@@ -1,0 +1,74 @@
+"""
+*******************************************************************************
+*   Ledger Blue
+*   (c) 2016 Ledger
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+********************************************************************************
+"""
+
+from secp256k1 import PrivateKey, PublicKey
+import sys
+import struct
+from .hexParser import IntelHexParser
+from .hexLoader import HexLoader
+
+def getDeployedSecret(dongle, masterPrivate, targetid):
+	testMaster = PrivateKey(bytes(masterPrivate))
+	testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
+	targetid = bytearray(struct.pack('>I', targetid))
+
+	# identify
+	apdu = bytearray([0xe0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
+	dongle.exchange(apdu)
+
+	# walk the chain 
+	batch_info = bytearray(dongle.exchange(bytearray.fromhex('E050000000')))
+	cardKey = batch_info[5:5 + batch_info[4]]
+
+	# if not found, get another pair
+	#if cardKey <> testMasterPublic:
+	#	raise Exception("Invalid batch public key")
+
+	# provide the ephemeral certificate
+	ephemeralPrivate = PrivateKey()
+	ephemeralPublic = bytearray(ephemeralPrivate.pubkey.serialize(compressed=False))
+	print "Using ephemeral key " + str(ephemeralPublic).encode('hex')
+	signature = testMaster.ecdsa_sign(bytes(ephemeralPublic))
+	signature = testMaster.ecdsa_serialize(signature)
+	certificate = bytearray([len(ephemeralPublic)]) + ephemeralPublic + bytearray([len(signature)]) + signature
+	apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(certificate)]) + certificate
+	dongle.exchange(apdu)
+
+	# walk the device certificates to retrieve the public key to use for authentication
+	index = 0
+	last_pub_key = PublicKey(bytes(testMasterPublic), raw=True)
+	while True:
+		certificate = bytearray(dongle.exchange(bytearray.fromhex('E052000000')))
+		if len(certificate) == 0:
+			break
+		certificatePublic = certificate[1 : 1 + certificate[0]]
+		certificateSignature = last_pub_key.ecdsa_deserialize(bytes(certificate[2 + certificate[0] :]))		
+		if not last_pub_key.ecdsa_verify(bytes(certificatePublic), certificateSignature):
+			if index == 0:
+				# Not an error if loading from user key
+				print "Broken certificate chain - loading from user key"
+			else:
+				raise Exception("Broken certificate chain")
+		last_pub_key = PublicKey(bytes(certificatePublic), raw=True)
+		index = index + 1
+
+	# Commit device ECDH channel
+	dongle.exchange(bytearray.fromhex('E053000000'))
+	secret = last_pub_key.ecdh(bytes(ephemeralPrivate.serialize().decode('hex')))
+	return str(secret[0:16])
