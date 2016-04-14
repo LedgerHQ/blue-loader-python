@@ -43,7 +43,7 @@ class IntelHexParser:
 			if len(data) == 0:
 				continue
 			if data[0] <> ':':
-				raise Exception("Invalid data at line " + lineNumber)
+				raise Exception("Invalid data at line " + str(lineNumber))
 			data = bytearray(data[1:].decode('hex'))		
 			count = data[0]
 			address = (data[1] << 8) + data[2]
