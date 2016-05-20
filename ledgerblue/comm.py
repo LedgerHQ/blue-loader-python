@@ -18,7 +18,7 @@
 """
 
 from abc import ABCMeta, abstractmethod
-from .commException import *
+from .commException import CommException
 from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
 from binascii import hexlify
 import hid
