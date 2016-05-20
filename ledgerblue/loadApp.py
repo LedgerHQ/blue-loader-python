@@ -21,7 +21,7 @@ from secp256k1 import PrivateKey
 from ledgerblue.comm import getDongle
 from ledgerblue.hexParser import IntelHexParser
 from ledgerblue.hexLoader import HexLoader
-from ledgerblue.deployed import getDeployedSecret
+from ledgerblue.deployed import getDeployedSecretV1, getDeployedSecretV2
 import argparse
 
 def auto_int(x):
@@ -35,11 +35,12 @@ parser.add_argument("--appFlags", help="Set the application flags", type=auto_in
 parser.add_argument("--bootAddr", help="Set the boot address", type=auto_int)
 parser.add_argument("--rootPrivateKey", help="Set the root private key")
 parser.add_argument("--apdu", help="Display APDU log", action='store_true')
+parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
 
 args = parser.parse_args()
 
 if args.targetId == None:
-	args.targetId = 0x31000001
+	args.targetId = 0x31000002
 if args.fileName == None:
 	raise Exception("Missing fileName")
 if args.appName == None:
@@ -57,7 +58,10 @@ if args.rootPrivateKey == None:
 parser = IntelHexParser(args.fileName)
 dongle = getDongle(args.apdu)
 
-secret = getDeployedSecret(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+if args.deployLegacy:
+	secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+else:
+	secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 loader = HexLoader(dongle, 0xe0, True, secret)
 
 if (not (args.appFlags & 2)):

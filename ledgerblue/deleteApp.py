@@ -19,7 +19,7 @@
 
 from secp256k1 import PrivateKey
 from ledgerblue.comm import getDongle
-from ledgerblue.deployed import getDeployedSecret
+from ledgerblue.deployed import getDeployedSecretV1, getDeployedSecretV2
 from ledgerblue.hexLoader import HexLoader
 import argparse
 
@@ -31,13 +31,14 @@ parser.add_argument("--targetId", help="Set the chip target ID", type=auto_int)
 parser.add_argument("--appName", help="Set the application name")
 parser.add_argument("--rootPrivateKey", help="Set the root private key")
 parser.add_argument("--apdu", help="Display APDU log", action='store_true')
+parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
 
 args = parser.parse_args()
 
 if args.appName == None:
 	raise Exception("Missing appName")
 if args.targetId == None:
-	args.targetId = 0x31000001
+	args.targetId = 0x31000002
 if args.rootPrivateKey == None:
 	privateKey = PrivateKey()
 	publicKey = str(privateKey.pubkey.serialize(compressed=False)).encode('hex')
@@ -46,6 +47,9 @@ if args.rootPrivateKey == None:
 
 dongle = getDongle(args.apdu)
 
-secret = getDeployedSecret(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+if args.deployLegacy:
+	secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+else:
+	secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 loader = HexLoader(dongle, 0xe0, True, secret)
 loader.deleteApp(args.appName)
