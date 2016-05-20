@@ -22,12 +22,13 @@ import struct
 import hashlib
 
 class HexLoader:
-	def __init__(self, card, cla=0xF0, secure=False, key=None):
+	def __init__(self, card, cla=0xF0, secure=False, key=None, relative=True):
 		self.card = card
 		self.cla = cla
 		self.secure = secure
 		self.key = key
 		self.iv = "\x00" * 16;
+		self.relative = relative
 
 	def crc16(self, data):
 		TABLE_CRC16_CCITT = [
@@ -132,7 +133,7 @@ class HexLoader:
 
 	def load(self, erase_u8, max_length_per_apdu, hexAreas, bootaddr):
 		initialAddress = 0
-		if len(hexAreas) <> 0:
+		if (len(hexAreas) <> 0) and self.relative:
 			initialAddress = hexAreas[0].getStart()
 		sha256 = hashlib.new('sha256')
 		for area in hexAreas:
@@ -162,7 +163,7 @@ class HexLoader:
 
 	def run(self, hexAreas, bootaddr):
 		initialAddress = 0
-		if len(hexAreas) <> 0:
+		if (len(hexAreas) <> 0) and self.relative:
 			initialAddress = hexAreas[0].getStart()		
 		self.boot(bootaddr - initialAddress)
 		
