@@ -94,6 +94,14 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid):
 	#if cardKey <> testMasterPublic:
 	#	raise Exception("Invalid batch public key")
 
+	print "Using test master key " + str(testMasterPublic).encode('hex')
+	dataToSign = bytes(bytearray([0x01]) + testMasterPublic)
+	signature = testMaster.ecdsa_sign(bytes(dataToSign))
+	signature = testMaster.ecdsa_serialize(signature)
+	certificate = bytearray([len(testMasterPublic)]) + testMasterPublic + bytearray([len(signature)]) + signature
+	apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(certificate)]) + certificate
+	dongle.exchange(apdu)
+	
 	# provide the ephemeral certificate
 	ephemeralPrivate = PrivateKey()
 	ephemeralPublic = bytearray(ephemeralPrivate.pubkey.serialize(compressed=False))
