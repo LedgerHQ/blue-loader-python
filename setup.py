@@ -7,10 +7,10 @@ from os.path import dirname, join
 here = dirname(__file__)
 setup(
     name='ledgerblue',
-    version='0.1.2',
+    version='0.1.3',
     author='Ledger',
     author_email='hello@ledger.fr',
-    description='Python library to communicate with Ledger Blue',
+    description='Python library to communicate with Ledger Blue/Nano S',
     long_description=open(join(here, 'README.md')).read(),
     packages=find_packages(),
     install_requires=['hidapi>=0.7.99', 'secp256k1>=0.12.1', 'pycrypto>=2.6.1'],
