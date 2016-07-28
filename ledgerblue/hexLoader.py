@@ -27,7 +27,7 @@ class HexLoader:
 		self.cla = cla
 		self.secure = secure
 		self.key = key
-		self.iv = "\x00" * 16;
+		self.iv = "\x00" * 16
 		self.relative = relative
 
 	def crc16(self, data):
@@ -65,7 +65,7 @@ class HexLoader:
 			0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
 			0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
 		]
-		crc =  0xFFFF;
+		crc =  0xFFFF
 		for i in range(0, len(data)):
 			b = data[i] & 0xff
 			b = (b ^ ((crc >> 8) & 0xff)) & 0xff
@@ -114,15 +114,21 @@ class HexLoader:
 		data = struct.pack('>I', targetId)
 		self.exchange(self.cla, 0x04, 0x00, 0x00, data)
 
-	def boot(self, bootadr):
+	def boot(self, bootadr, signature=None):
 		# Force jump into Thumb mode
 		bootadr |= 1
 		data = '\x09' + struct.pack('>I', bootadr)
+		if (signature != None):
+			data += chr(len(signature)) + signature
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
 
-	def createApp(self, appflags, applength, appname):
+	def createApp(self, appflags, applength, appname, icon=None, path=None):
 		data = '\x0B' + struct.pack('>I', applength) + struct.pack('>I', appflags) + chr(len(appname)) + appname
+		if (icon != None):
+			data += chr(len(icon)) + icon
+		if (path != None):
+			data += chr(len(path)) + path
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
 
@@ -161,9 +167,9 @@ class HexLoader:
 			self.crcSegment(0, len(data), crc)
 		return sha256.hexdigest()
 
-	def run(self, hexAreas, bootaddr):
+	def run(self, hexAreas, bootaddr, signature=None):
 		initialAddress = 0
 		if (len(hexAreas) <> 0) and self.relative:
 			initialAddress = hexAreas[0].getStart()		
-		self.boot(bootaddr - initialAddress)
+		self.boot(bootaddr - initialAddress, signature)
 		
