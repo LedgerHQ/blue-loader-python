@@ -147,10 +147,10 @@ class IntelHexPrinter:
 				oldoff = off;
 				off += blocksize
                                 
-			bootAddrHex = hex(0x100000000+self.bootAddr)[3:]
-			file.write(":04000005"+bootAddrHex+hex(0x100+self.checksum( bytearray(("04000005"+bootAddrHex).decode('hex'))))[3:]+self.eol)
+		bootAddrHex = hex(0x100000000+self.bootAddr)[3:]
+		file.write(":04000005"+bootAddrHex+hex(0x100+self.checksum( bytearray(("04000005"+bootAddrHex).decode('hex'))))[3:]+self.eol)
 
-			file.write(":00000001FF"+self.eol)
+		file.write(":00000001FF"+self.eol)
 
-			file.close()
+		file.close()
 			
