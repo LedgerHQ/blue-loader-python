@@ -170,7 +170,7 @@ def getDongle(debug=False, selectCommand=None):
 	hidDevicePath = None
 	ledger = True
 	for hidDevice in hid.enumerate(0, 0):
-		if hidDevice['vendor_id'] == 0x2c97 and hidDevice['product_id'] == 0x0000:
+		if hidDevice['vendor_id'] == 0x2c97:
 			hidDevicePath = hidDevice['path']
 	if hidDevicePath is not None:
 		dev = hid.device()
