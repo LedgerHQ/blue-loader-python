@@ -18,9 +18,9 @@
 """
 
 from secp256k1 import PrivateKey
-from ledgerblue.comm import getDongle
-from ledgerblue.deployed import getDeployedSecretV1, getDeployedSecretV2
-from ledgerblue.hexLoader import HexLoader
+from .comm import getDongle
+from .deployed import getDeployedSecretV1, getDeployedSecretV2
+from .hexLoader import HexLoader
 import argparse
 
 def auto_int(x):
