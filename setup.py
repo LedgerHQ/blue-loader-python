@@ -10,7 +10,7 @@ os.environ['SECP_BUNDLED_EXPERIMENTAL'] = "1"
 here = dirname(__file__)
 setup(
     name='ledgerblue',
-    version='0.1.5',
+    version='0.1.6',
     author='Ledger',
     author_email='hello@ledger.fr',
     description='Python library to communicate with Ledger Blue/Nano S',
