@@ -7,7 +7,6 @@ The life cycle management requires [libsecp256k1](https://github.com/ludbb/secp2
 ```
 virtualenv ledger
 source ledger/bin/activate
-SECP_BUNDLED_EXPERIMENTAL=1 pip install secp256k1
-pip install git+https://github.com/LedgerHQ/blue-loader-python.git 
+pip install ledgerblue
 ```
 
