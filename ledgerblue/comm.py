@@ -43,7 +43,7 @@ class Dongle(object):
 	__metaclass__ = ABCMeta
 
 	@abstractmethod
-	def exchange(self, apdu, timeout=20000):
+	def exchange(self, apdu, timeout=20):
 		pass
 
 	@abstractmethod
@@ -62,7 +62,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		self.waitImpl = self
 		self.opened = True
 
-	def exchange(self, apdu, timeout=20000):
+	def exchange(self, apdu, timeout=20):
 		if self.debug:
 			print "=> %s" % hexlify(apdu)
 		if self.ledger:
@@ -146,7 +146,7 @@ class DongleSmartcard(Dongle):
 		self.waitImpl = self
 		self.opened = True
 
-	def exchange(self, apdu, timeout=20000):
+	def exchange(self, apdu, timeout=20):
 		if self.debug:
 			print "=> %s" % hexlify(apdu)
 		response, sw1, sw2 = self.device.transmit(toBytes(hexlify(apdu)))
