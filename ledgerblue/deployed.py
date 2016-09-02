@@ -17,7 +17,7 @@
 ********************************************************************************
 """
 
-from secp256k1 import PrivateKey, PublicKey
+from .ecWrapper import PrivateKey, PublicKey
 import os
 import sys
 import struct

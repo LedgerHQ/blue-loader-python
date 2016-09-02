@@ -19,7 +19,7 @@
 
 from .comm import getDongle
 from .deployed import getDeployedSecretV2
-from secp256k1 import PrivateKey
+from .ecWrapper import PrivateKey
 from Crypto.Cipher import AES
 import argparse
 import sys

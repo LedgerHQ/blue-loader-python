@@ -17,7 +17,7 @@
 ********************************************************************************
 """
 
-from secp256k1 import PrivateKey
+from .ecWrapper import PrivateKey
 from .comm import getDongle
 from .hexParser import IntelHexParser
 from .hexLoader import HexLoader

@@ -19,7 +19,7 @@
 
 from .hexParser import IntelHexParser
 from .hexParser import IntelHexPrinter
-from secp256k1 import PrivateKey
+from .ecWrapper import PrivateKey
 import hashlib
 import binascii
 import argparse
