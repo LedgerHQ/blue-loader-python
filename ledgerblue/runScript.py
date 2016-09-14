@@ -48,14 +48,14 @@ else:
 class SCP:
 	def __init__(self, dongle, targetId, rootPrivateKey):
 		self.key = getDeployedSecretV2(dongle, rootPrivateKey, targetId)
-		self.iv = "\x00" * 16;
+		self.iv = b'\x00' * 16;
 		
 	def encryptAES(self, data):
-		paddedData = data + '\x80'
-		while (len(paddedData) % 16) <> 0:
-			paddedData += '\x00'
+		paddedData = data + b'\x80'
+		while (len(paddedData) % 16) != 0:
+			paddedData += b'\x00'
 		cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
-		encryptedData = cipher.encrypt(str(paddedData))
+		encryptedData = cipher.encrypt(paddedData)
 		self.iv = encryptedData[len(encryptedData) - 16:]
 		return encryptedData
 
@@ -64,9 +64,9 @@ dongle = getDongle(args.apdu)
 if args.scp:
 	if args.rootPrivateKey == None:
 		privateKey = PrivateKey()
-		publicKey = str(privateKey.pubkey.serialize(compressed=False)).encode('hex')
-		print "Generated random root public key : " + publicKey
-		args.rootPrivateKey = privateKey.serialize().encode('ascii')
+		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
+		print("Generated random root public key : %s" % publicKey)
+		args.rootPrivateKey = privateKey.serialize()
 		scp = SCP(dongle, args.targetId, bytearray.fromhex(args.rootPrivateKey))
 
 for data in file:

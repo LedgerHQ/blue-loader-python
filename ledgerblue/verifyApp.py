@@ -56,4 +56,4 @@ signature = publicKey.ecdsa_deserialize(bytes(bytearray.fromhex(args.signature))
 if not publicKey.ecdsa_verify(bytes(dataToSign), signature, raw=True):
 	raise Exception("Signature not verified")
 
-print "Signature verified"
+print("Signature verified")

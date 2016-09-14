@@ -24,14 +24,16 @@ from .hexLoader import HexLoader
 from .deployed import getDeployedSecretV1, getDeployedSecretV2
 import argparse
 import struct
+import binascii
+import sys
 
 def auto_int(x):
     return int(x, 0)
 
 def parse_bip32_path(path, apilevel):
         if len(path) == 0:
-                return ""
-        result = ""
+                return b""
+        result = b""
         elements = path.split('/')
         if apilevel >= 5:
         	result = result + chr(len(elements))
@@ -72,15 +74,21 @@ if args.appFlags == None:
 	args.appFlags = 0
 if args.rootPrivateKey == None:
 	privateKey = PrivateKey()
-	publicKey = str(privateKey.pubkey.serialize(compressed=False)).encode('hex')
-	print "Generated random root public key : " + publicKey
-	args.rootPrivateKey = privateKey.serialize().encode('ascii')
+	publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
+	print("Generated random root public key : %s" % publicKey)
+	args.rootPrivateKey = privateKey.serialize()
+
+
+if (sys.version_info.major == 3):
+	args.appName = bytes(args.appName,'ascii')
+if (sys.version_info.major == 2):
+	args.appName = bytes(args.appName)
 
 parser = IntelHexParser(args.fileName)
 if args.bootAddr == None:
     args.bootAddr = parser.getBootAddr()
 
-path = ""
+path = b""
 curveMask = 0xff
 if args.curve != None:	
 	curveMask = 0x00
@@ -95,17 +103,17 @@ if args.curve != None:
 			raise Exception("Unknown curve " + curve)	
 
 if args.apilevel >= 5:
-	path += chr(curveMask)
+	path += struct.pack('>B',curveMask)
 	if args.path != None:
 		for item in args.path:
-			if len(item) <> 0:
+			if len(item) != 0:
 				path += parse_bip32_path(item, args.apilevel)	
 else:
 	if args.curve != None:
-		print "Curve not supported using this API level, ignoring"
+		print("Curve not supported using this API level, ignoring")
 	if args.path != None:
 		if len(args.path) > 1:
-			print "Multiple path levels not supported using this API level, ignoring"
+			print("Multiple path levels not supported using this API level, ignoring")
 		else:
 			path = parse_bip32_path(args.path[0], args.apilevel)
 
@@ -126,13 +134,14 @@ for area in parser.getAreas():
 
 icon = None
 if args.icon != None:
-	icon = bytearray.fromhex(args.icon)
+	icon = bytes(bytearray.fromhex(args.icon))
 
 signature = None
 if args.signature != None:
-	signature = bytearray.fromhex(args.signature)	
+	signature = bytes(bytearray.fromhex(args.signature))
+
 
 loader.createApp(args.appFlags, appLength, args.appName, icon, path)
 hash = loader.load(0x0, 0xE0, parser.getAreas(), args.bootAddr)
-print "Application hash : " + hash
+print("Application hash : " + hash)
 loader.run(parser.getAreas(), args.bootAddr, signature)

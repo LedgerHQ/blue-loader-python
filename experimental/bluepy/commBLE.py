@@ -57,7 +57,7 @@ class BLEDongle(Dongle):
 
 	def exchange(self, apdu, timeout=20000):
 		if self.debug:
-			print "=> %s" % hexlify(apdu)
+			print("=> %s" % hexlify(apdu))
 		apdu = wrapCommandAPDU(0, apdu, DEFAULT_BLE_CHUNK, True)		
 		offset = 0
 		while(offset < len(apdu)):			
@@ -78,7 +78,7 @@ class BLEDongle(Dongle):
 		sw = (result[swOffset] << 8) + result[swOffset + 1]
 		response = result[dataStart : dataLength + dataStart]
 		if self.debug:
-			print "<= %s%.2x" % (hexlify(response), sw)
+			print("<= %s%.2x" % (hexlify(response), sw))
 		if sw <> 0x9000:
 			raise CommException("Invalid status %04x" % sw, sw)
 		return response

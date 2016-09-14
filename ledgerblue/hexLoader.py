@@ -20,6 +20,7 @@
 from Crypto.Cipher import AES
 import struct
 import hashlib
+import binascii
 
 class HexLoader:
 	def __init__(self, card, cla=0xF0, secure=False, key=None, relative=True):
@@ -27,9 +28,11 @@ class HexLoader:
 		self.cla = cla
 		self.secure = secure
 		self.key = key
-		self.iv = "\x00" * 16
+		self.iv = b"\x00" * 16
 		self.relative = relative
 
+	
+		
 	def crc16(self, data):
 		TABLE_CRC16_CCITT = [
 			0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -73,40 +76,40 @@ class HexLoader:
 		return crc
 
 	def exchange(self, cla, ins, p1, p2, data):
-		apdu = bytearray(chr(cla) + chr(ins) + chr(p1) + chr(p2) + chr(len(data))) + bytearray(data)
+		apdu = bytearray([cla, ins, p1, p2, len(data)]) + bytearray(data)
 		if self.card == None:
-			print str(apdu).encode('hex')
+			print("%s" % binascii.hexlify(apdu))
 		else:
 			self.card.exchange(apdu)
 
 	def encryptAES(self, data):
 		if not self.secure:
 			return data
-		paddedData = data + '\x80'
-		while (len(paddedData) % 16) <> 0:
-			paddedData += '\x00'
+		paddedData = data + b'\x80'
+		while (len(paddedData) % 16) != 0:
+			paddedData += b'\x00'
 		cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
-		encryptedData = cipher.encrypt(str(paddedData))
+		encryptedData = cipher.encrypt(paddedData)
 		self.iv = encryptedData[len(encryptedData) - 16:]
 		return encryptedData
 
 	def selectSegment(self, baseAddress):
-		data = '\x05' + struct.pack('>I', baseAddress)
+		data = b'\x05' + struct.pack('>I', baseAddress)
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def loadSegmentChunk(self, offset, chunk):
-		data = '\x06' + struct.pack('>H', offset) + chunk
+		data = b'\x06' + struct.pack('>H', offset) + chunk
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)		
 
 	def flushSegment(self):
-		data = '\x07'
+		data = b'\x07'
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)				
 
 	def crcSegment(self, offsetSegment, lengthSegment, crcExpected):
-		data = '\x08' + struct.pack('>H', offsetSegment) + struct.pack('>I', lengthSegment) + struct.pack('>H', crcExpected)
+		data = b'\x08' + struct.pack('>H', offsetSegment) + struct.pack('>I', lengthSegment) + struct.pack('>H', crcExpected)
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
 
@@ -117,29 +120,30 @@ class HexLoader:
 	def boot(self, bootadr, signature=None):
 		# Force jump into Thumb mode
 		bootadr |= 1
-		data = '\x09' + struct.pack('>I', bootadr)
+		data = b'\x09' + struct.pack('>I', bootadr)
 		if (signature != None):
 			data += chr(len(signature)) + signature
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
 
 	def createApp(self, appflags, applength, appname, icon=None, path=None):
-		data = '\x0B' + struct.pack('>I', applength) + struct.pack('>I', appflags) + chr(len(appname)) + appname
+		data = b'\x0B' + struct.pack('>I', applength) + struct.pack('>I', appflags) + struct.pack('>B', len(appname)) +  appname
 		if (icon != None):
-			data += chr(len(icon)) + icon
+			data += struct.pack('>B', len(icon))+ icon
 		if (path != None):
-			data += chr(len(path)) + path
+			data += struct.pack('>B', len(path)) + path
+                        
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
 
 	def deleteApp(self, appname):
-		data = '\x0C' + chr(len(appname)) + appname
+		data = b'\x0C' +  struct.pack('>B',len(appname)) +  appname
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
 
 	def load(self, erase_u8, max_length_per_apdu, hexAreas, bootaddr):
 		initialAddress = 0
-		if (len(hexAreas) <> 0) and self.relative:
+		if (len(hexAreas) != 0) and self.relative:
 			initialAddress = hexAreas[0].getStart()
 		sha256 = hashlib.new('sha256')
 		for area in hexAreas:
@@ -160,7 +164,7 @@ class HexLoader:
 					chunkLen = length
 				chunk = data[offset : offset + chunkLen]
 				sha256.update(chunk)
-				self.loadSegmentChunk(offset, chunk)
+				self.loadSegmentChunk(offset, bytes(chunk))
 				offset += chunkLen
 				length -= chunkLen
 			self.flushSegment()
@@ -169,7 +173,7 @@ class HexLoader:
 
 	def run(self, hexAreas, bootaddr, signature=None):
 		initialAddress = 0
-		if (len(hexAreas) <> 0) and self.relative:
+		if (len(hexAreas) != 0) and self.relative:
 			initialAddress = hexAreas[0].getStart()		
 		self.boot(bootaddr - initialAddress, signature)
 		
