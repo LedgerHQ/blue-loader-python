@@ -125,7 +125,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		if self.debug:
 			print("<= %s%.2x" % (hexstr(response), sw))
 		if sw != 0x9000:
-			raise CommException("Invalid status %04x" % sw, sw)
+			raise CommException("Invalid status %04x" % sw, sw, response)
 		return response
 
 	def waitFirstResponse(self, timeout):
@@ -163,7 +163,7 @@ class DongleSmartcard(Dongle):
 		if self.debug:
 			print("<= %s%.2x" % (hexstr(response).replace(" ", ""), sw))
 		if sw != 0x9000:
-			raise CommException("Invalid status %04x" % sw, sw)
+			raise CommException("Invalid status %04x" % sw, sw, bytearray(response))
 		return bytearray(response)
 
 	def close(self):
