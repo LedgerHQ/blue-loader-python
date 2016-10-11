@@ -59,6 +59,17 @@ class SCP:
 		self.iv = encryptedData[len(encryptedData) - 16:]
 		return encryptedData
 
+        def decryptAES(self, data):
+                if len(data) == 0:
+                        return data
+                cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
+                decryptedData = cipher.decrypt(data)
+                l = len(decryptedData) - 1
+                while (decryptedData[l] != chr(0x80)):
+                        l-=1
+                decryptedData = decryptedData[0:l]
+                self.iv = data[len(data) - 16:]
+                return decryptedData
 
 dongle = getDongle(args.apdu)
 if args.scp:
@@ -67,15 +78,23 @@ if args.scp:
 		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
 		print("Generated random root public key : %s" % publicKey)
 		args.rootPrivateKey = privateKey.serialize()
-		scp = SCP(dongle, args.targetId, bytearray.fromhex(args.rootPrivateKey))
+	scp = SCP(dongle, args.targetId, bytearray.fromhex(args.rootPrivateKey))
 
 for data in file:
 	data = data.rstrip('\r\n').decode('hex')
+	if len(data) < 5:
+		continue
 	if args.scp:
 		data = bytearray(data)
 		if data[4] > 0 and len(data)>5:
-			dongle.exchange(data[0:4] + scp.encryptAES(data[5:5+data[4]]) )
+			apduData = data[5 : 5 + data[4]]
+			apduData = scp.encryptAES(str(apduData))
+			result = dongle.exchange(data[0:4] + bytearray([len(apduData)]) + bytearray(apduData))
 		else:
-			dongle.exchange(data[0:5])
+			result = dongle.exchange(data[0:5])
+		result = scp.decryptAES(str(result))
+		if args.apdu:
+			print "<= Clear " + result.encode('hex')	
 	else:
 		dongle.exchange(bytearray(data))	
+

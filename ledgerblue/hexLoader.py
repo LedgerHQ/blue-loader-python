@@ -80,7 +80,7 @@ class HexLoader:
 		if self.card == None:
 			print("%s" % binascii.hexlify(apdu))
 		else:
-			self.card.exchange(apdu)
+			return self.card.exchange(apdu)
 
 	def encryptAES(self, data):
 		if not self.secure:
@@ -92,6 +92,18 @@ class HexLoader:
 		encryptedData = cipher.encrypt(paddedData)
 		self.iv = encryptedData[len(encryptedData) - 16:]
 		return encryptedData
+
+	def decryptAES(self, data):
+		if not self.secure or len(data) == 0:
+			return data
+		cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
+		decryptedData = cipher.decrypt(data)
+		l = len(decryptedData) - 1
+		while (decryptedData[l] != chr(0x80)):
+			l-=1
+		decryptedData = decryptedData[0:l]
+		self.iv = data[len(data) - 16:]
+		return decryptedData
 
 	def selectSegment(self, baseAddress):
 		data = b'\x05' + struct.pack('>I', baseAddress)
@@ -140,6 +152,28 @@ class HexLoader:
 		data = b'\x0C' +  struct.pack('>B',len(appname)) +  appname
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
+
+	def listApp(self, restart=True):
+		if restart:
+			data = b'\x0E'
+		else:
+			data = b'\x0F'
+		data = self.encryptAES(data)
+		response = str(self.exchange(self.cla, 0x00, 0x00, 0x00, data))
+		response = bytearray(self.decryptAES(response))
+		result = []
+		offset = 0
+		while offset != len(response):
+			item = {}
+			offset += 1
+			item['name'] = response[offset + 1 : offset + 1 + response[offset]]
+			offset += 1 + response[offset]
+			item['flags'] = response[offset] << 24 | response[offset + 1] << 16 | response[offset + 2] << 8 | response[offset + 3]
+			offset += 4
+			item['hash'] = response[offset : offset + 32]
+			offset += 32
+			result.append(item)
+		return result
 
 	def load(self, erase_u8, max_length_per_apdu, hexAreas, bootaddr):
 		initialAddress = 0
