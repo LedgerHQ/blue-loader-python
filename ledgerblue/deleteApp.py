@@ -22,6 +22,8 @@ from .comm import getDongle
 from .deployed import getDeployedSecretV1, getDeployedSecretV2
 from .hexLoader import HexLoader
 import argparse
+import binascii
+import sys
 
 def auto_int(x):
     return int(x, 0)
@@ -37,13 +39,19 @@ args = parser.parse_args()
 
 if args.appName == None:
 	raise Exception("Missing appName")
+    
+if (sys.version_info.major == 3):
+	args.appName = bytes(args.appName,'ascii')
+if (sys.version_info.major == 2):
+	args.appName = bytes(args.appName)
+
 if args.targetId == None:
 	args.targetId = 0x31000002
 if args.rootPrivateKey == None:
 	privateKey = PrivateKey()
-	publicKey = str(privateKey.pubkey.serialize(compressed=False)).encode('hex')
-	print "Generated random root public key : " + publicKey
-	args.rootPrivateKey = privateKey.serialize().encode('ascii')
+	publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
+	print("Generated random root public key : %s" % publicKey)
+	args.rootPrivateKey = privateKey.serialize()
 
 dongle = getDongle(args.apdu)
 

@@ -50,11 +50,11 @@ dataToSign = m.digest()
 
 MASTER_PRIVATE = bytearray.fromhex(args.key)
 testMaster = PrivateKey(bytes(MASTER_PRIVATE))
-testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
+#testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
 
 signature = testMaster.ecdsa_sign(bytes(dataToSign), raw=True)
 
 # test signature before printing it
 if testMaster.pubkey.ecdsa_verify(dataToSign, signature, raw=True):
-	#print "Signer's public: " + binascii.hexlify(testMasterPublic)
-	print testMaster.ecdsa_serialize(signature).encode('hex')
+	#print("Signer's public: " + binascii.hexlify(testMasterPublic))
+	print(testMaster.ecdsa_serialize(signature).encode('hex'))

@@ -58,23 +58,23 @@ class PublicKey(object):
 			return self.obj.serialize(compressed)
 		else:
 			if not compressed:
-				out = "\x04"
-				out += str(bytearray(self.obj.W.x.to_bytes(32, 'big')))
-				out += str(bytearray(self.obj.W.y.to_bytes(32, 'big')))
+				out = b"\x04"
+				out += self.obj.W.x.to_bytes(32, 'big')
+				out += self.obj.W.y.to_bytes(32, 'big')
 			else:
-				out = "\x03" if ((self.obj.W.y & 1) <> 0) else "\x02"
-				out += str(bytearray(self.obj.W.x.to_bytes(32, 'big')))
+				out = b"\x03" if ((self.obj.W.y & 1) != 0) else "\x02"
+				out += self.obj.W.x.to_bytes(32, 'big')
 			return out
 
 	def ecdh(self, scalar):
 		if USE_SECP:
 			return self.obj.ecdh(scalar)
 		else:
-			scalar = int.from_bytes(scalar)
+			scalar = int.from_bytes(scalar, 'big')
 			point = self.obj.W * scalar
 			# libsecp256k1 style secret
-			out = "\x03" if ((point.y & 1) <> 0) else "\x02"
-			out += str(bytearray(point.x.to_bytes(32, 'big')))
+			out = b"\x03" if ((point.y & 1) != 0) else b"\x02"
+			out += point.x.to_bytes(32, 'big')
 			hash = hashlib.sha256()
 			hash.update(out)
 			return hash.digest()
@@ -104,19 +104,19 @@ class PrivateKey(object):
 			if privkey == None:
 				privkey = ecpy.ecrand.rnd(CURVE_SECP256K1.order)
 			else:
-				privkey = int.from_bytes(privkey)
+				privkey = int.from_bytes(privkey,'big')
 			self.obj = ECPrivateKey(privkey, CURVE_SECP256K1)
 			pubkey = self.obj.get_public_key().W
-			out = "\x04"
-			out += str(bytearray(pubkey.x.to_bytes(32, 'big')))
-			out += str(bytearray(pubkey.y.to_bytes(32, 'big')))
+			out = b"\x04"
+			out += pubkey.x.to_bytes(32, 'big')
+			out += pubkey.y.to_bytes(32, 'big')
 			self.pubkey = PublicKey(out, raw=True)
 
 	def serialize(self):
 		if USE_SECP:
 			return self.obj.serialize()
 		else:
-			return str(bytearray(self.obj.d.to_bytes(32, 'big'))).encode('hex')
+			return "%.64x"%self.obj.d
 
 	def ecdsa_serialize(self, raw_sig):
 		if USE_SECP:

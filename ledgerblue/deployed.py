@@ -23,6 +23,7 @@ import sys
 import struct
 from .hexParser import IntelHexParser
 from .hexLoader import HexLoader
+import binascii
 
 def getDeployedSecretV1(dongle, masterPrivate, targetid):
 	testMaster = PrivateKey(bytes(masterPrivate))
@@ -38,13 +39,13 @@ def getDeployedSecretV1(dongle, masterPrivate, targetid):
 	cardKey = batch_info[5:5 + batch_info[4]]
 
 	# if not found, get another pair
-	#if cardKey <> testMasterPublic:
+	#if cardKey != testMasterPublic:
 	#	raise Exception("Invalid batch public key")
 
 	# provide the ephemeral certificate
 	ephemeralPrivate = PrivateKey()
 	ephemeralPublic = bytearray(ephemeralPrivate.pubkey.serialize(compressed=False))
-	print "Using ephemeral key " + str(ephemeralPublic).encode('hex')
+	print("Using ephemeral key %s" %binascii.hexlify(ephemeralPublic))
 	signature = testMaster.ecdsa_sign(bytes(ephemeralPublic))
 	signature = testMaster.ecdsa_serialize(signature)
 	certificate = bytearray([len(ephemeralPublic)]) + ephemeralPublic + bytearray([len(signature)]) + signature
@@ -63,7 +64,7 @@ def getDeployedSecretV1(dongle, masterPrivate, targetid):
 		if not last_pub_key.ecdsa_verify(bytes(certificatePublic), certificateSignature):
 			if index == 0:
 				# Not an error if loading from user key
-				print "Broken certificate chain - loading from user key"
+				print("Broken certificate chain - loading from user key")
 			else:
 				raise Exception("Broken certificate chain")
 		last_pub_key = PublicKey(bytes(certificatePublic), raw=True)
@@ -72,7 +73,7 @@ def getDeployedSecretV1(dongle, masterPrivate, targetid):
 	# Commit device ECDH channel
 	dongle.exchange(bytearray.fromhex('E053000000'))
 	secret = last_pub_key.ecdh(bytes(ephemeralPrivate.serialize().decode('hex')))
-	return str(secret[0:16])
+	return secret[0:16]
 
 def getDeployedSecretV2(dongle, masterPrivate, targetid):
 	testMaster = PrivateKey(bytes(masterPrivate))
@@ -91,10 +92,10 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid):
 	deviceNonce = auth_info[4:12]
 
 	# if not found, get another pair
-	#if cardKey <> testMasterPublic:
+	#if cardKey != testMasterPublic:
 	#	raise Exception("Invalid batch public key")
 
-	print "Using test master key " + str(testMasterPublic).encode('hex')
+	print("Using test master key %s " % binascii.hexlify(testMasterPublic))
 	dataToSign = bytes(bytearray([0x01]) + testMasterPublic)
 	signature = testMaster.ecdsa_sign(bytes(dataToSign))
 	signature = testMaster.ecdsa_serialize(signature)
@@ -105,7 +106,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid):
 	# provide the ephemeral certificate
 	ephemeralPrivate = PrivateKey()
 	ephemeralPublic = bytearray(ephemeralPrivate.pubkey.serialize(compressed=False))
-	print "Using ephemeral key " + str(ephemeralPublic).encode('hex')
+	print("Using ephemeral key %s" %binascii.hexlify(ephemeralPublic))
 	dataToSign = bytes(bytearray([0x11]) + nonce + deviceNonce + ephemeralPublic)
 	signature = testMaster.ecdsa_sign(bytes(dataToSign))
 	signature = testMaster.ecdsa_serialize(signature)
@@ -122,10 +123,10 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid):
 		elif index == 1:
 			certificate = bytearray(dongle.exchange(bytearray.fromhex('E052800000')))
 		else:
-				break
+			break
 		if len(certificate) == 0:
 			break
-	 	offset = 1
+		offset = 1
 		certificateHeader = certificate[offset : offset + certificate[offset-1]]
 		offset += certificate[offset-1] + 1
 		certificatePublicKey = certificate[offset : offset + certificate[offset-1]]
@@ -142,7 +143,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid):
 		if not last_pub_key.ecdsa_verify(bytes(certificateSignedData), certificateSignature):
 			if index == 0:
 				# Not an error if loading from user key
-				print "Broken certificate chain - loading from user key"
+				print("Broken certificate chain - loading from user key")
 			else:
 				raise Exception("Broken certificate chain")
 		last_pub_key = PublicKey(bytes(certificatePublicKey), raw=True)
@@ -150,5 +151,5 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid):
 
 	# Commit device ECDH channel
 	dongle.exchange(bytearray.fromhex('E053000000'))
-	secret = last_pub_key.ecdh(bytes(ephemeralPrivate.serialize().decode('hex')))
-	return str(secret[0:16])
+	secret = last_pub_key.ecdh(binascii.unhexlify(ephemeralPrivate.serialize()))
+	return secret[0:16]
