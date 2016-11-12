@@ -20,6 +20,7 @@
 from .comm import getDongle
 import argparse
 import getpass
+import unicodedata
 
 def auto_int(x):
     return int(x, 0)
@@ -37,6 +38,7 @@ if len(passphrase) != 0:
 		p1 = 0x02
 	else:
 		p1 = 0x01
-	apdu = bytearray([0xE0, 0xD0, p1, 0x00, len(passphrase)]) + bytearray(passphrase)
+	passphrase = unicodedata.normalize('NFKD', passphrase)
+	apdu = bytearray([0xE0, 0xD0, p1, 0x00, len(passphrase)]) + bytearray(passphrase, 'utf8')
 	dongle.exchange(apdu, timeout=300)
 
