@@ -13,7 +13,7 @@ pip install ledgerblue
 ## Installation pre-requisites
 
 
-  * libudev
+  * libudev-dev
   * libusb-1.0-0-dev 
   * python-dev (python 2.7)
   * virtualenv
