@@ -26,7 +26,7 @@ import sys
 import fileinput
 
 def auto_int(x):
-    return int(x, 0)
+	return int(x, 0)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--fileName", help="Set the file name to load")
@@ -37,7 +37,7 @@ parser.add_argument("--rootPrivateKey", help="Set the root private key")
 
 args = parser.parse_args()
 
-if args.targetId == None:
+if args.targetId is None:
 	args.targetId = 0x31100002
 if not args.fileName:
 	#raise Exception("Missing fileName")
@@ -45,11 +45,12 @@ if not args.fileName:
 else:
 	file = open(args.fileName, "r")
 
+
 class SCP:
 	def __init__(self, dongle, targetId, rootPrivateKey):
 		self.key = getDeployedSecretV2(dongle, rootPrivateKey, targetId)
-		self.iv = b'\x00' * 16;
-		
+		self.iv = b'\x00' * 16
+
 	def encryptAES(self, data):
 		paddedData = data + b'\x80'
 		while (len(paddedData) % 16) != 0:
@@ -73,7 +74,7 @@ class SCP:
 
 dongle = getDongle(args.apdu)
 if args.scp:
-	if args.rootPrivateKey == None:
+	if args.rootPrivateKey is None:
 		privateKey = PrivateKey()
 		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
 		print("Generated random root public key : %s" % publicKey)
@@ -94,7 +95,6 @@ for data in file:
 			result = dongle.exchange(data[0:5])
 		result = scp.decryptAES(str(result))
 		if args.apdu:
-			print "<= Clear " + result.encode('hex')	
+			print("<= Clear " + result.encode('hex'))
 	else:
-		dongle.exchange(bytearray(data))	
-
+		dongle.exchange(bytearray(data))
