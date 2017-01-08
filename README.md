@@ -21,7 +21,7 @@ pip install ledgerblue
 This package can optionally work with [libsecp256k1](https://github.com/ludbb/secp256k1-py) Python bindings compiled with ECDH support. If you wish to enable libsecp256k1 bindings, make sure to install libsecp256k1 as follows
 
 ```
-SECP_BUNDLED_EXPERIMENTAL=1 pip --no-cache-dir install secp256k1
+SECP_BUNDLED_EXPERIMENTAL=1 pip --no-cache-dir --no-binary secp256k1 install secp256k1
 ``` 
 
 ## Giving permissions on udev 
