@@ -79,6 +79,14 @@ class PublicKey(object):
 			hash.update(out)
 			return hash.digest()
 
+	def tweak_add(self, scalar):
+		if USE_SECP:
+			self.obj = self.obj.tweak_add(scalar)
+		else:
+			scalar = int.from_bytes(scalar, 'big')
+			privKey = ECPrivateKey(scalar, CURVE_SECP256K1)
+			self.obj = ECPublicKey(self.obj.W + privKey.get_public_key().W)
+
 	def ecdsa_verify(self, msg, raw_sig, raw=False, digest=hashlib.sha256):
 		if USE_SECP:
 			return self.obj.ecdsa_verify(msg, raw_sig, raw, digest)
