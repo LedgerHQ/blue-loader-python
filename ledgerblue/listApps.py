@@ -23,10 +23,10 @@ from .deployed import getDeployedSecretV1, getDeployedSecretV2
 from .hexLoader import HexLoader
 import argparse
 import binascii
-import sys
+
 
 def auto_int(x):
-    return int(x, 0)
+	return int(x, 0)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--targetId", help="Set the chip target ID", type=auto_int)
@@ -36,9 +36,9 @@ parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='
 
 args = parser.parse_args()
 
-if args.targetId == None:
+if args.targetId is None:
 	args.targetId = 0x31000002
-if args.rootPrivateKey == None:
+if args.rootPrivateKey is None:
 	privateKey = PrivateKey()
 	publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
 	print("Generated random root public key : %s" % publicKey)
@@ -53,6 +53,5 @@ else:
 loader = HexLoader(dongle, 0xe0, True, secret)
 apps = loader.listApp()
 while len(apps) != 0:
-	print apps
+	print(apps)
 	apps = loader.listApp(False)
-
