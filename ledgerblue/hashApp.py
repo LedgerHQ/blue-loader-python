@@ -32,7 +32,7 @@ parser.add_argument("--hex", help="Hex file to be hashed")
 args = parser.parse_args()
 
 if args.hex == None:
-	raise Exception("Missing hex filename to hash")
+    raise Exception("Missing hex filename to hash")
 
 # parse
 parser = IntelHexParser(args.hex)
@@ -41,7 +41,7 @@ parser = IntelHexParser(args.hex)
 m = hashlib.sha256()
 # consider areas are ordered by ascending address and non-overlaped
 for a in parser.getAreas():
-	m.update(a.data)
+    m.update(a.data)
 dataToSign = m.digest()
 
-print dataToSign.encode('hex')
+print(dataToSign.encode('hex'))

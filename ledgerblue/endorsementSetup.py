@@ -21,29 +21,32 @@ from .comm import getDongle
 import binascii
 import argparse
 
+
 def auto_int(x):
     return int(x, 0)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--key", help="Reference of the endorsement key to setup (1 or 2)", type=auto_int)
-parser.add_argument("--certificate", help="Certificate to store if finalizing the endorsement (hex encoded)")
+parser.add_argument(
+    "--key", help="Reference of the endorsement key to setup (1 or 2)", type=auto_int)
+parser.add_argument(
+    "--certificate", help="Certificate to store if finalizing the endorsement (hex encoded)")
 parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 
 args = parser.parse_args()
 
 if args.key == None:
-	raise Exception("Missing endorsement key reference")
+    raise Exception("Missing endorsement key reference")
 if args.key != 1 and args.key != 2:
-	raise Exception("Invalid endorsement key reference")
+    raise Exception("Invalid endorsement key reference")
 
 dongle = getDongle(args.apdu)
 if args.certificate == None:
-	apdu = bytearray([0xe0, 0xC0, args.key, 0x00, 0x00]) 
-	response = dongle.exchange(apdu)
-	print "Public key " + str(response[0:65]).encode('hex')
-	print "Certificate " + str(response[65:]).encode('hex')
+    apdu = bytearray([0xe0, 0xC0, args.key, 0x00, 0x00])
+    response = dongle.exchange(apdu)
+    print("Public key " + str(response[0:65]).encode('hex'))
+    print("Certificate " + str(response[65:]).encode('hex'))
 else:
-	certificate = bytearray.fromhex(args.certificate)
-	apdu = bytearray([0xe0, 0xC2, 0x00, 0x00, len(certificate)]) + certificate
-	dongle.exchange(apdu)
-	print "Endorsement setup finalized"
+    certificate = bytearray.fromhex(args.certificate)
+    apdu = bytearray([0xe0, 0xC2, 0x00, 0x00, len(certificate)]) + certificate
+    dongle.exchange(apdu)
+    print("Endorsement setup finalized")
