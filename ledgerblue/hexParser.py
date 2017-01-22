@@ -18,139 +18,199 @@
 """
 
 class IntelHexArea:
-	def __init__(self, start, data):
-		self.start = start
-		self.data = data
-		self.bootAddr = 0
+        def __init__(self, start, data):
+                self.start = start
+                self.data = data
 
-	def getStart(self):
-		return self.start
+        def getStart(self):
+                return self.start
 
-	def getData(self):
-		return self.data
+        def getData(self):
+                return self.data
+
+def insertAreaSorted(areas, area):
+        i=0
+        while i < len(areas):
+                if area.start < areas[i].start:
+                        break
+                i+=1
+        #areas = areas[0:i] + [area]
+        areas[i:i] = [area]
+        return areas
+
 
 class IntelHexParser:
-	def __init__(self, fileName):
-		self.areas = []
-		lineNumber = 0
-		startZone = None
-		startFirst = None
-		current = None
-		zoneData = b''
-		file = open(fileName, "r")
-		for data in file:
-			lineNumber += 1
-			data = data.rstrip('\r\n')
-			if len(data) == 0:
-				continue
-			if data[0] != ':':
-				raise Exception("Invalid data at line %d" % lineNumber)
-			data = bytearray.fromhex(data[1:]) #binascii.unhexlify(data[1:])		 
-			count = data[0]
-			address = (data[1] << 8) + data[2]
-			recordType = data[3]
-			if recordType == 0x00:
-				if startZone == None:
-					raise Exception("Data record but no zone defined at line " + lineNumber) 
-				if startFirst == None:
-					startFirst = address
-					current = startFirst
-				if address != current:
-					self.areas.append(IntelHexArea((startZone << 16) + startFirst, zoneData))
-					zoneData = ""
-					startFirst = address
-					current = address
-				zoneData += data[4:4 + count]
-				current += count
-			if recordType == 0x01:
-				if len(zoneData) != 0:
-					self.areas.append(IntelHexArea((startZone << 16) + startFirst, zoneData))
-					zoneData = ""
-					startZone = None
-					startFirst = None
-					current = None					
-			if recordType == 0x02:
-					raise Exception("Unsupported record 02")
-			if recordType == 0x03:
-					raise Exception("Unsupported record 03")
-			if recordType == 0x04:
-					if len(zoneData) != 0:
-						self.areas.append(IntelHexArea((startZone << 16) + startFirst, zoneData))
-						zoneData = ""
-						startZone = None
-						startFirst = None
-						current = None						
-					startZone = (data[4] << 8) + data[5]
-			if recordType == 0x05:
-					self.bootAddr = ((data[4]&0xFF) << 24) + ((data[5]&0xFF) << 16) + ((data[6]&0xFF) << 8) + (data[7]&0xFF)
-		file.close()
+        # order by start address
+        def _addArea(self, area):
+                self.areas = insertAreaSorted(self.areas, area)
 
-	def getAreas(self):
-		return self.areas
+        def __init__(self, fileName):
+                self.bootAddr = 0
+                self.areas = []
+                lineNumber = 0
+                startZone = None
+                startFirst = None
+                current = None
+                zoneData = b''
+                file = open(fileName, "r")
+                for data in file:
+                        lineNumber += 1
+                        data = data.rstrip('\r\n')
+                        if len(data) == 0:
+                                continue
+                        if data[0] != ':':
+                                raise Exception("Invalid data at line %d" % lineNumber)
+                        data = bytearray.fromhex(data[1:])                
+                        count = data[0]
+                        address = (data[1] << 8) + data[2]
+                        recordType = data[3]
+                        if recordType == 0x00:
+                                if startZone == None:
+                                        raise Exception("Data record but no zone defined at line " + lineNumber) 
+                                if startFirst == None:
+                                        startFirst = address
+                                        current = startFirst
+                                if address != current:
+                                        self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
+                                        zoneData = ""
+                                        startFirst = address
+                                        current = address
+                                zoneData += data[4:4 + count]
+                                current += count
+                        if recordType == 0x01:
+                                if len(zoneData) != 0:
+                                        self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
+                                        zoneData = ""
+                                        startZone = None
+                                        startFirst = None
+                                        current = None                                        
+                        if recordType == 0x02:
+                                        raise Exception("Unsupported record 02")
+                        if recordType == 0x03:
+                                        raise Exception("Unsupported record 03")
+                        if recordType == 0x04:
+                                        if len(zoneData) != 0:
+                                                self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
+                                                zoneData = ""
+                                                startZone = None
+                                                startFirst = None
+                                                current = None                                                
+                                        startZone = (data[4] << 8) + data[5]
+                        if recordType == 0x05:
+                                        self.bootAddr = ((data[4]&0xFF) << 24) + ((data[5]&0xFF) << 16) + ((data[6]&0xFF) << 8) + (data[7]&0xFF)
+                file.close()
 
-	def getBootAddr(self):
-		return self.bootAddr
+        def getAreas(self):
+                return self.areas
+            
+        def getBootAddr(self):
+                return self.bootAddr
 
-	def maxAddr(self):
-		addr = 0
-		for a in self.areas:
-			if (a.start+len(a.data) > addr):
-				addr = a.start+len(a.data)
-		return addr		
+        def maxAddr(self):
+                addr = 0
+                for a in self.areas:
+                        if (a.start+len(a.data) > addr):
+                                addr = a.start+len(a.data)
+                return addr
+
+        def minAddr(self):
+                addr = 0xFFFFFFFF
+                for a in self.areas:
+                        if (a.start < addr):
+                                addr = a.start
+                return addr
 
 import binascii
 
 class IntelHexPrinter:
-	def __init__(self, parser=None, eol="\r\n"):
-		self.areas = []
-		self.eol = eol
-		self.bootAddr = 0
-		# build bound to the parser
-		if (parser):
-			self.areas = parser.areas
-			self.bootAddr = parser.bootAddr
-
-	def addArea(self, startaddress, data):
-		self.areas.append(IntelHexArea(startaddress, data))
+        def addArea(self, startaddress, data):
+                #order by start address
+                #self.areas.append(IntelHexArea(startaddress, data))
+                self.areas = insertAreaSorted(self.areas, IntelHexArea(startaddress, data))
                 
-	def setBootAddr(self, bootAddr):
-		self.bootAddr = int(bootAddr)
+        def __init__(self, parser=None, eol="\r\n"):
+                self.areas = []
+                self.eol = eol
+                self.bootAddr = 0
+                # build bound to the parser
+                if (parser):
+                        for a in parser.areas:
+                                self.addArea(a.start, a.data);
+                        self.bootAddr = parser.bootAddr
 
-	def checksum(self, bin):
-		cks = 0
-		for b in bin:
-			cks += b
-		cks = (-cks) & 0x0FF
-		return cks
+        def getAreas(self):
+                return self.areas
 
-	def _emit_binary(self, file, bin):
-		cks = self.checksum(bin)
-		file.write((":" + binascii.hexlify(bin) + hex(0x100+cks)[3:] + self.eol).upper())
+        def getBootAddr(self):
+                return self.bootAddr
 
-	def writeTo(self, fileName, blocksize=32):
-		file = open(fileName, "w")
-		for area in self.areas:
-			off = 0
-			# force the emission of selection record at start
-			oldoff = area.start + 0x10000
-			while off < len(area.data):
-				# emit a offset selection record
-				if ((off & 0xFFFF0000) != (oldoff & 0xFFFF0000) ):
-					self._emit_binary(file, bytearray(("02000004" + hex(0x10000+(area.start>>16))[3:7]).decode('hex')))
+        def maxAddr(self):
+                addr = 0
+                for a in self.areas:
+                        if (a.start+len(a.data) > addr):
+                                addr = a.start+len(a.data)
+                return addr
 
-				# emit data record
-				if (off+blocksize > len(area.data)):
-					self._emit_binary(file, bytearray((hex(0x100+(len(area.data)-off))[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00").decode('hex')) + area.data[off:len(area.data)])
-				else:
-					self._emit_binary(file, bytearray((hex(0x100+blocksize)[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00").decode('hex')) + area.data[off:off+blocksize])
+        def minAddr(self):
+                addr = 0xFFFFFFFF
+                for a in self.areas:
+                        if (a.start < addr):
+                                addr = a.start
+                return addr
 
-				oldoff = off;
-				off += blocksize
+        def setBootAddr(self, bootAddr):
+                self.bootAddr = int(bootAddr)
+
+        def checksum(self, bin):
+                cks = 0
+                for b in bin:
+                        cks += b
+                cks = (-cks) & 0x0FF
+                return cks
+
+        def _emit_binary(self, file, bin):
+                cks = self.checksum(bin)
+                s = (":" + binascii.hexlify(bin) + hex(0x100+cks)[3:] + self.eol).upper()
+                if (file != None):
+                        file.write(s)
+                else:
+                        print(s)
+
+        def writeTo(self, fileName, blocksize=32):
+                file = None
+                if(fileName != None):
+                        file = open(fileName, "w")
+                for area in self.areas:
+                        off = 0
+                        # force the emission of selection record at start
+                        oldoff = area.start + 0x10000
+                        while off < len(area.data):
+                                # emit a offset selection record
+                                if ((off & 0xFFFF0000) != (oldoff & 0xFFFF0000) ):
+                                        self._emit_binary(file, bytearray(("02000004" + hex(0x10000+(area.start>>16))[3:7]).decode('hex')))
+
+                                # emit data record
+                                if (off+blocksize > len(area.data)):
+                                        self._emit_binary(file, bytearray((hex(0x100+(len(area.data)-off))[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00").decode('hex')) + area.data[off:len(area.data)])
+                                else:
+                                        self._emit_binary(file, bytearray((hex(0x100+blocksize)[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00").decode('hex')) + area.data[off:off+blocksize])
+
+                                oldoff = off;
+                                off += blocksize
                                 
-		bootAddrHex = hex(0x100000000+self.bootAddr)[3:]
-		file.write(":04000005"+bootAddrHex+hex(0x100+self.checksum( bytearray(("04000005"+bootAddrHex).decode('hex'))))[3:]+self.eol)
+                bootAddrHex = hex(0x100000000+self.bootAddr)[3:]
+                s = ":04000005"+bootAddrHex+hex(0x100+self.checksum( bytearray(("04000005"+bootAddrHex).decode('hex'))))[3:]+self.eol
+                if (file != None):
+                        file.write(s)
+                else:
+                        print(s)
 
-		file.write(":00000001FF"+self.eol)
+                s = ":00000001FF"+self.eol
 
-		file.close()
-			
+                if (file != None):
+                        file.write(s)
+                else:
+                        print(s)
+
+                if (file != None):
+                        file.close()

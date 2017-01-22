@@ -22,6 +22,9 @@ import struct
 import hashlib
 import binascii
 
+LOAD_SEGMENT_CHUNK_HEADER_LENGTH = 3
+MIN_PADDING_LENGTH = 1
+
 class HexLoader:
 	def __init__(self, card, cla=0xF0, secure=False, key=None, relative=True):
 		self.card = card
@@ -89,7 +92,7 @@ class HexLoader:
 		while (len(paddedData) % 16) != 0:
 			paddedData += b'\x00'
 		cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
-		encryptedData = cipher.encrypt(paddedData)
+		encryptedData = cipher.encrypt(str(paddedData))
 		self.iv = encryptedData[len(encryptedData) - 16:]
 		return encryptedData
 
@@ -136,15 +139,27 @@ class HexLoader:
 		if (signature != None):
 			data += chr(len(signature)) + signature
 		data = self.encryptAES(data)
-		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
-	def createApp(self, appflags, applength, appname, icon=None, path=None):
-		data = b'\x0B' + struct.pack('>I', applength) + struct.pack('>I', appflags) + struct.pack('>B', len(appname)) +  appname
-		if (icon != None):
-			data += struct.pack('>B', len(icon))+ icon
-		if (path != None):
+	def createApp(self, appflags, applength, appname, icon=None, path=None, iconOffset=None, iconSize=None, appversion=None):
+		data = b'\x0B' + struct.pack('>I', applength) + struct.pack('>I', appflags) + struct.pack('>B', len(appname)) + appname
+		if iconOffset is None:
+			if not (icon is None):
+				data += struct.pack('>B', len(icon)) + icon
+			else:
+				data += b'\x00'
+
+		if not (path is None):
 			data += struct.pack('>B', len(path)) + path
-                        
+		else:
+			data += b'\x00'
+
+		if not iconOffset is None:
+			data += struct.pack('>I', iconOffset) + struct.pack('>H', iconSize)
+
+		if not appversion is None:
+			data += struct.pack('>B', len(appversion)) + appversion
+
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
 
@@ -175,12 +190,12 @@ class HexLoader:
 			result.append(item)
 		return result
 
-	def load(self, erase_u8, max_length_per_apdu, hexAreas, bootaddr):
+	def load(self, erase_u8, max_length_per_apdu, hexFile):
 		initialAddress = 0
-		if (len(hexAreas) != 0) and self.relative:
-			initialAddress = hexAreas[0].getStart()
+		if self.relative:
+			initialAddress = hexFile.minAddr()
 		sha256 = hashlib.new('sha256')
-		for area in hexAreas:
+		for area in hexFile.getAreas():
 			startAddress = area.getStart() - initialAddress
 			data = area.getData()
 			self.selectSegment(startAddress)
@@ -192,8 +207,8 @@ class HexLoader:
 			offset = 0
 			length = len(data)
 			while (length > 0):
-				if length > max_length_per_apdu:
-					chunkLen = max_length_per_apdu
+				if length > max_length_per_apdu - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH:
+					chunkLen = max_length_per_apdu - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH
 				else:
 					chunkLen = length
 				chunk = data[offset : offset + chunkLen]
@@ -205,9 +220,9 @@ class HexLoader:
 			self.crcSegment(0, len(data), crc)
 		return sha256.hexdigest()
 
-	def run(self, hexAreas, bootaddr, signature=None):
+	def run(self, hexFile, bootaddr, signature=None):
 		initialAddress = 0
-		if (len(hexAreas) != 0) and self.relative:
-			initialAddress = hexAreas[0].getStart()		
+		if self.relative:
+			initialAddress = hexFile.minAddr()
 		self.boot(bootaddr - initialAddress, signature)
 		

@@ -47,5 +47,5 @@ dongle = getDongle(args.apdu)
 loader = HexLoader(dongle, 0xe0, False, None, False)
 
 loader.validateTargetId(args.targetId)
-hash = loader.load(0xFF, 0xF0, parser.getAreas(), args.bootAddr)
+hash = loader.load(0xFF, 0xF0, parser)
 loader.run(parser.getAreas(), args.bootAddr)

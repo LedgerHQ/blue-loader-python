@@ -17,9 +17,11 @@
 ********************************************************************************
 """
 
+DEFAULT_ALIGNMENT = 1024
+
 from .ecWrapper import PrivateKey
 from .comm import getDongle
-from .hexParser import IntelHexParser
+from .hexParser import IntelHexParser, IntelHexPrinter
 from .hexLoader import HexLoader
 from .deployed import getDeployedSecretV1, getDeployedSecretV2
 import argparse
@@ -59,6 +61,9 @@ parser.add_argument("--rootPrivateKey", help="Set the root private key")
 parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
 parser.add_argument("--apilevel", help="Use given API level when interacting with the device", type=auto_int)
+parser.add_argument("--delete", help="Delete app before installing it", action='store_true')
+parser.add_argument("--params", help="Store icon and install parameters in a parameter section before the code", action='store_true')
+parser.add_argument("--appVersion", help="Set the application version (text)")
 
 args = parser.parse_args()
 
@@ -115,7 +120,34 @@ else:
 		if len(args.path) > 1:
 			print("Multiple path levels not supported using this API level, ignoring")
 		else:
-			path = parse_bip32_path(args.path[0], args.apilevel)
+			path = parse_bip32_path(args.path[0], args.apilevel)	
+
+icon = None
+if not args.icon is None:
+	icon = bytearray.fromhex(args.icon)
+	
+signature = None
+if not args.signature is None:
+	signature = bytearray.fromhex(args.signature)
+	
+#prepend app's data with the icon content (could also add other various install parameters)
+printer = IntelHexPrinter(parser)
+#todo build a TLV zone to keep install params
+#todo dney nvm_write in that section ?
+paramsSectionContent = []
+if icon:
+	paramsSectionContent = icon
+
+# prepend the param section (arbitrary)
+if (args.params):
+	#take care of aligning the parameters sections to avoid possible invalid dereference of aligned words in the program nvram.
+	#also use the default MPU alignment
+	param_start = printer.minAddr()-len(paramsSectionContent)-(DEFAULT_ALIGNMENT-(len(paramsSectionContent)%DEFAULT_ALIGNMENT))
+	printer.addArea(param_start, paramsSectionContent)
+
+# account for added regions (install parameters, icon ...)
+appLength = printer.maxAddr() - printer.minAddr()
+
 
 dongle = getDongle(args.apdu)
 
@@ -125,23 +157,15 @@ else:
 	secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 loader = HexLoader(dongle, 0xe0, True, secret)
 
-if (not (args.appFlags & 2)):
-	loader.deleteApp(args.appName)
+if (not (args.appFlags & 2)) and args.delete:
+		loader.deleteApp(args.appName)
 
-appLength = 0
-for area in parser.getAreas():
-	appLength += len(area.getData())	
+#heuristic to guess how to pass the icon
+if (args.params):
+	loader.createApp(args.appFlags, appLength, args.appName, None, path, 0, len(paramsSectionContent), args.appVersion)
+else:
+	loader.createApp(args.appFlags, appLength, args.appName, icon, path, None, None, args.appVersion)
 
-icon = None
-if args.icon != None:
-	icon = bytes(bytearray.fromhex(args.icon))
-
-signature = None
-if args.signature != None:
-	signature = bytes(bytearray.fromhex(args.signature))
-
-
-loader.createApp(args.appFlags, appLength, args.appName, icon, path)
-hash = loader.load(0x0, 0xE0, parser.getAreas(), args.bootAddr)
+hash = loader.load(0x0, 0xF0, printer)
 print("Application hash : " + hash)
-loader.run(parser.getAreas(), args.bootAddr, signature)
+loader.run(printer, args.bootAddr, signature)
