@@ -136,7 +136,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 			if not len(data):
 				if time.time() - start > timeout:
 					raise CommException("Timeout")
-				time.sleep(0.02)
+				time.sleep(0.0001)
 		return bytearray(data)
 
 	def close(self):
