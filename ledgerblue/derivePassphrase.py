@@ -21,6 +21,7 @@ from .comm import getDongle
 import argparse
 import getpass
 import unicodedata
+import sys
 
 def auto_int(x):
     return int(x, 0)
@@ -33,6 +34,8 @@ args = parser.parse_args()
 dongle = getDongle(False)
 
 passphrase = getpass.getpass("Enter BIP39 passphrase : ")
+if isinstance(passphrase, bytes):
+	passphrase = passphrase.decode(sys.stdin.encoding)
 if len(passphrase) != 0:
 	if args.persistent:
 		p1 = 0x02
