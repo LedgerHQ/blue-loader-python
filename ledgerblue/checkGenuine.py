@@ -20,7 +20,6 @@
 from .ecWrapper import PrivateKey, PublicKey
 from .comm import getDongle
 from .commException import CommException
-from .hexParser import IntelHexParser
 from .hexLoader import HexLoader
 import argparse
 import struct
@@ -30,7 +29,7 @@ import binascii
 def auto_int(x):
     return int(x, 0)
 
-def getDeployedSecretV2(dongle, masterPrivate, targetid):
+def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
         testMaster = PrivateKey(bytes(masterPrivate))
         testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
         targetid = bytearray(struct.pack('>I', targetid))
@@ -69,7 +68,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid):
 
         # walk the device certificates to retrieve the public key to use for authentication
         index = 0
-        last_pub_key = PublicKey(binascii.unhexlify("0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609"), raw=True)
+        last_pub_key = PublicKey(binascii.unhexlify(issuerKey), raw=True)
         while True:
                 if index == 0:                  
                         certificate = bytearray(dongle.exchange(bytearray.fromhex('E052000000')))
@@ -106,12 +105,16 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--targetId", help="Set the chip target ID", type=auto_int)
+parser.add_argument("--issuerKey", help="Issuer key (hex encoded, default : batch 1)")
 parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 
 args = parser.parse_args()
 
 if args.targetId == None:
         args.targetId = 0x31000002
+
+if args.issuerKey == None:
+        args.issuerKey = "0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609"
 
 privateKey = PrivateKey()
 publicKey = str(privateKey.pubkey.serialize(compressed=False))
@@ -121,7 +124,7 @@ genuine = False
 
 dongle = getDongle(args.apdu)
 
-secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId, args.issuerKey)
 if secret != None:
         loader = HexLoader(dongle, 0xe0, True, secret)
         data = b'\xFF'
