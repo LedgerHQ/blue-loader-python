@@ -225,4 +225,13 @@ class HexLoader:
 		if self.relative:
 			initialAddress = hexFile.minAddr()
 		self.boot(bootaddr - initialAddress, signature)
-		
+
+	def resetCustomCA(self):
+		data = b'\x13'
+		data = self.encryptAES(data)
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def setupCustomCA(self, name, public):
+		data = b'\x12' + struct.pack('>B',len(name)) + name +  struct.pack('>B',len(public)) + public
+		data = self.encryptAES(data)
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)

@@ -25,6 +25,8 @@ import hid
 import time
 import sys
 
+TIMEOUT=20000
+
 try:
 	from smartcard.Exceptions import NoCardException
 	from smartcard.System import readers
@@ -52,7 +54,7 @@ class Dongle(object):
 	__metaclass__ = ABCMeta
 
 	@abstractmethod
-	def exchange(self, apdu, timeout=20):
+	def exchange(self, apdu, timeout=TIMEOUT):
 		pass
 
 	@abstractmethod
@@ -71,7 +73,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		self.waitImpl = self
 		self.opened = True
 
-	def exchange(self, apdu, timeout=20):
+	def exchange(self, apdu, timeout=TIMEOUT):
 		if self.debug:
 			print("=> %s" % hexstr(apdu))
 		if self.ledger:
@@ -155,7 +157,7 @@ class DongleSmartcard(Dongle):
 		self.waitImpl = self
 		self.opened = True
 
-	def exchange(self, apdu, timeout=20):
+	def exchange(self, apdu, timeout=TIMEOUT):
 		if self.debug:
 			print("=> %s" % hexstr(apdu))
 		response, sw1, sw2 = self.device.transmit(toBytes(hexlify(apdu)))
