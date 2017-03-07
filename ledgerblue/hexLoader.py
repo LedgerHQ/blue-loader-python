@@ -235,3 +235,8 @@ class HexLoader:
 		data = b'\x12' + struct.pack('>B',len(name)) + name +  struct.pack('>B',len(public)) + public
 		data = self.encryptAES(data)
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def runApp(self, name):
+		data = b'\x14' + struct.pack('>B',len(name)) + name
+		data = self.encryptAES(data)
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)

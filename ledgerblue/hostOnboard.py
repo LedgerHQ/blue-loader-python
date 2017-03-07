@@ -17,8 +17,6 @@
 ********************************************************************************
 """
 
-DEFAULT_ALIGNMENT = 1024
-
 from .ecWrapper import PrivateKey
 from .comm import getDongle
 from .hexParser import IntelHexParser, IntelHexPrinter

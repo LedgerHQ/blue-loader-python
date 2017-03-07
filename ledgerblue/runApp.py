@@ -34,8 +34,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--targetId", help="Set the chip target ID", type=auto_int)
 parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 parser.add_argument("--rootPrivateKey", help="Set the root private key")
-parser.add_argument("--public", help="Custom CA public key to setup (hex encoded)")
-parser.add_argument("--name", help="Name of the Custom CA (to be displayed on screen upon auth requests)")
+parser.add_argument("--appName", help="Name of the application to run")
 
 
 args = parser.parse_args()
@@ -47,17 +46,13 @@ if args.rootPrivateKey is None:
 	publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
 	print("Generated random root public key : %s" % publicKey)
 	args.rootPrivateKey = privateKey.serialize()
-if args.public is None:
-	raise Exception("Missing public key")
-if args.name is None:
-	raise Exception("Missing certificate name")
+if args.appName is None:
+	raise Exception("Missing appname to run")
 
-public = bytearray.fromhex(args.public)
-	
 
 dongle = getDongle(args.apdu)
 
 secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 loader = HexLoader(dongle, 0xe0, True, secret)
 
-loader.setupCustomCA(args.name, public)
+loader.runApp(args.appName)
