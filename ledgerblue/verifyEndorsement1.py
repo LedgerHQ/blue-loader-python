@@ -17,37 +17,41 @@
 ********************************************************************************
 """
 
-from .ecWrapper import PublicKey
-import hashlib
-import binascii
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--key", help="The public endorsement key 1 to verify with (hex encoded)")
-parser.add_argument("--codehash", help="The hash of the code associated to the endorsement request (hex encoded)")
-parser.add_argument("--message", help="The message associated to the endorsement request (hex encoded)")
-parser.add_argument("--signature", help="The signature to verify with (hex encoded)")
+def get_argparser():
+	parser = argparse.ArgumentParser(description="Verify a message signature created with Endorsement Scheme #1.")
+	parser.add_argument("--key", help="The endorsement public key with which to verify the signature (hex encoded)")
+	parser.add_argument("--codehash", help="The hash of the app associated with the endorsement request (hex encoded)")
+	parser.add_argument("--message", help="The message associated to the endorsement request (hex encoded)")
+	parser.add_argument("--signature", help="The signature to be verified (hex encoded)")
+	return parser
 
-args = parser.parse_args()
+if __name__ == '__main__':
+	from .ecWrapper import PublicKey
+	import hashlib
+	import binascii
 
-if args.key == None:
-	raise Exception("Missing public key")
-if args.codehash == None:
-	raise Exception("Missing code hash")
-if args.message == None:
-	raise Exception("Missing message")
-if args.signature == None:
-	raise Exception("Missing signature")
+	args = get_argparser().parse_args()
 
-# prepare data
-m = hashlib.sha256()
-m.update(bytes(bytearray.fromhex(args.message)))
-m.update(bytes(bytearray.fromhex(args.codehash)))
-digest = m.digest()
+	if args.key == None:
+		raise Exception("Missing public key")
+	if args.codehash == None:
+		raise Exception("Missing code hash")
+	if args.message == None:
+		raise Exception("Missing message")
+	if args.signature == None:
+		raise Exception("Missing signature")
 
-publicKey = PublicKey(bytes(bytearray.fromhex(args.key)), raw=True)
-signature = publicKey.ecdsa_deserialize(bytes(bytearray.fromhex(args.signature)))
-if not publicKey.ecdsa_verify(bytes(digest), signature, raw=True):
-	raise Exception("Endorsement not verified")
+	# prepare data
+	m = hashlib.sha256()
+	m.update(bytes(bytearray.fromhex(args.message)))
+	m.update(bytes(bytearray.fromhex(args.codehash)))
+	digest = m.digest()
 
-print("Endorsement verified")
+	publicKey = PublicKey(bytes(bytearray.fromhex(args.key)), raw=True)
+	signature = publicKey.ecdsa_deserialize(bytes(bytearray.fromhex(args.signature)))
+	if not publicKey.ecdsa_verify(bytes(digest), signature, raw=True):
+		raise Exception("Endorsement not verified")
+
+	print("Endorsement verified")

@@ -17,31 +17,35 @@
 ********************************************************************************
 """
 
-from .hexParser import IntelHexParser
-from .hexParser import IntelHexPrinter
-import hashlib
-import binascii
 import argparse
 
+def get_argparser():
+	parser = argparse.ArgumentParser(description="Calculate an application hash from the application's hex file.")
+	parser.add_argument("--hex", help="The application hex file to be hashed")
+	return parser
+
 def auto_int(x):
-    return int(x, 0)
+	return int(x, 0)
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--hex", help="Hex file to be hashed")
+if __name__ == '__main__':
+	from .hexParser import IntelHexParser
+	from .hexParser import IntelHexPrinter
+	import hashlib
+	import binascii
 
-args = parser.parse_args()
+	args = get_argparser().parse_args()
 
-if args.hex == None:
-    raise Exception("Missing hex filename to hash")
+	if args.hex == None:
+		raise Exception("Missing hex filename to hash")
 
-# parse
-parser = IntelHexParser(args.hex)
+	# parse
+	parser = IntelHexParser(args.hex)
 
-# prepare data
-m = hashlib.sha256()
-# consider areas are ordered by ascending address and non-overlaped
-for a in parser.getAreas():
-    m.update(a.data)
-dataToSign = m.digest()
+	# prepare data
+	m = hashlib.sha256()
+	# consider areas are ordered by ascending address and non-overlaped
+	for a in parser.getAreas():
+		m.update(a.data)
+	dataToSign = m.digest()
 
-print(dataToSign.encode('hex'))
+	print(dataToSign.encode('hex'))
