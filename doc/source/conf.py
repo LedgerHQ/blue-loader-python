@@ -7,6 +7,9 @@ import sys
 
 sys.path.append(os.path.abspath('../../'))
 
+def setup(app):
+    app.add_stylesheet('theme_overrides.css') # Override wide tables in RTD theme
+
 # General Configuration
 # =====================
 
@@ -20,8 +23,8 @@ project = u'BOLOS Python Loader'
 copyright = u'2017, Ledger Team'
 author = u'Ledger Team'
 
-version = u'0.1.14'
-release = u'0.1.14'
+version = u'0.1.15'
+release = u'0.1.15'
 
 pygments_style = 'sphinx'
 
@@ -31,12 +34,6 @@ pygments_style = 'sphinx'
 html_theme = 'sphinx_rtd_theme'
 
 html_static_path = ['_static']
-
-html_context = {
-    'css_files': [
-        '_static/theme_overrides.css', # Override wide tables in RTD theme
-    ],
-}
 
 # sphinxarg
 # =========
@@ -49,5 +46,5 @@ extensions += ['sphinxarg.ext']
 extensions += ['sphinx.ext.intersphinx']
 
 intersphinx_mapping = {
-    'ledger': ('https://ledger.readthedocs.io/en/1/', None)
+    'ledger': ('https://ledger.readthedocs.io/en/2/', None)
 }

@@ -10,6 +10,6 @@ The checklist for releasing a new version of this repository (and by extension,
 of the documentation) is as follows:
 
 1. Create a final commit that bumps the version number(s) in
-   `/doc/source/conf.py`.
+   `/doc/source/conf.py` and `/setup.py`.
 2. Tag that commit with the appropriate version number.
 3. Done! RTD should find the tag and build the docs automagically.
