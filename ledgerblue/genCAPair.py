@@ -17,17 +17,24 @@
 ********************************************************************************
 """
 
-from .ecWrapper import PrivateKey
-from .comm import getDongle
-from .hexParser import IntelHexParser, IntelHexPrinter
-from .hexLoader import HexLoader
-from .deployed import getDeployedSecretV1, getDeployedSecretV2
 import argparse
-import struct
-import binascii
-import sys
 
-privateKey = PrivateKey()
-publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
-print("Public key : %s" % publicKey)
-print("Private key: %s" % privateKey.serialize())
+def get_argparser():
+	parser = argparse.ArgumentParser(description="Generate a Custom CA public-private keypair and print it to console.")
+	return parser
+
+if __name__ == '__main__':
+	from .ecWrapper import PrivateKey
+	from .comm import getDongle
+	from .hexParser import IntelHexParser, IntelHexPrinter
+	from .hexLoader import HexLoader
+	from .deployed import getDeployedSecretV1, getDeployedSecretV2
+	import struct
+	import binascii
+	import sys
+
+	get_argparser().parse_args()
+	privateKey = PrivateKey()
+	publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
+	print("Public key : %s" % publicKey)
+	print("Private key: %s" % privateKey.serialize())
