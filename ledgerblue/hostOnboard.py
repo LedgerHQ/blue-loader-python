@@ -58,7 +58,7 @@ if __name__ == '__main__':
 		if strg is None: # or len(string) == 0: len 0 is accepted, to specify without being bothered by a message
 			strg = getpass.getpass(hint)
 		if len(strg) != 0 :
-			strg = unicodedata.normalize('NFKD', u''+strg)
+			strg = unicodedata.normalize('NFKD', strg.decode(sys.stdin.encoding))
 		return strg
 
 	if (args.id < 2):
@@ -73,22 +73,26 @@ if __name__ == '__main__':
 	args.words = enter_if_none_and_normalize("Derivation phrase: ", args.words)
 
 	if args.pin:
-		apdudata = bytearray([len(args.pin)]) + bytearray(args.pin, 'utf8')
+		pin_ba = bytearray(args.pin, 'utf8')
+		apdudata = bytearray([len(pin_ba)]) + pin_ba
 	else:
 		apdudata = bytearray([0])
 
 	if args.prefix:
-		apdudata += bytearray([len(args.prefix)]) + bytearray(args.prefix, 'utf8')
+		prefix_ba = bytearray(args.prefix, 'utf8')
+		apdudata += bytearray([len(prefix_ba)]) + prefix_ba
 	else:
 		apdudata += bytearray([0])
 
 	if args.passphrase:
-		apdudata += bytearray([len(args.passphrase)]) + bytearray(args.passphrase, 'utf8')
+		passphrase_ba = bytearray(args.passphrase, 'utf8')
+		apdudata += bytearray([len(passphrase_ba)]) + passphrase_ba
 	else:
 		apdudata += bytearray([0])
 
 	if args.words:
-		apdudata += bytearray([len(args.words)]) + bytearray(args.words, 'utf8')
+		words_ba = bytearray(args.words, 'utf8')
+		apdudata += bytearray([len(words_ba)]) + words_ba
 	else:
 		apdudata += bytearray([0])
 
