@@ -77,8 +77,6 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
 						certificate = bytearray(dongle.exchange(bytearray.fromhex('E052800000')))
 				else:
 								break
-				if len(certificate) == 0:
-						break
 				offset = 1
 				certificateHeader = certificate[offset : offset + certificate[offset-1]]
 				offset += certificate[offset-1] + 1
