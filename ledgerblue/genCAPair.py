@@ -23,6 +23,13 @@ def get_argparser():
 	parser = argparse.ArgumentParser(description="Generate a Custom CA public-private keypair and print it to console.")
 	return parser
 
+def hexstr(bstr):
+	if (sys.version_info.major == 3):
+		return binascii.hexlify(bstr).decode()
+	if (sys.version_info.major == 2):
+		return binascii.hexlify(bstr)
+	return ""
+
 if __name__ == '__main__':
 	from .ecWrapper import PrivateKey
 	from .comm import getDongle
@@ -35,6 +42,6 @@ if __name__ == '__main__':
 
 	get_argparser().parse_args()
 	privateKey = PrivateKey()
-	publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
+	publicKey = hexstr(privateKey.pubkey.serialize(compressed=False))
 	print("Public key : %s" % publicKey)
 	print("Private key: %s" % privateKey.serialize())

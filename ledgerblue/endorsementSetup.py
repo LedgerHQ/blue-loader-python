@@ -35,6 +35,13 @@ if no certificate is specified""")
 def auto_int(x):
 		return int(x, 0)
 
+def hexstr(bstr):
+	if (sys.version_info.major == 3):
+		return binascii.hexlify(bstr).decode()
+	if (sys.version_info.major == 2):
+		return binascii.hexlify(bstr)
+	return ""
+
 def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
 		testMaster = PrivateKey(bytes(masterPrivate))
 		testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
@@ -114,6 +121,7 @@ if __name__ == '__main__':
 	import hashlib
 	import struct
 	import os
+	import sys
 	import binascii
 
 	args = get_argparser().parse_args()
@@ -139,9 +147,9 @@ if __name__ == '__main__':
 	if args.certificate == None:
 			apdu = bytearray([0xe0, 0xC0, args.key, 0x00, 0x00])
 			response = dongle.exchange(apdu)
-			print("Public key " + str(response[0:65]).encode('hex'))
+			print("Public key " + hexstr(response[0:65]))
 			m = hashlib.sha256()
-			m.update(bytes("\xff")) # Endorsement role
+			m.update(bytes(b"\xff")) # Endorsement role
 			m.update(bytes(response[0:65]))
 			digest = m.digest()
 			signature = publicKey.ecdsa_deserialize(bytes(response[65:]))
@@ -151,7 +159,7 @@ if __name__ == '__main__':
 				privateKey = PrivateKey(bytes(args.privateKey.decode('hex')))
 				dataToSign = bytes(bytearray([0xfe]) + response[0:65])
 				signature = privateKey.ecdsa_sign(bytes(dataToSign))
-				args.certificate = str(privateKey.ecdsa_serialize(signature)).encode('hex')
+				args.certificate = hexstr(privateKey.ecdsa_serialize(signature))
 
 	if args.certificate != None:
 			certificate = bytearray.fromhex(args.certificate)

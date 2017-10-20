@@ -79,7 +79,7 @@ class BLEDongle(Dongle):
 		response = result[dataStart : dataLength + dataStart]
 		if self.debug:
 			print("<= %s%.2x" % (hexlify(response), sw))
-		if sw <> 0x9000:
+		if sw != 0x9000:
 			raise CommException("Invalid status %04x" % sw, sw)
 		return response
 

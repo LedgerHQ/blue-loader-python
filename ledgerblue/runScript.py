@@ -30,6 +30,13 @@ device. The file must be formatted as hex, with one CAPDU per line.""")
 a random one will be generated)""")
 	return parser
 
+def hexstr(bstr):
+	if (sys.version_info.major == 3):
+		return binascii.hexlify(bstr).decode()
+	if (sys.version_info.major == 2):
+		return binascii.hexlify(bstr)
+	return ""
+
 def auto_int(x):
 	return int(x, 0)
 
@@ -40,6 +47,7 @@ if __name__ == '__main__':
 	from Crypto.Cipher import AES
 	import sys
 	import fileinput
+	import binascii
 
 	args = get_argparser().parse_args()
 
@@ -104,6 +112,6 @@ if __name__ == '__main__':
 				result = dongle.exchange(data[0:5])
 			result = scp.decryptAES(str(result))
 			if args.apdu:
-				print("<= Clear " + result.encode('hex'))
+				print("<= Clear " + hexstr(result))
 		else:
 			dongle.exchange(bytearray(data))

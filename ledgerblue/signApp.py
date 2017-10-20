@@ -28,11 +28,19 @@ def get_argparser():
 def auto_int(x):
 	return int(x, 0)
 
+def hexstr(bstr):
+	if (sys.version_info.major == 3):
+		return binascii.hexlify(bstr).decode()
+	if (sys.version_info.major == 2):
+		return binascii.hexlify(bstr)
+	return ""
+
 if __name__ == '__main__':
 	from .hexParser import IntelHexParser
 	from .hexParser import IntelHexPrinter
 	from .ecWrapper import PrivateKey
 	import hashlib
+	import sys
 	import binascii
 
 	args = get_argparser().parse_args()
@@ -61,4 +69,4 @@ if __name__ == '__main__':
 	# test signature before printing it
 	if testMaster.pubkey.ecdsa_verify(dataToSign, signature, raw=True):
 		#print("Signer's public: " + binascii.hexlify(testMasterPublic))
-		print(str(testMaster.ecdsa_serialize(signature)).encode('hex'))
+		print(hexstr(testMaster.ecdsa_serialize(signature)))

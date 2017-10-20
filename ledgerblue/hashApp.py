@@ -27,9 +27,17 @@ def get_argparser():
 def auto_int(x):
 	return int(x, 0)
 
+def hexstr(bstr):
+	if (sys.version_info.major == 3):
+		return binascii.hexlify(bstr).decode()
+	if (sys.version_info.major == 2):
+		return binascii.hexlify(bstr)
+	return ""
+
 if __name__ == '__main__':
 	from .hexParser import IntelHexParser
 	from .hexParser import IntelHexPrinter
+	import sys
 	import hashlib
 	import binascii
 
@@ -48,4 +56,4 @@ if __name__ == '__main__':
 		m.update(a.data)
 	dataToSign = m.digest()
 
-	print(dataToSign.encode('hex'))
+	print(hexstr(dataToSign))

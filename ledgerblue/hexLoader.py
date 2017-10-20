@@ -92,7 +92,7 @@ class HexLoader:
 		while (len(paddedData) % 16) != 0:
 			paddedData += b'\x00'
 		cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
-		encryptedData = cipher.encrypt(str(paddedData))
+		encryptedData = cipher.encrypt(paddedData)
 		self.iv = encryptedData[len(encryptedData) - 16:]
 		return encryptedData
 
