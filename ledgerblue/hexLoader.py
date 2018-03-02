@@ -102,7 +102,7 @@ class HexLoader:
 		cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
 		decryptedData = cipher.decrypt(data)
 		l = len(decryptedData) - 1
-		while (decryptedData[l] != 0x80): #b'\x80'):
+		while (decryptedData[l] != 0x80):
 			l-=1
 		decryptedData = decryptedData[0:l]
 		self.iv = data[len(data) - 16:]
