@@ -102,7 +102,7 @@ class HexLoader:
 		cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
 		decryptedData = cipher.decrypt(data)
 		l = len(decryptedData) - 1
-		while (decryptedData[l] != chr(0x80)):
+		while (decryptedData[l] != 0x80):
 			l-=1
 		decryptedData = decryptedData[0:l]
 		self.iv = data[len(data) - 16:]
@@ -174,7 +174,7 @@ class HexLoader:
 		else:
 			data = b'\x0F'
 		data = self.encryptAES(data)
-		response = str(self.exchange(self.cla, 0x00, 0x00, 0x00, data))
+		response = bytes(self.exchange(self.cla, 0x00, 0x00, 0x00, data))
 		response = bytearray(self.decryptAES(response))
 		result = []
 		offset = 0
