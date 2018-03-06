@@ -38,6 +38,7 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="2c97", ATTRS{idProduct}=="0001", MODE="0660
 
 Use the following Target IDs (--targetId option) when running commands directly:
 
-  * 0x31100002 on Nano S
+  * 0x31100002 on Nano S (until firmware 1.3.1, included)
+  * 0x31100003 on Nano S (after firmware 1.3.1)
   * 0x31000002 on Blue
 
