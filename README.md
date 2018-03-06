@@ -1,8 +1,8 @@
 # Python tools for Ledger Blue and Nano S
 
-This package contains Python tools to communicate with Ledger Blue and Nano S and manage applications life cycle 
+This package contains Python tools to communicate with Ledger Blue and Nano S and manage applications life cycle.
 
-It is recommended to install this package in a [Virtual Environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) in your native environment (not a Docker image) to avoid hidapi issues. 
+It is recommended to install this package in a [Virtual Environment](http://docs.python-guide.org/en/latest/dev/virtualenvs/) in your native environment (not a Docker image) to avoid hidapi issues.
 
 ```
 virtualenv ledger
@@ -14,19 +14,19 @@ pip install ledgerblue
 
 
   * libudev-dev
-  * libusb-1.0-0-dev 
+  * libusb-1.0-0-dev
   * python-dev (python 2.7)
   * virtualenv
 
-This package can optionally work with [libsecp256k1](https://github.com/ludbb/secp256k1-py) Python bindings compiled with ECDH support. If you wish to enable libsecp256k1 bindings, make sure to install libsecp256k1 as follows
+This package can optionally work with [libsecp256k1](https://github.com/ludbb/secp256k1-py) Python bindings compiled with ECDH support. If you wish to enable libsecp256k1 bindings, make sure to install libsecp256k1 as follows:
 
 ```
-SECP_BUNDLED_EXPERIMENTAL=1 pip --no-cache-dir --no-binary secp256k1 install secp256k1
-``` 
+SECP_BUNDLED_EXPERIMENTAL=1 pip --no-cache-dir install --no-binary secp256k1 secp256k1
+```
 
-## Giving permissions on udev 
+## Giving permissions on udev
 
-When running on Linux, make sure the following rules have been added to /etc/udev/rules.d/
+When running on Linux, make sure the following rules have been added to `/etc/udev/rules.d/`:
 
 ```
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="2c97", ATTRS{idProduct}=="0000", MODE="0660", TAG+="uaccess", TAG+="udev-acl" OWNER="<UNIX username>"
@@ -36,8 +36,8 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="2c97", ATTRS{idProduct}=="0001", MODE="0660
 
 ## Target ID
 
-Use the following Target IDs (--targetId option) when running commands directly 
+Use the following Target IDs (--targetId option) when running commands directly:
 
   * 0x31100002 on Nano S
-  * 0x31000002 on Blue 
+  * 0x31000002 on Blue
 
