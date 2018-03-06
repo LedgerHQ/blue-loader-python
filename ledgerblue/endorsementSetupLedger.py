@@ -51,7 +51,11 @@ if __name__ == '__main__':
 	import sys
 	import os
 	import struct
-	import urllib2, urlparse
+	if sys.version_info.major == 3:
+		import urllib.request as urllib2
+		import urllib.parse as urlparse
+	else:
+		import urllib2, urlparse
 	from .BlueHSMServer_pb2 import Request, Response, Parameter
 	from .comm import getDongle
 
@@ -108,13 +112,17 @@ if __name__ == '__main__':
 	parameter.local = False
 	parameter.alias = "persoKey"
 	parameter.name = args.perso
-	request.parameters = str(deviceNonce)
+	request.parameters = bytes(deviceNonce)
 
 	response = serverQuery(request, args.url)
 
 	offset = 0
 
-	remotePublicKeySignatureLength = ord(response.response[offset + 1]) + 2
+	if sys.version_info.major == 2:
+		responseLength = ord(response.response[offset + 1])
+	else:
+		responseLength = response.response[offset + 1]
+	remotePublicKeySignatureLength = responseLength + 2
 	remotePublicKeySignature = response.response[offset : offset + remotePublicKeySignatureLength]
 
 	certificate = bytearray([len(remotePublicKey)]) + remotePublicKey + bytearray([len(remotePublicKeySignature)]) + remotePublicKeySignature
@@ -136,7 +144,7 @@ if __name__ == '__main__':
 			request = Request()
 			request.reference = "signEndorsement"
 			request.id = response.id
-			request.parameters = str(certificate)
+			request.parameters = bytes(certificate)
 			serverQuery(request, args.url)
 			index += 1
 
@@ -158,7 +166,7 @@ if __name__ == '__main__':
 	parameter.local = False
 	parameter.alias = "endorsementKey"
 	parameter.name = args.endorsement
-	request.parameters = str(endorsementData)
+	request.parameters = bytes(endorsementData)
 	request.id = response.id
 	response = serverQuery(request, args.url)
 	certificate = bytearray(response.response)

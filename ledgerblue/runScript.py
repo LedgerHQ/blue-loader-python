@@ -63,39 +63,23 @@ if __name__ == '__main__':
 	class SCP:
 
 		def __init__(self, dongle, targetId, rootPrivateKey):
-			self.key = getDeployedSecretV2(dongle, rootPrivateKey, targetId)
-			self.iv = b'\x00' * 16
+			secret = getDeployedSecretV2(dongle, rootPrivateKey, targetId)
+			self.loader = HexLoader(dongle, 0xe0, True, secret)
 
 		def encryptAES(self, data):
-			paddedData = data + b'\x80'
-			while (len(paddedData) % 16) != 0:
-				paddedData += b'\x00'
-			cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
-			encryptedData = cipher.encrypt(paddedData)
-			self.iv = encryptedData[len(encryptedData) - 16:]
-			return encryptedData
+			return self.loader.scpWrap(data);
 
 		def decryptAES(self, data):
-			if len(data) == 0:
-				return data
-			cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
-			decryptedData = cipher.decrypt(data)
-			l = len(decryptedData) - 1
-			while (decryptedData[l] != chr(0x80)):
-				l -= 1
-			decryptedData = decryptedData[0:l]
-			self.iv = data[len(data) - 16:]
-			return decryptedData
+			return self.loader.scpUnwrap(data);
 
 	dongle = getDongle(args.apdu)
 	if args.scp:
 		if args.rootPrivateKey is None:
 			privateKey = PrivateKey()
-			publicKey = binascii.hexlify(
-				privateKey.pubkey.serialize(compressed=False))
+			publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
 			print("Generated random root public key : %s" % publicKey)
 			args.rootPrivateKey = privateKey.serialize()
-		scp = SCP(dongle, args.targetId, bytearray.fromhex(args.rootPrivateKey))
+			scp = SCP(dongle, args.targetId, bytearray.fromhex(args.rootPrivateKey))
 
 	for data in file:
 		data = data.rstrip('\r\n').decode('hex')
@@ -105,13 +89,13 @@ if __name__ == '__main__':
 			data = bytearray(data)
 			if data[4] > 0 and len(data) > 5:
 				apduData = data[5: 5 + data[4]]
-				apduData = scp.encryptAES(str(apduData))
+				apduData = scp.encryptAES(bytes(apduData))
 				result = dongle.exchange(
-					data[0:4] + bytearray([len(apduData)]) + bytearray(apduData))
+				data[0:4] + bytearray([len(apduData)]) + bytearray(apduData))
 			else:
 				result = dongle.exchange(data[0:5])
 			result = scp.decryptAES(str(result))
 			if args.apdu:
-				print("<= Clear " + hexstr(result))
+				print("<= Clear " + result.encode('hex'))
 		else:
 			dongle.exchange(bytearray(data))

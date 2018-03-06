@@ -23,6 +23,7 @@ def get_argparser():
 	parser = argparse.ArgumentParser(description="Delete the app with the specified name.")
 	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
 	parser.add_argument("--appName", help="The name of the application to delete")
+	parser.add_argument("--appHash", help="Set the application hash")
 	parser.add_argument("--rootPrivateKey", help="A private key used to establish a Secure Channel (hex encoded)")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
@@ -41,13 +42,24 @@ if __name__ == '__main__':
 
 	args = get_argparser().parse_args()
 
-	if args.appName == None:
-		raise Exception("Missing appName")
+	if args.appName == None and args.appHash == None:
+		raise Exception("Missing appName or appHash")
+	if args.appName != None and args.appHash != None:
+		raise Exception("Set either appName or appHash")
 
-	if (sys.version_info.major == 3):
-		args.appName = bytes(args.appName,'ascii')
-	if (sys.version_info.major == 2):
-		args.appName = bytes(args.appName)
+	if args.appName != None:
+		if (sys.version_info.major == 3):
+			args.appName = bytes(args.appName,'ascii')
+		if (sys.version_info.major == 2):
+			args.appName = bytes(args.appName)
+
+	if args.appHash != None:
+		if (sys.version_info.major == 3):
+			args.appHash = bytes(args.appHash,'ascii')
+		if (sys.version_info.major == 2):
+			args.appHash = bytes(args.appHash)
+		args.appHash = bytearray.fromhex(args.appHash)
+
 
 	if args.targetId == None:
 		args.targetId = 0x31000002
@@ -64,4 +76,8 @@ if __name__ == '__main__':
 	else:
 		secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 	loader = HexLoader(dongle, 0xe0, True, secret)
-	loader.deleteApp(args.appName)
+
+	if args.appName != None:
+		loader.deleteApp(args.appName)
+	if args.appHash != None:
+		loader.deleteAppByHash(args.appHash)

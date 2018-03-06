@@ -66,7 +66,7 @@ class IntelHexParser:
                         recordType = data[3]
                         if recordType == 0x00:
                                 if startZone == None:
-                                        raise Exception("Data record but no zone defined at line " + lineNumber) 
+                                        raise Exception("Data record but no zone defined at line " + str(lineNumber)) 
                                 if startFirst == None:
                                         startFirst = address
                                         current = startFirst
@@ -123,10 +123,13 @@ class IntelHexParser:
 import binascii
 
 class IntelHexPrinter:
-        def addArea(self, startaddress, data):
-                #order by start address
+        def addArea(self, startaddress, data, insertFirst=False):
                 #self.areas.append(IntelHexArea(startaddress, data))
-                self.areas = insertAreaSorted(self.areas, IntelHexArea(startaddress, data))
+                if (insertFirst):
+                        self.areas = [IntelHexArea(startaddress, data)] + self.areas
+                else:
+                        #order by start address
+                        self.areas = insertAreaSorted(self.areas, IntelHexArea(startaddress, data))
                 
         def __init__(self, parser=None, eol="\r\n"):
                 self.areas = []

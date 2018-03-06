@@ -46,9 +46,14 @@ def serverQuery(request, url):
 	return response
 
 if __name__ == '__main__':
+	import sys
 	import os
 	import struct
-	import urllib2, urlparse
+	if sys.version_info.major == 3:
+		import urllib.request as urllib2
+		import urllib.parse as urlparse
+	else:
+		import urllib2, urlparse	
 	from .BlueHSMServer_pb2 import Request, Response, Parameter
 	from .comm import getDongle
 	import sys
@@ -81,6 +86,11 @@ if __name__ == '__main__':
 	parameter.local = False
 	parameter.alias = "persoKey"
 	parameter.name = args.perso
+	if args.targetId&0xF == 0x3:
+		parameter = request.remote_parameters.add()
+		parameter.local = False
+		parameter.alias = "scpv2"
+		parameter.name = "dummy"
 	request.largeStack = True
 
 	response = serverQuery(request, args.url)
@@ -106,14 +116,23 @@ if __name__ == '__main__':
 	parameter.local = False
 	parameter.alias = "persoKey"
 	parameter.name = args.perso
-	request.parameters = str(deviceNonce)
+	if args.targetId&0xF == 0x3:
+		parameter = request.remote_parameters.add()
+		parameter.local = False
+		parameter.alias = "scpv2"
+		parameter.name = "dummy"	
+	request.parameters = bytes(deviceNonce)	
 	request.largeStack = True
 
 	response = serverQuery(request, args.url)
 
 	offset = 0
 
-	remotePublicKeySignatureLength = ord(response.response[offset + 1]) + 2
+	if sys.version_info.major == 2:
+		responseLength = ord(response.response[offset + 1])
+	else:
+		responseLength = response.response[offset + 1]
+	remotePublicKeySignatureLength = responseLength + 2
 	remotePublicKeySignature = response.response[offset : offset + remotePublicKeySignatureLength]
 
 	certificate = bytearray([len(remotePublicKey)]) + remotePublicKey + bytearray([len(remotePublicKeySignature)]) + remotePublicKeySignature
@@ -135,7 +154,7 @@ if __name__ == '__main__':
 			request = Request()
 			request.reference = "distributeFirmware11"
 			request.id = response.id
-			request.parameters = str(certificate)
+			request.parameters = bytes(certificate)
 			request.largeStack = True
 			serverQuery(request, args.url)
 			index += 1
@@ -152,6 +171,11 @@ if __name__ == '__main__':
 	parameter.local = False
 	parameter.alias = "firmwareKey"
 	parameter.name = args.firmwareKey
+	if args.targetId&0xF == 0x3:
+		parameter = request.remote_parameters.add()
+		parameter.local = False
+		parameter.alias = "scpv2"
+		parameter.name = "dummy"	
 	request.id = response.id
 	request.largeStack = True
 

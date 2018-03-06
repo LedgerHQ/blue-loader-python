@@ -30,10 +30,10 @@ device.""")
 def auto_int(x):
 	return int(x, 0)
 
-def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
+def getDeployedSecretV2(dongle, masterPrivate, targetId, issuerKey):
 		testMaster = PrivateKey(bytes(masterPrivate))
 		testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
-		targetid = bytearray(struct.pack('>I', targetid))
+		targetid = bytearray(struct.pack('>I', targetId))
 
 		# identify
 		apdu = bytearray([0xe0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
@@ -70,6 +70,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
 		# walk the device certificates to retrieve the public key to use for authentication
 		index = 0
 		last_pub_key = PublicKey(binascii.unhexlify(issuerKey), raw=True)
+		devicePublicKey = None
 		while True:
 				if index == 0:
 						certificate = bytearray(dongle.exchange(bytearray.fromhex('E052000000')))
@@ -86,6 +87,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
 				certificateSignature = last_pub_key.ecdsa_deserialize(bytes(certificateSignatureArray))
 				# first cert contains a header field which holds the certificate's public key role
 				if index == 0:
+						devicePublicKey = certificatePublicKey
 						certificateSignedData = bytearray([0x02]) + certificateHeader + certificatePublicKey
 						# Could check if the device certificate is signed by the issuer public key
 				# ephemeral key certificate
@@ -99,7 +101,13 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
 		# Commit device ECDH channel
 		dongle.exchange(bytearray.fromhex('E053000000'))
 		secret = last_pub_key.ecdh(binascii.unhexlify(ephemeralPrivate.serialize()))
-		return secret[0:16]
+		if targetId&0xF == 0x2:
+			return secret[0:16]
+		elif targetId&0xF == 0x3:
+			ret = {}
+			ret['ecdh_secret'] = secret
+			ret['devicePublicKey'] = devicePublicKey
+		return ret
 
 if __name__ == '__main__':
 	from .ecWrapper import PrivateKey, PublicKey
@@ -123,20 +131,38 @@ if __name__ == '__main__':
 	args.rootPrivateKey = privateKey.serialize()
 
 	genuine = False
+	ui = False
+	customCA = False
 
 	dongle = getDongle(args.apdu)
+	version = None
 
 	secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId, args.issuerKey)
 	if secret != None:
-			loader = HexLoader(dongle, 0xe0, True, secret)
-			data = b'\xFF'
-			data = loader.encryptAES(data)
 			try:
-					loader.exchange(loader.cla, 0x00, 0x00, 0x00, data)
-			except CommException as e:
-					genuine = (e.sw == 0x6D00)
-
+				loader = HexLoader(dongle, 0xe0, True, secret)
+				version = loader.getVersion()
+				genuine = True
+				apps = loader.listApp()
+				while len(apps) != 0:
+					for app in apps:
+						if (app['flags'] & 0x08):
+							ui = True
+						if (app['flags'] & 0x400):
+							customCA = True
+					apps = loader.listApp(False)
+			except:
+				genuine = False			
 	if genuine:
+		if ui:
+			print ("WARNING : Product is genuine but has a UI application loaded")
+		if customCA:
+			print ("WARNING : Product is genuine but has a Custom CA loaded")
+		if not ui and not customCA:
 			print ("Product is genuine")
+		print ("SE Version " + version['osVersion'])
+		print ("MCU Version " + version['mcuVersion'])
+		if 'mcuHash' in version:
+			print ("MCU Hash " + binascii.hexlify(version['mcuHash']).decode('ascii'))
 	else:
-			print ("Product is NOT genuine")
+		print ("Product is NOT genuine")

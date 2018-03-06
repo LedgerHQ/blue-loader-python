@@ -55,7 +55,6 @@ if __name__ == '__main__':
 
 	dongle = getDongle(args.apdu)
 
-	secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
-	loader = HexLoader(dongle, 0xe0, True, secret)
+	loader = HexLoader(dongle, 0xe0)
 
 	loader.runApp(args.appName)

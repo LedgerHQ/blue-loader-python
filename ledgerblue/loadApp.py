@@ -18,6 +18,7 @@
 """
 
 DEFAULT_ALIGNMENT = 1024
+PAGE_ALIGNMENT = 64
 
 import argparse
 
@@ -32,6 +33,7 @@ def get_argparser():
 repeated""", action='append')
 	parser.add_argument("--appName", help="The name to give the application after loading it")
 	parser.add_argument("--signature", help="A signature of the application (hex encoded)")
+	parser.add_argument("--signApp", help="Sign application with provided rootPrivateKey", action='store_true')
 	parser.add_argument("--appFlags", help="The application flags", type=auto_int)
 	parser.add_argument("--bootAddr", help="The application's boot address", type=auto_int)
 	parser.add_argument("--rootPrivateKey", help="""The Signer private key used to establish a Secure Channel (otherwise
@@ -41,7 +43,13 @@ a random one will be generated)""")
 	parser.add_argument("--apilevel", help="Use given API level when interacting with the device", type=auto_int)
 	parser.add_argument("--delete", help="Delete the app with the same name before loading the provided one", action='store_true')
 	parser.add_argument("--params", help="Store icon and install parameters in a parameter section before the code", action='store_true')
+	parser.add_argument("--tlv", help="Use install parameters for all variable length parameters", action='store_true')
+	parser.add_argument("--dataSize", help="The code section's size in the provided hex file (to separate data from code, if not provided the whole allocated NVRAM section for the application will remain readonly.", type=auto_int)
 	parser.add_argument("--appVersion", help="The application version (as a string)")
+	parser.add_argument("--offline", help="Request to only output application load APDUs", action="store_true")
+	parser.add_argument("--installparamsSize", help="The loaded install parameters section size (when parameters are already included within the .hex file.", type=auto_int)
+	parser.add_argument("--tlvraw", help="Add a custom install param with the hextag:hexvalue encoding", action='append')
+	parser.add_argument("--dep", help="Add a dependency over an appname[:appversion]", action='append')
 	return parser
 
 def auto_int(x):
@@ -129,50 +137,121 @@ if __name__ == '__main__':
 			else:
 				path = parse_bip32_path(args.path[0], args.apilevel)
 
-	icon = None
 	if not args.icon is None:
-		icon = bytearray.fromhex(args.icon)
-
+		args.icon = bytearray.fromhex(args.icon)
+	
 	signature = None
 	if not args.signature is None:
 		signature = bytearray.fromhex(args.signature)
-
+	
 	#prepend app's data with the icon content (could also add other various install parameters)
 	printer = IntelHexPrinter(parser)
-	#todo build a TLV zone to keep install params
-	#todo dney nvm_write in that section ?
-	paramsSectionContent = []
-	if icon:
-		paramsSectionContent = icon
 
-	# prepend the param section (arbitrary)
-	if (args.params):
+	# Use of Nested Encryption Key within the SCP protocol is mandartory for upgrades
+	cleardata_block_len=None
+	if args.appFlags & 2:
+		# Not true for scp < 3
+		# if signature is None:
+		# 	raise BaseException('Upgrades must be signed')
+
+		# ensure data can be decoded with code decryption key without troubles.
+		cleardata_block_len = 16
+
+	if not args.offline:
+		dongle = getDongle(args.apdu)
+
+		if args.deployLegacy:
+			secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+		else:
+			secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+
+	loader = HexLoader(dongle, 0xe0, not(args.offline), secret, cleardata_block_len=cleardata_block_len)
+
+	#tlv mode does not support explicit by name removal, would require a list app before to identify the hash to be removed
+	if (not (args.appFlags & 2)) and args.delete:
+			loader.deleteApp(args.appName)
+
+	if (args.tlv):
+		#if code length is not provided, then consider the whole provided hex file is the code and no data section is split
+		code_length = printer.maxAddr() - printer.minAddr()
+		if not args.dataSize is None:
+			code_length -= args.dataSize
+		else:
+			args.dataSize = 0
+
+		installparams = ""
+
+		# express dependency
+		if (args.dep):
+			for dep in args.dep:
+				appname = dep
+				appversion = None
+				# split if version is specified
+				if (dep.find(":") != -1):
+					(appname,appversion) = dep.split(":")
+				depvalue = encodelv(appname)			
+				if(appversion):
+					depvalue += encodelv(appversion)
+				installparams += encodetlv(BOLOS_TAG_DEPENDENCY, depvalue)
+
+		#add raw install parameters as requested
+		if (args.tlvraw):
+			for tlvraw in args.tlvraw:
+				(hextag,hexvalue) = tlvraw.split(":")
+				installparams += encodetlv(int(hextag, 16), binascii.unhexlify(hexvalue))
+
+		if (not (args.appFlags & 2)) and ( args.installparamsSize is None or args.installparamsSize == 0 ):
+			#build install parameters
+			#mandatory app name
+			installparams += encodetlv(BOLOS_TAG_APPNAME, args.appName)
+			if not args.appVersion is None:
+				installparams += encodetlv(BOLOS_TAG_APPVERSION, args.appVersion)
+			if not args.icon is None:
+				installparams += encodetlv(BOLOS_TAG_ICON, args.icon)
+			if len(path) > 0:
+				installparams += encodetlv(BOLOS_TAG_DERIVEPATH, path)
+
+			# append install parameters to the loaded file
+			param_start = printer.maxAddr()+(PAGE_ALIGNMENT-(args.dataSize%PAGE_ALIGNMENT))%PAGE_ALIGNMENT
+			# only append install param section when not an upgrade as it has already been computed in the encrypted and signed chunk
+			printer.addArea(param_start, installparams)
+			paramsSize = len(installparams)
+		else:
+			paramsSize = args.installparamsSize
+			# split code and install params in the code
+			code_length -= args.installparamsSize
+		# create app
+		#ensure the boot address is an offset
+		if args.bootAddr > printer.minAddr():
+			args.bootAddr -= printer.minAddr()
+		loader.createApp(code_length, args.dataSize, paramsSize, args.appFlags, args.bootAddr|1)
+	elif (args.params):
+		paramsSectionContent = []
+		if not args.icon is None:
+			paramsSectionContent = args.icon
 		#take care of aligning the parameters sections to avoid possible invalid dereference of aligned words in the program nvram.
 		#also use the default MPU alignment
 		param_start = printer.minAddr()-len(paramsSectionContent)-(DEFAULT_ALIGNMENT-(len(paramsSectionContent)%DEFAULT_ALIGNMENT))
 		printer.addArea(param_start, paramsSectionContent)
-
-	# account for added regions (install parameters, icon ...)
-	appLength = printer.maxAddr() - printer.minAddr()
-
-
-	dongle = getDongle(args.apdu)
-
-	if args.deployLegacy:
-		secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+		# account for added regions (install parameters, icon ...)
+		appLength = printer.maxAddr() - printer.minAddr()
+		loader.createAppNoInstallParams(args.appFlags, appLength, args.appName, None, path, 0, len(paramsSectionContent), args.appVersion)
 	else:
-		secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
-	loader = HexLoader(dongle, 0xe0, True, secret)
+		# account for added regions (install parameters, icon ...)
+		appLength = printer.maxAddr() - printer.minAddr()
+		loader.createAppNoInstallParams(args.appFlags, appLength, args.appName, args.icon, path, None, None, args.appVersion)
 
-	if (not (args.appFlags & 2)) and args.delete:
-			loader.deleteApp(args.appName)
-
-	#heuristic to guess how to pass the icon
-	if (args.params):
-		loader.createApp(args.appFlags, appLength, args.appName, None, path, 0, len(paramsSectionContent), args.appVersion)
-	else:
-		loader.createApp(args.appFlags, appLength, args.appName, icon, path, None, None, args.appVersion)
 
 	hash = loader.load(0x0, 0xF0, printer)
-	print("Application hash : " + hash)
-	loader.run(printer, args.bootAddr, signature)
+
+	print("Application full hash : " + hash)
+
+	if (signature == None and args.signApp):
+		masterPrivate = PrivateKey(bytes(bytearray.fromhex(args.rootPrivateKey)))
+		signature = masterPrivate.ecdsa_serialize(masterPrivate.ecdsa_sign(bytes(binascii.unhexlify(hash)), raw=True))
+		print("Application signature: " + binascii.hexlify(signature))
+
+	if (args.tlv):
+		loader.commit(signature)
+	else:
+		loader.run(args.bootAddr-printer.minAddr(), signature)

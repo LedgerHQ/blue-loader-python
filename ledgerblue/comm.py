@@ -20,49 +20,38 @@
 from abc import ABCMeta, abstractmethod
 from .commException import CommException
 from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
+from .Dongle import *
 from binascii import hexlify
-import hid
 import time
+import os
 import sys
+from .commU2F import getDongle as getDongleU2F
+from .commHTTP import getDongle as getDongleHTTP
+import hid
 
-TIMEOUT=20000
-
-try:
-	from smartcard.Exceptions import NoCardException
-	from smartcard.System import readers
-	from smartcard.util import toHexString, toBytes
-	SCARD = True
-except ImportError:
-	SCARD = False
-
+APDUGEN=None
+if "APDUGEN" in os.environ and len(os.environ["APDUGEN"]) != 0:
+	APDUGEN=os.environ["APDUGEN"]
+# Force use of U2F if required
+U2FKEY=None
+if "U2FKEY" in os.environ and len(os.environ["U2FKEY"]) != 0:
+	U2FKEY=os.environ["U2FKEY"]
+# Force use of MCUPROXY if required
+MCUPROXY=None
+if "MCUPROXY" in os.environ and len(os.environ["MCUPROXY"]) != 0:
+	MCUPROXY=os.environ["MCUPROXY"]
 	
-def hexstr(bstr):
-	if (sys.version_info.major == 3):
-		return hexlify(bstr).decode()
-	if (sys.version_info.major == 2):
-		return hexlify(bstr)
-	return "<undecoded APDU<"
-
-class DongleWait(object):
-	__metaclass__ = ABCMeta
-
-	@abstractmethod
-	def waitFirstResponse(self, timeout):
-		pass
-
-class Dongle(object):
-	__metaclass__ = ABCMeta
-
-	@abstractmethod
-	def exchange(self, apdu, timeout=TIMEOUT):
-		pass
-
-	@abstractmethod
-	def close(self):
-		pass
-
-	def setWaitImpl(self, waitImpl):
-		self.waitImpl = waitImpl
+# Force use of MCUPROXY if required
+PCSC=None
+if "PCSC" in os.environ and len(os.environ["PCSC"]) != 0:
+	PCSC=os.environ["PCSC"]
+if PCSC:	
+	try:
+		from smartcard.Exceptions import NoCardException
+		from smartcard.System import readers
+		from smartcard.util import toHexString, toBytes
+	except ImportError:
+		PCSC = False
 
 class HIDDongleHIDAPI(Dongle, DongleWait):
 
@@ -74,8 +63,12 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		self.opened = True
 
 	def exchange(self, apdu, timeout=TIMEOUT):
+		if APDUGEN:
+			print("%s" % hexstr(apdu))
+			return
+
 		if self.debug:
-			print("=> %s" % hexstr(apdu))
+			print("HID => %s" % hexstr(apdu))
 		if self.ledger:
 			apdu = wrapCommandAPDU(0x0101, apdu, 64)		
 		padSize = len(apdu) % 64
@@ -86,7 +79,8 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		while(offset != len(tmp)):
 			data = tmp[offset:offset + 64]
 			data = bytearray([0]) + data
-			self.device.write(data)
+			if self.device.write(data) < 0:
+				raise BaseException("Error while writing")
 			offset += 64
 		dataLength = 0
 		dataStart = 2		
@@ -125,7 +119,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		sw = (result[swOffset] << 8) + result[swOffset + 1]
 		response = result[dataStart : dataLength + dataStart]
 		if self.debug:
-			print("<= %s%.2x" % (hexstr(response), sw))
+			print("HID <= %s%.2x" % (hexstr(response), sw))
 		if sw != 0x9000:
 			raise CommException("Invalid status %04x" % sw, sw, response)
 		return response
@@ -140,6 +134,9 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 					raise CommException("Timeout")
 				time.sleep(0.0001)
 		return bytearray(data)
+
+	def apduMaxDataSize(self):
+		return 255
 
 	def close(self):
 		if self.opened:
@@ -159,11 +156,11 @@ class DongleSmartcard(Dongle):
 
 	def exchange(self, apdu, timeout=TIMEOUT):
 		if self.debug:
-			print("=> %s" % hexstr(apdu))
+			print("SC => %s" % hexstr(apdu))
 		response, sw1, sw2 = self.device.transmit(toBytes(hexlify(apdu)))
 		sw = (sw1 << 8) | sw2
 		if self.debug:
-			print("<= %s%.2x" % (hexstr(response).replace(" ", ""), sw))
+			print("SC <= %s%.2x" % (hexstr(response).replace(" ", ""), sw))
 		if sw != 0x9000:
 			raise CommException("Invalid status %04x" % sw, sw, bytearray(response))
 		return bytearray(response)
@@ -177,18 +174,25 @@ class DongleSmartcard(Dongle):
 		self.opened = False
 
 def getDongle(debug=False, selectCommand=None):
+	if APDUGEN:
+		return HIDDongleHIDAPI(None, True, debug)
+
+	if not U2FKEY is None:
+		return getDongleU2F(scrambleKey=U2FKEY, debug=debug)
+	if MCUPROXY is not None:
+		return getDongleHTTP(remote_host=MCUPROXY, debug=debug)
 	dev = None
 	hidDevicePath = None
 	ledger = True
 	for hidDevice in hid.enumerate(0, 0):
-		if hidDevice['vendor_id'] == 0x2c97:
+		if hidDevice['vendor_id'] == 0x2c97 and ('interface_number' not in hidDevice or hidDevice['interface_number'] == 0):
 			hidDevicePath = hidDevice['path']
 	if hidDevicePath is not None:
 		dev = hid.device()
 		dev.open_path(hidDevicePath)
 		dev.set_nonblocking(True)
 		return HIDDongleHIDAPI(dev, ledger, debug)
-	if SCARD:
+	if PCSC:
 		connection = None
 		for reader in readers():
 			try:
