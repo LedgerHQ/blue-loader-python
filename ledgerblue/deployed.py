@@ -25,152 +25,152 @@ from .hexParser import IntelHexParser
 from .hexLoader import HexLoader
 import binascii
 
+
 def getDeployedSecretV1(dongle, masterPrivate, targetid):
-	testMaster = PrivateKey(bytes(masterPrivate))
-	testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
-	targetid = bytearray(struct.pack('>I', targetid))
+    testMaster = PrivateKey(bytes(masterPrivate))
+    testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
+    targetid = bytearray(struct.pack('>I', targetid))
 
-	if targetId&0xF != 0x1:
-		raise BaseException("Target ID does not support SCP V1")
+    if targetId & 0xF != 0x1:
+        raise BaseException("Target ID does not support SCP V1")
 
-	# identify
-	apdu = bytearray([0xe0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
-	dongle.exchange(apdu)
+    # identify
+    apdu = bytearray([0xe0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
+    dongle.exchange(apdu)
 
-	# walk the chain 
-	batch_info = bytearray(dongle.exchange(bytearray.fromhex('E050000000')))
-	cardKey = batch_info[5:5 + batch_info[4]]
+    # walk the chain
+    batch_info = bytearray(dongle.exchange(bytearray.fromhex('E050000000')))
+    cardKey = batch_info[5:5 + batch_info[4]]
 
-	# if not found, get another pair
-	#if cardKey != testMasterPublic:
-	#	raise Exception("Invalid batch public key")
+    # if not found, get another pair
+    # if cardKey != testMasterPublic:
+    #     raise Exception("Invalid batch public key")
 
-	# provide the ephemeral certificate
-	ephemeralPrivate = PrivateKey()
-	ephemeralPublic = bytearray(ephemeralPrivate.pubkey.serialize(compressed=False))
-	print("Using ephemeral key %s" %binascii.hexlify(ephemeralPublic))
-	signature = testMaster.ecdsa_sign(bytes(ephemeralPublic))
-	signature = testMaster.ecdsa_serialize(signature)
-	certificate = bytearray([len(ephemeralPublic)]) + ephemeralPublic + bytearray([len(signature)]) + signature
-	apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(certificate)]) + certificate
-	dongle.exchange(apdu)
+    # provide the ephemeral certificate
+    ephemeralPrivate = PrivateKey()
+    ephemeralPublic = bytearray(ephemeralPrivate.pubkey.serialize(compressed=False))
+    print("Using ephemeral key %s" % binascii.hexlify(ephemeralPublic))
+    signature = testMaster.ecdsa_sign(bytes(ephemeralPublic))
+    signature = testMaster.ecdsa_serialize(signature)
+    certificate = bytearray([len(ephemeralPublic)]) + ephemeralPublic + bytearray([len(signature)]) + signature
+    apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(certificate)]) + certificate
+    dongle.exchange(apdu)
 
-	# walk the device certificates to retrieve the public key to use for authentication
-	index = 0
-	last_pub_key = PublicKey(bytes(testMasterPublic), raw=True)
-	while True:
-		certificate = bytearray(dongle.exchange(bytearray.fromhex('E052000000')))
-		if len(certificate) == 0:
-			break
-		certificatePublic = certificate[1 : 1 + certificate[0]]
-		certificateSignature = last_pub_key.ecdsa_deserialize(bytes(certificate[2 + certificate[0] :]))		
-		if not last_pub_key.ecdsa_verify(bytes(certificatePublic), certificateSignature):
-			if index == 0:
-				# Not an error if loading from user key
-				print("Broken certificate chain - loading from user key")
-			else:
-				raise Exception("Broken certificate chain")
-		last_pub_key = PublicKey(bytes(certificatePublic), raw=True)
-		index = index + 1
+    # walk the device certificates to retrieve the public key to use for authentication
+    index = 0
+    last_pub_key = PublicKey(bytes(testMasterPublic), raw=True)
+    while True:
+        certificate = bytearray(dongle.exchange(bytearray.fromhex('E052000000')))
+        if len(certificate) == 0:
+            break
+        certificatePublic = certificate[1: 1 + certificate[0]]
+        certificateSignature = last_pub_key.ecdsa_deserialize(bytes(certificate[2 + certificate[0]:]))
+        if not last_pub_key.ecdsa_verify(bytes(certificatePublic), certificateSignature):
+            if index == 0:
+                # Not an error if loading from user key
+                print("Broken certificate chain - loading from user key")
+            else:
+                raise Exception("Broken certificate chain")
+        last_pub_key = PublicKey(bytes(certificatePublic), raw=True)
+        index = index + 1
 
-	# Commit device ECDH channel
-	dongle.exchange(bytearray.fromhex('E053000000'))
-	secret = last_pub_key.ecdh(bytes(ephemeralPrivate.serialize().decode('hex')))
-	return secret[0:16]
+    # Commit device ECDH channel
+    dongle.exchange(bytearray.fromhex('E053000000'))
+    secret = last_pub_key.ecdh(bytes(ephemeralPrivate.serialize().decode('hex')))
+    return secret[0:16]
+
 
 def getDeployedSecretV2(dongle, masterPrivate, targetId, signerCertChain=None, ecdh_secret_format=None):
-	testMaster = PrivateKey(bytes(masterPrivate))
-	testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
-	targetid = bytearray(struct.pack('>I', targetId))
+    testMaster = PrivateKey(bytes(masterPrivate))
+    testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
+    targetid = bytearray(struct.pack('>I', targetId))
 
-	if targetId&0xF == 0x1:
-		raise BaseException("Target ID does not support SCP V2")
+    if targetId & 0xF == 0x1:
+        raise BaseException("Target ID does not support SCP V2")
 
-	# identify
-	apdu = bytearray([0xe0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
-	dongle.exchange(apdu)
+    # identify
+    apdu = bytearray([0xe0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
+    dongle.exchange(apdu)
 
-	# walk the chain 
-	nonce = os.urandom(8)
-	apdu = bytearray([0xe0, 0x50, 0x00, 0x00]) + bytearray([len(nonce)]) + nonce
-	auth_info = dongle.exchange(apdu)
-	batch_signer_serial = auth_info[0:4]
-	deviceNonce = auth_info[4:12]
+    # walk the chain
+    nonce = os.urandom(8)
+    apdu = bytearray([0xe0, 0x50, 0x00, 0x00]) + bytearray([len(nonce)]) + nonce
+    auth_info = dongle.exchange(apdu)
+    batch_signer_serial = auth_info[0:4]
+    deviceNonce = auth_info[4:12]
 
-	# if not found, get another pair
-	#if cardKey != testMasterPublic:
-	#	raise Exception("Invalid batch public key")
+    # if not found, get another pair
+    # if cardKey != testMasterPublic:
+    #	raise Exception("Invalid batch public key")
 
-	if (signerCertChain):
-		for cert in signerCertChain:
-			apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(cert)]) + cert
-			dongle.exchange(apdu)
-	else:
-		print("Using test master key %s " % binascii.hexlify(testMasterPublic))
-		dataToSign = bytes(bytearray([0x01]) + testMasterPublic)
-		signature = testMaster.ecdsa_sign(bytes(dataToSign))
-		signature = testMaster.ecdsa_serialize(signature)
-		certificate = bytearray([len(testMasterPublic)]) + testMasterPublic + bytearray([len(signature)]) + signature
-		apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(certificate)]) + certificate
-		dongle.exchange(apdu)
-	
-	# provide the ephemeral certificate
-	ephemeralPrivate = PrivateKey()
-	ephemeralPublic = bytearray(ephemeralPrivate.pubkey.serialize(compressed=False))
-	print("Using ephemeral key %s" %binascii.hexlify(ephemeralPublic))
-	dataToSign = bytes(bytearray([0x11]) + nonce + deviceNonce + ephemeralPublic)
-	signature = testMaster.ecdsa_sign(bytes(dataToSign))
-	signature = testMaster.ecdsa_serialize(signature)
-	certificate = bytearray([len(ephemeralPublic)]) + ephemeralPublic + bytearray([len(signature)]) + signature
-	apdu = bytearray([0xE0, 0x51, 0x80, 0x00]) + bytearray([len(certificate)]) + certificate
-	dongle.exchange(apdu)
+    if signerCertChain:
+        for cert in signerCertChain:
+            apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(cert)]) + cert
+            dongle.exchange(apdu)
+    else:
+        print("Using test master key %s " % binascii.hexlify(testMasterPublic))
+        dataToSign = bytes(bytearray([0x01]) + testMasterPublic)
+        signature = testMaster.ecdsa_sign(bytes(dataToSign))
+        signature = testMaster.ecdsa_serialize(signature)
+        certificate = bytearray([len(testMasterPublic)]) + testMasterPublic + bytearray([len(signature)]) + signature
+        apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(certificate)]) + certificate
+        dongle.exchange(apdu)
 
-	# walk the device certificates to retrieve the public key to use for authentication
-	index = 0
-	last_dev_pub_key = PublicKey(bytes(testMasterPublic), raw=True)
-	devicePublicKey = None
-	while True:
-		if index == 0:			
-			certificate = bytearray(dongle.exchange(bytearray.fromhex('E052000000')))
-		elif index == 1:
-			certificate = bytearray(dongle.exchange(bytearray.fromhex('E052800000')))
-		else:
-			break
-		if len(certificate) == 0:
-			break
-		offset = 1
-		certificateHeader = certificate[offset : offset + certificate[offset-1]]
-		offset += certificate[offset-1] + 1
-		certificatePublicKey = certificate[offset : offset + certificate[offset-1]]
-		offset += certificate[offset-1] + 1
-		certificateSignatureArray = certificate[offset : offset + certificate[offset-1]]
-		certificateSignature = last_dev_pub_key.ecdsa_deserialize(bytes(certificateSignatureArray))
-		# first cert contains a header field which holds the certificate's public key role
-		if index == 0:
-			devicePublicKey = certificatePublicKey
-			certificateSignedData = bytearray([0x02]) + certificateHeader + certificatePublicKey
-			# Could check if the device certificate is signed by the issuer public key
-		# ephemeral key certificate
-		else:
-			certificateSignedData = bytearray([0x12]) + deviceNonce + nonce + certificatePublicKey		
-		if not last_dev_pub_key.ecdsa_verify(bytes(certificateSignedData), certificateSignature):
-			if index == 0:
-				# Not an error if loading from user key
-				print("Broken certificate chain - loading from user key")
-			else:
-				raise Exception("Broken certificate chain")
-		last_dev_pub_key = PublicKey(bytes(certificatePublicKey), raw=True)
-		index = index + 1
+    # provide the ephemeral certificate
+    ephemeralPrivate = PrivateKey()
+    ephemeralPublic = bytearray(ephemeralPrivate.pubkey.serialize(compressed=False))
+    print("Using ephemeral key %s" % binascii.hexlify(ephemeralPublic))
+    dataToSign = bytes(bytearray([0x11]) + nonce + deviceNonce + ephemeralPublic)
+    signature = testMaster.ecdsa_sign(bytes(dataToSign))
+    signature = testMaster.ecdsa_serialize(signature)
+    certificate = bytearray([len(ephemeralPublic)]) + ephemeralPublic + bytearray([len(signature)]) + signature
+    apdu = bytearray([0xE0, 0x51, 0x80, 0x00]) + bytearray([len(certificate)]) + certificate
+    dongle.exchange(apdu)
 
-	# Commit device ECDH channel
-	dongle.exchange(bytearray.fromhex('E053000000'))
-	secret = last_dev_pub_key.ecdh(binascii.unhexlify(ephemeralPrivate.serialize()))
+    # walk the device certificates to retrieve the public key to use for authentication
+    index = 0
+    last_dev_pub_key = PublicKey(bytes(testMasterPublic), raw=True)
+    devicePublicKey = None
+    while True:
+        if index == 0:
+            certificate = bytearray(dongle.exchange(bytearray.fromhex('E052000000')))
+        elif index == 1:
+            certificate = bytearray(dongle.exchange(bytearray.fromhex('E052800000')))
+        else:
+            break
+        if len(certificate) == 0:
+            break
+        offset = 1
+        certificateHeader = certificate[offset: offset + certificate[offset - 1]]
+        offset += certificate[offset - 1] + 1
+        certificatePublicKey = certificate[offset: offset + certificate[offset - 1]]
+        offset += certificate[offset - 1] + 1
+        certificateSignatureArray = certificate[offset: offset + certificate[offset - 1]]
+        certificateSignature = last_dev_pub_key.ecdsa_deserialize(bytes(certificateSignatureArray))
+        # first cert contains a header field which holds the certificate's public key role
+        if index == 0:
+            devicePublicKey = certificatePublicKey
+            certificateSignedData = bytearray([0x02]) + certificateHeader + certificatePublicKey
+        # Could check if the device certificate is signed by the issuer public key
+        # ephemeral key certificate
+        else:
+            certificateSignedData = bytearray([0x12]) + deviceNonce + nonce + certificatePublicKey
+        if not last_dev_pub_key.ecdsa_verify(bytes(certificateSignedData), certificateSignature):
+            if index == 0:
+                # Not an error if loading from user key
+                print("Broken certificate chain - loading from user key")
+            else:
+                raise Exception("Broken certificate chain")
+        last_dev_pub_key = PublicKey(bytes(certificatePublicKey), raw=True)
+        index = index + 1
 
-	#forced to specific version
-	if ecdh_secret_format==1 or targetId&0xF == 0x2:
-		return secret[0:16]
-	elif targetId&0xF == 0x3:
-		ret = {}
-		ret['ecdh_secret'] = secret
-		ret['devicePublicKey'] = devicePublicKey
-		return ret
+    # Commit device ECDH channel
+    dongle.exchange(bytearray.fromhex('E053000000'))
+    secret = last_dev_pub_key.ecdh(binascii.unhexlify(ephemeralPrivate.serialize()))
+
+    # forced to specific version
+    if ecdh_secret_format == 1 or targetId & 0xF == 0x2:
+        return secret[0:16]
+    elif targetId & 0xF == 0x3:
+        ret = {'ecdh_secret': secret, 'devicePublicKey': devicePublicKey}
+        return ret

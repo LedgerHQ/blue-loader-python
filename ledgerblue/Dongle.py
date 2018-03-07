@@ -20,36 +20,39 @@ from abc import ABCMeta, abstractmethod
 from binascii import hexlify
 import sys
 
-TIMEOUT=20000
+TIMEOUT = 20000
+
 
 def hexstr(bstr):
-	if (sys.version_info.major == 3):
-		return hexlify(bstr).decode()
-	if (sys.version_info.major == 2):
-		return hexlify(bstr)
-	return "<undecoded APDU<"
+    if sys.version_info.major == 3:
+        return hexlify(bstr).decode()
+    if sys.version_info.major == 2:
+        return hexlify(bstr)
+    return "<undecoded APDU<"
+
 
 class DongleWait(object):
-	__metaclass__ = ABCMeta
+    __metaclass__ = ABCMeta
 
-	@abstractmethod
-	def waitFirstResponse(self, timeout):
-		pass
+    @abstractmethod
+    def waitFirstResponse(self, timeout):
+        pass
+
 
 class Dongle(object):
-	__metaclass__ = ABCMeta
+    __metaclass__ = ABCMeta
 
-	@abstractmethod
-	def exchange(self, apdu, timeout=TIMEOUT):
-		pass
+    @abstractmethod
+    def exchange(self, apdu, timeout=TIMEOUT):
+        pass
 
-	@abstractmethod
-	def apduMaxDataSize(self):
-		pass
+    @abstractmethod
+    def apduMaxDataSize(self):
+        pass
 
-	@abstractmethod
-	def close(self):
-		pass
+    @abstractmethod
+    def close(self):
+        pass
 
-	def setWaitImpl(self, waitImpl):
-		self.waitImpl = waitImpl
+    def setWaitImpl(self, waitImpl):
+        self.waitImpl = waitImpl

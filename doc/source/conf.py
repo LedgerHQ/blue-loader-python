@@ -7,8 +7,10 @@ import sys
 
 sys.path.append(os.path.abspath('../../'))
 
+
 def setup(app):
-    app.add_stylesheet('theme_overrides.css') # Override wide tables in RTD theme
+    app.add_stylesheet('theme_overrides.css')  # Override wide tables in RTD theme
+
 
 # General Configuration
 # =====================
