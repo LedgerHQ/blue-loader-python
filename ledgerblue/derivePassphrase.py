@@ -19,33 +19,37 @@
 
 import argparse
 
+
 def get_argparser():
-	parser = argparse.ArgumentParser(description="Set a BIP 39 passphrase on the device.")
-	parser.add_argument("--persistent", help="""Persist passphrase as secondary PIN (otherwise, it's set as a temporary
+    parser = argparse.ArgumentParser(description="Set a BIP 39 passphrase on the device.")
+    parser.add_argument("--persistent", help="""Persist passphrase as secondary PIN (otherwise, it's set as a temporary
 passphrase)""", action='store_true')
-	return parser
+    return parser
+
 
 def auto_int(x):
-	return int(x, 0)
+    return int(x, 0)
+
 
 if __name__ == '__main__':
-	from .comm import getDongle
-	import getpass
-	import unicodedata
-	import sys
+    from .comm import getDongle
+    import getpass
+    import unicodedata
+    import sys
 
-	args = get_argparser().parse_args()
+    args = get_argparser().parse_args()
 
-	dongle = getDongle(False)
+    dongle = getDongle(False)
 
-	passphrase = getpass.getpass("Enter BIP39 passphrase : ")
-	if isinstance(passphrase, bytes):
-		passphrase = passphrase.decode(sys.stdin.encoding)
-	if len(passphrase) != 0:
-		if args.persistent:
-			p1 = 0x02
-		else:
-			p1 = 0x01
-		passphrase = unicodedata.normalize('NFKD', passphrase)
-		apdu = bytearray([0xE0, 0xD0, p1, 0x00, len(passphrase)]) + bytearray(passphrase, 'utf8')
-		dongle.exchange(apdu, timeout=300)
+    passphrase = getpass.getpass("Enter BIP39 passphrase : ")
+    if isinstance(passphrase, bytes):
+        passphrase = passphrase.decode(sys.stdin.encoding)
+
+    if len(passphrase) != 0:
+        if args.persistent:
+            p1 = 0x02
+        else:
+            p1 = 0x01
+        passphrase = unicodedata.normalize('NFKD', passphrase)
+        apdu = bytearray([0xE0, 0xD0, p1, 0x00, len(passphrase)]) + bytearray(passphrase, 'utf8')
+        dongle.exchange(apdu, timeout=300)

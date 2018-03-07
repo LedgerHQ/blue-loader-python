@@ -19,8 +19,10 @@
 
 import argparse
 
+
 def auto_int(x):
     return int(x, 0)
+
 
 def get_argparser():
     parser = argparse.ArgumentParser(description="""Load the firmware onto the MCU. The MCU must already be in
@@ -29,9 +31,11 @@ bootloader mode.""")
     parser.add_argument("--fileName", help="The name of the firmware file to load")
     parser.add_argument("--bootAddr", help="The firmware's boot address", type=auto_int)
     parser.add_argument("--apdu", help="Display APDU log", action='store_true')
-    parser.add_argument("--reverse", help="Load HEX file in reverse from the highest address to the lowest", action='store_true')
+    parser.add_argument("--reverse", help="Load HEX file in reverse from the highest address to the lowest",
+                        action='store_true')
     parser.add_argument("--nocrc", help="Load HEX file without checking CRC of loaded sections", action='store_true')
     return parser
+
 
 if __name__ == '__main__':
     from .hexParser import IntelHexParser
@@ -40,21 +44,20 @@ if __name__ == '__main__':
 
     args = get_argparser().parse_args()
 
-    if args.targetId == None:
-    	raise Exception("Missing targetId")
-    if args.fileName == None:
-    	raise Exception("Missing fileName")
+    if args.targetId is None:
+        raise Exception("Missing targetId")
+    if args.fileName is None:
+        raise Exception("Missing fileName")
 
     parser = IntelHexParser(args.fileName)
-    if args.bootAddr == None:
+    if args.bootAddr is None:
         args.bootAddr = parser.getBootAddr()
 
     dongle = getDongle(args.apdu)
 
-    #relative load
+    # relative load
     loader = HexLoader(dongle, 0xe0, False, None, False)
 
     loader.validateTargetId(args.targetId)
     hash = loader.load(0xFF, 0xF0, parser, reverse=args.reverse, doCRC=(not args.nocrc))
     loader.run(args.bootAddr)
-    

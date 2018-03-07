@@ -19,43 +19,46 @@
 
 import argparse
 
+
 def get_argparser():
-	parser = argparse.ArgumentParser(description="List all apps on the device.")
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
-	parser.add_argument("--rootPrivateKey", help="""The Signer private key used to establish a Secure Channel
+    parser = argparse.ArgumentParser(description="List all apps on the device.")
+    parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
+    parser.add_argument("--rootPrivateKey", help="""The Signer private key used to establish a Secure Channel
 (otherwise, a random one will be generated)""")
-	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
-	parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
-	return parser
+    parser.add_argument("--apdu", help="Display APDU log", action='store_true')
+    parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
+    return parser
+
 
 def auto_int(x):
-	return int(x, 0)
+    return int(x, 0)
+
 
 if __name__ == '__main__':
-	from .ecWrapper import PrivateKey
-	from .comm import getDongle
-	from .deployed import getDeployedSecretV1, getDeployedSecretV2
-	from .hexLoader import HexLoader
-	import binascii
+    from .ecWrapper import PrivateKey
+    from .comm import getDongle
+    from .deployed import getDeployedSecretV1, getDeployedSecretV2
+    from .hexLoader import HexLoader
+    import binascii
 
-	args = get_argparser().parse_args()
+    args = get_argparser().parse_args()
 
-	if args.targetId is None:
-		args.targetId = 0x31000002
-	if args.rootPrivateKey is None:
-		privateKey = PrivateKey()
-		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
-		print("Generated random root public key : %s" % publicKey)
-		args.rootPrivateKey = privateKey.serialize()
+    if args.targetId is None:
+        args.targetId = 0x31000002
+    if args.rootPrivateKey is None:
+        privateKey = PrivateKey()
+        publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
+        print("Generated random root public key : %s" % publicKey)
+        args.rootPrivateKey = privateKey.serialize()
 
-	dongle = getDongle(args.apdu)
+    dongle = getDongle(args.apdu)
 
-	if args.deployLegacy:
-		secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
-	else:
-		secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
-	loader = HexLoader(dongle, 0xe0, True, secret)
-	apps = loader.listApp()
-	while len(apps) != 0:
-		print(apps)
-		apps = loader.listApp(False)
+    if args.deployLegacy:
+        secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+    else:
+        secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+    loader = HexLoader(dongle, 0xe0, True, secret)
+    apps = loader.listApp()
+    while len(apps) != 0:
+        print(apps)
+        apps = loader.listApp(False)

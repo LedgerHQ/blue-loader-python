@@ -19,41 +19,44 @@
 
 import argparse
 
+
 def get_argparser():
-	parser = argparse.ArgumentParser(description="Calculate an application hash from the application's hex file.")
-	parser.add_argument("--hex", help="The application hex file to be hashed")
-	return parser
+    parser = argparse.ArgumentParser(description="Calculate an application hash from the application's hex file.")
+    parser.add_argument("--hex", help="The application hex file to be hashed")
+    return parser
+
 
 def auto_int(x):
-	return int(x, 0)
+    return int(x, 0)
+
 
 def hexstr(bstr):
-	if (sys.version_info.major == 3):
-		return binascii.hexlify(bstr).decode()
-	if (sys.version_info.major == 2):
-		return binascii.hexlify(bstr)
-	return ""
+    if sys.version_info.major == 3:
+        return binascii.hexlify(bstr).decode()
+    if sys.version_info.major == 2:
+        return binascii.hexlify(bstr)
+    return ""
+
 
 if __name__ == '__main__':
-	from .hexParser import IntelHexParser
-	from .hexParser import IntelHexPrinter
-	import sys
-	import hashlib
-	import binascii
+    from .hexParser import IntelHexParser
+    import sys
+    import hashlib
+    import binascii
 
-	args = get_argparser().parse_args()
+    args = get_argparser().parse_args()
 
-	if args.hex == None:
-		raise Exception("Missing hex filename to hash")
+    if args.hex is None:
+        raise Exception("Missing hex filename to hash")
 
-	# parse
-	parser = IntelHexParser(args.hex)
+    # parse
+    parser = IntelHexParser(args.hex)
 
-	# prepare data
-	m = hashlib.sha256()
-	# consider areas are ordered by ascending address and non-overlaped
-	for a in parser.getAreas():
-		m.update(a.data)
-	dataToSign = m.digest()
+    # prepare data
+    m = hashlib.sha256()
+    # consider areas are ordered by ascending address and non-overlaped
+    for a in parser.getAreas():
+        m.update(a.data)
+    dataToSign = m.digest()
 
-	print(hexstr(dataToSign))
+    print(hexstr(dataToSign))
