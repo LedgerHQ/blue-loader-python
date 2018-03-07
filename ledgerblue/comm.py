@@ -121,7 +121,12 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		if self.debug:
 			print("HID <= %s%.2x" % (hexstr(response), sw))
 		if sw != 0x9000:
-			raise CommException("Invalid status %04x" % sw, sw, response)
+			possibleCause = "Unknown reason"
+			if sw == 0x6982:
+				possibleCause = "Have you uninstalled the existing CA with resetCustomCA first?"
+			if sw == 0x6484:
+				possibleCause = "Are you using the correct targetId?"
+			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		return response
 
 	def waitFirstResponse(self, timeout):
