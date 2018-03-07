@@ -41,7 +41,7 @@ BOLOS_TAG_DEPENDENCY = 0x06
 
 def encodelv(v):
 	l = len(v)
-	s = ""
+	s = b""
 	if l < 128:
 		s += struct.pack(">B", l)
 	elif l < 256:

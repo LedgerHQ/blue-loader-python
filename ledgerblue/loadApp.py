@@ -70,11 +70,20 @@ def parse_bip32_path(path, apilevel):
 						result = result + struct.pack(">I", 0x80000000 | int(element[0]))
 		return result
 
+def string_to_bytes(x):
+	import sys
+	if sys.version_info.major == 3:
+		return bytes(x, 'ascii')
+	else:
+		return bytes(x)
+
+
 if __name__ == '__main__':
 	from .ecWrapper import PrivateKey
 	from .comm import getDongle
 	from .hexParser import IntelHexParser, IntelHexPrinter
 	from .hexLoader import HexLoader
+	from .hexLoader import *
 	from .deployed import getDeployedSecretV1, getDeployedSecretV2
 	import struct
 	import binascii
@@ -98,11 +107,7 @@ if __name__ == '__main__':
 		print("Generated random root public key : %s" % publicKey)
 		args.rootPrivateKey = privateKey.serialize()
 
-
-	if (sys.version_info.major == 3):
-		args.appName = bytes(args.appName,'ascii')
-	if (sys.version_info.major == 2):
-		args.appName = bytes(args.appName)
+	args.appName = string_to_bytes(args.appName)
 
 	parser = IntelHexParser(args.fileName)
 	if args.bootAddr == None:
@@ -179,7 +184,7 @@ if __name__ == '__main__':
 		else:
 			args.dataSize = 0
 
-		installparams = ""
+		installparams = b""
 
 		# express dependency
 		if (args.dep):
@@ -189,9 +194,9 @@ if __name__ == '__main__':
 				# split if version is specified
 				if (dep.find(":") != -1):
 					(appname,appversion) = dep.split(":")
-				depvalue = encodelv(appname)			
+				depvalue = encodelv(string_to_bytes(appname))
 				if(appversion):
-					depvalue += encodelv(appversion)
+					depvalue += encodelv(string_to_bytes(appversion))
 				installparams += encodetlv(BOLOS_TAG_DEPENDENCY, depvalue)
 
 		#add raw install parameters as requested
@@ -205,9 +210,9 @@ if __name__ == '__main__':
 			#mandatory app name
 			installparams += encodetlv(BOLOS_TAG_APPNAME, args.appName)
 			if not args.appVersion is None:
-				installparams += encodetlv(BOLOS_TAG_APPVERSION, args.appVersion)
+				installparams += encodetlv(BOLOS_TAG_APPVERSION, string_to_bytes(args.appVersion))
 			if not args.icon is None:
-				installparams += encodetlv(BOLOS_TAG_ICON, args.icon)
+				installparams += encodetlv(BOLOS_TAG_ICON, bytes(args.icon))
 			if len(path) > 0:
 				installparams += encodetlv(BOLOS_TAG_DERIVEPATH, path)
 
