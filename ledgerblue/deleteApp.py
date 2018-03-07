@@ -18,6 +18,12 @@
 """
 
 import argparse
+import binascii
+
+from ledgerblue.comm import getDongle
+from ledgerblue.deployed import getDeployedSecretV1, getDeployedSecretV2
+from ledgerblue.ecWrapper import PrivateKey
+from ledgerblue.hexLoader import HexLoader
 
 
 def get_argparser():
@@ -36,13 +42,6 @@ def auto_int(x):
 
 
 if __name__ == '__main__':
-    from .ecWrapper import PrivateKey
-    from .comm import getDongle
-    from .deployed import getDeployedSecretV1, getDeployedSecretV2
-    from .hexLoader import HexLoader
-    import binascii
-    import sys
-
     args = get_argparser().parse_args()
 
     if args.appName is None and args.appHash is None:
@@ -50,22 +49,16 @@ if __name__ == '__main__':
     if args.appName is not None and args.appHash is not None:
         raise Exception("Set either appName or appHash")
 
-    if args.appName is not None:
-        if sys.version_info.major == 3:
-            args.appName = bytes(args.appName, 'ascii')
-        if sys.version_info.major == 2:
-            args.appName = bytes(args.appName)
+    if args.appName:
+        args.appName = args.appName.encode('ascii')
 
-    if args.appHash is not None:
-        if sys.version_info.major == 3:
-            args.appHash = bytes(args.appHash, 'ascii')
-        if sys.version_info.major == 2:
-            args.appHash = bytes(args.appHash)
-        args.appHash = bytearray.fromhex(args.appHash)
+    if args.appHash:
+        args.appHash = binascii.unhexlify(args.appHash)
 
-    if args.targetId is None:
+    if not args.targetId:
         args.targetId = 0x31000002
-    if args.rootPrivateKey is None:
+
+    if not args.rootPrivateKey:
         privateKey = PrivateKey()
         publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
         print("Generated random root public key : %s" % publicKey)
@@ -77,9 +70,11 @@ if __name__ == '__main__':
         secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
     else:
         secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+
     loader = HexLoader(dongle, 0xe0, True, secret)
 
-    if args.appName is not None:
+    if args.appName:
         loader.deleteApp(args.appName)
-    if args.appHash is not None:
+
+    if args.appHash:
         loader.deleteAppByHash(args.appHash)

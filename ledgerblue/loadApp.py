@@ -89,11 +89,7 @@ def parse_bip32_path(path, apilevel):
 
 
 def string_to_bytes(x):
-    import sys
-    if sys.version_info.major == 3:
-        return bytes(x, 'ascii')
-    else:
-        return bytes(x)
+    return x.encode('ascii')
 
 
 if __name__ == '__main__':

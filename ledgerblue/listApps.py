@@ -19,6 +19,13 @@
 
 import argparse
 
+import binascii
+
+from ledgerblue.comm import getDongle
+from ledgerblue.deployed import getDeployedSecretV1, getDeployedSecretV2
+from ledgerblue.ecWrapper import PrivateKey
+from ledgerblue.hexLoader import HexLoader
+
 
 def get_argparser():
     parser = argparse.ArgumentParser(description="List all apps on the device.")
@@ -35,16 +42,11 @@ def auto_int(x):
 
 
 if __name__ == '__main__':
-    from .ecWrapper import PrivateKey
-    from .comm import getDongle
-    from .deployed import getDeployedSecretV1, getDeployedSecretV2
-    from .hexLoader import HexLoader
-    import binascii
-
     args = get_argparser().parse_args()
 
     if args.targetId is None:
         args.targetId = 0x31000002
+
     if args.rootPrivateKey is None:
         privateKey = PrivateKey()
         publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
@@ -53,12 +55,23 @@ if __name__ == '__main__':
 
     dongle = getDongle(args.apdu)
 
-    if args.deployLegacy:
-        secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
-    else:
-        secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
-    loader = HexLoader(dongle, 0xe0, True, secret)
-    apps = loader.listApp()
-    while len(apps) != 0:
-        print(apps)
-        apps = loader.listApp(False)
+    try:
+        if args.deployLegacy:
+            secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+        else:
+            secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+
+        loader = HexLoader(dongle, 0xe0, True, secret)
+
+        apps = loader.listApp()
+        while len(apps) != 0:
+            for app in apps:
+                print("{:20}\n\thash:  {:64}\n\tcode:  {:64}\n\tflags: {}".format(
+                      app['name'],
+                      binascii.hexlify(app['hash']),
+                      binascii.hexlify(app['hash_code_data']),
+                      app['flags']))
+
+            apps = loader.listApp(False)
+    except Exception as e:
+        print(e)
