@@ -56,12 +56,13 @@ def auto_int(x):
 	return int(x, 0)
 
 def parse_bip32_path(path, apilevel):
+		import struct
 		if len(path) == 0:
 				return b""
 		result = b""
 		elements = path.split('/')
 		if apilevel >= 5:
-			result = result + chr(len(elements))
+			result = result + struct.pack('>B', len(elements))
 		for pathElement in elements:
 				element = pathElement.split('\'')
 				if len(element) == 1:
