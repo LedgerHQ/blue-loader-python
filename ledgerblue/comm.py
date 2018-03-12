@@ -190,8 +190,9 @@ def getDongle(debug=False, selectCommand=None):
 	hidDevicePath = None
 	ledger = True
 	for hidDevice in hid.enumerate(0, 0):
-		if hidDevice['vendor_id'] == 0x2c97 and ('interface_number' not in hidDevice or hidDevice['interface_number'] == 0):
-			hidDevicePath = hidDevice['path']
+		if hidDevice['vendor_id'] == 0x2c97:
+			if ('interface_number' in hidDevice and hidDevice['interface_number'] == 0) or ('usage_page' in hidDevice and hidDevice['usage_page'] == 0xffa0):
+				hidDevicePath = hidDevice['path']
 	if hidDevicePath is not None:
 		dev = hid.device()
 		dev.open_path(hidDevicePath)
