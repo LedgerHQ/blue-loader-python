@@ -72,7 +72,7 @@ class IntelHexParser:
                                         current = startFirst
                                 if address != current:
                                         self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                                        zoneData = ""
+                                        zoneData = b''
                                         startFirst = address
                                         current = address
                                 zoneData += data[4:4 + count]
@@ -80,7 +80,7 @@ class IntelHexParser:
                         if recordType == 0x01:
                                 if len(zoneData) != 0:
                                         self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                                        zoneData = ""
+                                        zoneData = b''
                                         startZone = None
                                         startFirst = None
                                         current = None                                        
@@ -91,7 +91,7 @@ class IntelHexParser:
                         if recordType == 0x04:
                                         if len(zoneData) != 0:
                                                 self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                                                zoneData = ""
+                                                zoneData = b''
                                                 startZone = None
                                                 startFirst = None
                                                 current = None                                                
