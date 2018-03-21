@@ -247,7 +247,7 @@ class HexLoader:
 				print(binascii.hexlify(data))
 			# MAC
 			cipher = AES.new(self.scp_mac_key, AES.MODE_CBC, self.scp_mac_iv)
-			macData = cipher.encrypt(data[0:-SCP_MAC_LENGTH])
+			macData = cipher.encrypt(bytes(data[0:-SCP_MAC_LENGTH]))
 			self.scp_mac_iv = macData[-16:]
 			if self.scp_mac_iv[-SCP_MAC_LENGTH:] != data[-SCP_MAC_LENGTH:] :
 				raise BaseException("Invalid SCP MAC")
@@ -258,8 +258,8 @@ class HexLoader:
 				print(binascii.hexlify(data))
 			# ENC
 			cipher = AES.new(self.scp_enc_key, AES.MODE_CBC, self.scp_enc_iv)
-			self.scp_enc_iv = data[-16:]
-			data = cipher.decrypt(data)
+			self.scp_enc_iv = bytes(data[-16:])
+			data = cipher.decrypt(bytes(data))
 			l = len(data) - 1
 			while (data[l] != padding_char):
 				l-=1
