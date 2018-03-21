@@ -419,7 +419,21 @@ class HexLoader:
 					offset += 1 + response[offset]
 					result.append(item)
 		return result
-		
+
+	def getMemInfo(self):
+		response = self.exchange(self.cla, 0x00, 0x00, 0x00, b'\x11')
+		item = {}
+		offset = 0
+		item['systemSize'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		offset += 4
+		item['applicationsSize'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		offset += 4
+		item['freeSize'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		offset += 4
+		item['usedAppSlots'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		offset += 4
+		item['totalAppSlots'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		return item
 
 	def load(self, erase_u8, max_length_per_apdu, hexFile, reverse=False, doCRC=True):
 		if (max_length_per_apdu > self.max_mtu):
