@@ -485,7 +485,7 @@ class HexLoader:
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def setupCustomCA(self, name, public):
-		data = b'\x12' + struct.pack('>B',len(name)) + name +  struct.pack('>B',len(public)) + public
+		data = b'\x12' + struct.pack('>B', len(name)) + name.encode() + struct.pack('>B', len(public)) + public
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def runApp(self, name):

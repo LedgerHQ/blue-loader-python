@@ -33,11 +33,12 @@ def get_argparser():
 repeated""", action='append')
 	parser.add_argument("--appName", help="The name to give the application after loading it")
 	parser.add_argument("--signature", help="A signature of the application (hex encoded)")
-	parser.add_argument("--signApp", help="Sign application with provided rootPrivateKey", action='store_true')
+	parser.add_argument("--signApp", help="Sign application with provided signPrivateKey", action='store_true')
 	parser.add_argument("--appFlags", help="The application flags", type=auto_int)
 	parser.add_argument("--bootAddr", help="The application's boot address", type=auto_int)
 	parser.add_argument("--rootPrivateKey", help="""The Signer private key used to establish a Secure Channel (otherwise
 a random one will be generated)""")
+	parser.add_argument("--signPrivateKey", help="Set the private key used to sign the loaded app")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
 	parser.add_argument("--apilevel", help="Use given API level when interacting with the device", type=auto_int)
@@ -253,9 +254,9 @@ if __name__ == '__main__':
 	print("Application full hash : " + hash)
 
 	if (signature == None and args.signApp):
-		masterPrivate = PrivateKey(bytes(bytearray.fromhex(args.rootPrivateKey)))
+		masterPrivate = PrivateKey(bytes(bytearray.fromhex(args.signPrivateKey)))
 		signature = masterPrivate.ecdsa_serialize(masterPrivate.ecdsa_sign(bytes(binascii.unhexlify(hash)), raw=True))
-		print("Application signature: " + binascii.hexlify(signature))
+		print("Application signature: " + str(binascii.hexlify(signature)))
 
 	if (args.tlv):
 		loader.commit(signature)
