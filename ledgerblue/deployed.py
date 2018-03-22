@@ -25,10 +25,10 @@ from .hexParser import IntelHexParser
 from .hexLoader import HexLoader
 import binascii
 
-def getDeployedSecretV1(dongle, masterPrivate, targetid):
+def getDeployedSecretV1(dongle, masterPrivate, targetId):
 	testMaster = PrivateKey(bytes(masterPrivate))
 	testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
-	targetid = bytearray(struct.pack('>I', targetid))
+	targetid = bytearray(struct.pack('>I', targetId))
 
 	if targetId&0xF != 0x1:
 		raise BaseException("Target ID does not support SCP V1")
