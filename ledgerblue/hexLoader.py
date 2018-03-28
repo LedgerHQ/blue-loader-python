@@ -422,6 +422,8 @@ class HexLoader:
 
 	def getMemInfo(self):
 		response = self.exchange(self.cla, 0x00, 0x00, 0x00, b'\x11')
+		if sys.version_info.major == 2:
+			response = bytearray(response)
 		item = {}
 		offset = 0
 		item['systemSize'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
