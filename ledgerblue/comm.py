@@ -124,6 +124,10 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 			possibleCause = "Unknown reason"
 			if sw == 0x6982:
 				possibleCause = "Have you uninstalled the existing CA with resetCustomCA first?"
+			if sw == 0x6985:
+				possibleCause = "Condition of use not satisfied (denied by the user?)"
+			if sw == 0x6a84 or sw == 0x6a85:
+				possibleCause = "Not enough space?"
 			if sw == 0x6484:
 				possibleCause = "Are you using the correct targetId?"
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
