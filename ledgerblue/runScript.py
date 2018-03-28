@@ -48,6 +48,7 @@ if __name__ == '__main__':
 	import sys
 	import fileinput
 	import binascii
+	from .hexLoader import HexLoader
 
 	args = get_argparser().parse_args()
 
@@ -82,20 +83,16 @@ if __name__ == '__main__':
 			scp = SCP(dongle, args.targetId, bytearray.fromhex(args.rootPrivateKey))
 
 	for data in file:
-		data = data.rstrip('\r\n').decode('hex')
+		data = binascii.unhexlify(data.replace("\n", ""))
 		if len(data) < 5:
 			continue
 		if args.scp:
-			data = bytearray(data)
-			if data[4] > 0 and len(data) > 5:
-				apduData = data[5: 5 + data[4]]
-				apduData = scp.encryptAES(bytes(apduData))
-				result = dongle.exchange(
-				data[0:4] + bytearray([len(apduData)]) + bytearray(apduData))
-			else:
-				result = dongle.exchange(data[0:5])
-			result = scp.decryptAES(str(result))
-			if args.apdu:
-				print("<= Clear " + result.encode('hex'))
+			apduData = data[4:]
+			apduData = scp.encryptAES(bytes(apduData))
+			apdu = bytearray([data[0], data[1], data[2], data[3], len(apduData)]) + bytearray(apduData)
+			result = dongle.exchange(apdu)
+			result = scp.decryptAES((result))
 		else:
-			dongle.exchange(bytearray(data))
+			result = dongle.exchange(bytearray(data))
+		if args.apdu:
+			print("<= Clear " + str(result))

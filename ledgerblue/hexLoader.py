@@ -207,6 +207,8 @@ class HexLoader:
 			if SCP_DEBUG:
 				print(binascii.hexlify(paddedData))
 			cipher = AES.new(self.scp_enc_key, AES.MODE_CBC, self.scp_enc_iv)
+			if sys.version_info.major == 2:
+				paddedData = bytes(paddedData)
 			encryptedData = cipher.encrypt(paddedData)
 			self.scp_enc_iv = encryptedData[-16:]
 			if SCP_DEBUG:
@@ -247,7 +249,7 @@ class HexLoader:
 				print(binascii.hexlify(data))
 			# MAC
 			cipher = AES.new(self.scp_mac_key, AES.MODE_CBC, self.scp_mac_iv)
-			macData = cipher.encrypt(data[0:-SCP_MAC_LENGTH])
+			macData = cipher.encrypt(bytes(data[0:-SCP_MAC_LENGTH]))
 			self.scp_mac_iv = macData[-16:]
 			if self.scp_mac_iv[-SCP_MAC_LENGTH:] != data[-SCP_MAC_LENGTH:] :
 				raise BaseException("Invalid SCP MAC")
@@ -258,8 +260,8 @@ class HexLoader:
 				print(binascii.hexlify(data))
 			# ENC
 			cipher = AES.new(self.scp_enc_key, AES.MODE_CBC, self.scp_enc_iv)
-			self.scp_enc_iv = data[-16:]
-			data = cipher.decrypt(data)
+			self.scp_enc_iv = bytes(data[-16:])
+			data = cipher.decrypt(bytes(data))
 			l = len(data) - 1
 			while (data[l] != padding_char):
 				l-=1
@@ -419,7 +421,23 @@ class HexLoader:
 					offset += 1 + response[offset]
 					result.append(item)
 		return result
-		
+
+	def getMemInfo(self):
+		response = self.exchange(self.cla, 0x00, 0x00, 0x00, b'\x11')
+		if sys.version_info.major == 2:
+			response = bytearray(response)
+		item = {}
+		offset = 0
+		item['systemSize'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		offset += 4
+		item['applicationsSize'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		offset += 4
+		item['freeSize'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		offset += 4
+		item['usedAppSlots'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		offset += 4
+		item['totalAppSlots'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+		return item
 
 	def load(self, erase_u8, max_length_per_apdu, hexFile, reverse=False, doCRC=True):
 		if (max_length_per_apdu > self.max_mtu):
@@ -485,7 +503,7 @@ class HexLoader:
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def setupCustomCA(self, name, public):
-		data = b'\x12' + struct.pack('>B',len(name)) + name +  struct.pack('>B',len(public)) + public
+		data = b'\x12' + struct.pack('>B', len(name)) + name.encode() + struct.pack('>B', len(public)) + public
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def runApp(self, name):
