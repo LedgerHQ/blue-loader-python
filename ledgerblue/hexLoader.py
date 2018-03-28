@@ -207,6 +207,8 @@ class HexLoader:
 			if SCP_DEBUG:
 				print(binascii.hexlify(paddedData))
 			cipher = AES.new(self.scp_enc_key, AES.MODE_CBC, self.scp_enc_iv)
+			if sys.version_info.major == 2:
+				paddedData = bytes(paddedData)
 			encryptedData = cipher.encrypt(paddedData)
 			self.scp_enc_iv = encryptedData[-16:]
 			if SCP_DEBUG:
