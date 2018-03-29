@@ -164,6 +164,8 @@ if __name__ == '__main__':
 		# ensure data can be decoded with code decryption key without troubles.
 		cleardata_block_len = 16
 
+	dongle = None
+	secret = None
 	if not args.offline:
 		dongle = getDongle(args.apdu)
 

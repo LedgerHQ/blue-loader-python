@@ -477,7 +477,7 @@ class HexLoader:
 					if (chunkLen < self.cleardata_block_len):
 						raise Exception("Cannot transport not block aligned data with fixed block len")
 					chunkLen -= chunkLen%self.cleardata_block_len;
-				# padd with 00's when not complete block and performing NENC
+				# pad with 00's when not complete block and performing NENC
 				if reverse:
 					chunk = data[offset-chunkLen : offset]
 					self.loadSegmentChunk(offset-chunkLen, bytes(chunk))
