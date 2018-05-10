@@ -244,11 +244,11 @@ if __name__ == '__main__':
 		printer.addArea(param_start, paramsSectionContent)
 		# account for added regions (install parameters, icon ...)
 		appLength = printer.maxAddr() - printer.minAddr()
-		loader.createAppNoInstallParams(args.appFlags, appLength, args.appName, None, path, 0, len(paramsSectionContent), args.appVersion)
+		loader.createAppNoInstallParams(args.appFlags, appLength, args.appName, None, path, 0, len(paramsSectionContent), string_to_bytes(args.appVersion))
 	else:
 		# account for added regions (install parameters, icon ...)
 		appLength = printer.maxAddr() - printer.minAddr()
-		loader.createAppNoInstallParams(args.appFlags, appLength, args.appName, args.icon, path, None, None, args.appVersion)
+		loader.createAppNoInstallParams(args.appFlags, appLength, args.appName, args.icon, path, None, None, string_to_bytes(args.appVersion))
 
 
 	hash = loader.load(0x0, 0xF0, printer)
