@@ -44,7 +44,6 @@ if __name__ == '__main__':
 	from .comm import getDongle
 	from .deployed import getDeployedSecretV2
 	from .ecWrapper import PrivateKey
-	from Crypto.Cipher import AES
 	import sys
 	import fileinput
 	import binascii
