@@ -8,14 +8,14 @@ import os
 here = dirname(__file__)
 setup(
     name='ledgerblue',
-    version='0.1.18',
+    version='0.1.19',
     author='Ledger',
     author_email='hello@ledger.fr',
     description='Python library to communicate with Ledger Blue/Nano S',
     long_description=open(join(here, 'README.md')).read(),
     url='https://github.com/LedgerHQ/blue-loader-python',
     packages=find_packages(),
-    install_requires=['hidapi>=0.7.99', 'protobuf>=2.6.1', 'pycryptodomex>=3.6.1', 'future', 'ecpy>=0.8.1', 'pillow>=3.4.0', 'python-u2flib-host>=3.0.2'],
+    install_requires=['hidapi>=0.7.99', 'protobuf>=2.6.1', 'pycryptodomex>=3.6.1', 'future', 'ecpy>=0.9.0', 'pillow>=3.4.0', 'python-u2flib-host>=3.0.2'],
     extras_require = {
 	'smartcard': [ 'python-pyscard>=1.6.12-4build1' ]
     },
