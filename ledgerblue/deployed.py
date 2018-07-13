@@ -83,7 +83,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, signerCertChain=None, e
 	testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
 	targetid = bytearray(struct.pack('>I', targetId))
 
-	if targetId&0xF == 0x1:
+	if targetId&0xF < 3:
 		raise BaseException("Target ID does not support SCP V2")
 
 	# identify
@@ -169,7 +169,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, signerCertChain=None, e
 	#forced to specific version
 	if ecdh_secret_format==1 or targetId&0xF == 0x2:
 		return secret[0:16]
-	elif targetId&0xF == 0x3:
+	elif targetId&0xF >= 0x3:
 		ret = {}
 		ret['ecdh_secret'] = secret
 		ret['devicePublicKey'] = devicePublicKey
