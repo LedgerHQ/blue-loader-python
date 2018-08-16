@@ -107,7 +107,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, issuerKey):
 			ret = {}
 			ret['ecdh_secret'] = secret
 			ret['devicePublicKey'] = devicePublicKey
-		return ret
+			return ret
 
 if __name__ == '__main__':
 	from .ecWrapper import PrivateKey, PublicKey
