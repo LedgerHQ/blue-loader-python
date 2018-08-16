@@ -41,7 +41,7 @@ if __name__ == '__main__':
 	args = get_argparser().parse_args()
 
 	if args.targetId == None:
-		args.targetId = 0x31000002
+		args.targetId = 0x31010004
 	if args.rootPrivateKey == None:
 		privateKey = PrivateKey()
 		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))

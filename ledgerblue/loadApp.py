@@ -96,7 +96,7 @@ if __name__ == '__main__':
 	if args.apilevel == None:
 		args.apilevel = 5
 	if args.targetId == None:
-		args.targetId = 0x31000002
+		args.targetId = 0x31010004
 	if args.fileName == None:
 		raise Exception("Missing fileName")
 	if args.appName == None:

@@ -68,7 +68,7 @@ if __name__ == '__main__':
 	if args.firmwareKey == None:
 		raise Exception("No firmware key specified")
 	if args.targetId == None:
-		args.targetId = 0x31000002 # Ledger Blue by default
+		args.targetId = 0x31010004 # Ledger Blue by default
 
 	dongle = getDongle(args.apdu)
 
