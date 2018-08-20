@@ -86,7 +86,7 @@ if __name__ == '__main__':
 	parameter.local = False
 	parameter.alias = "persoKey"
 	parameter.name = args.perso
-	if args.targetId&0xF == 0x3:
+	if args.targetId&0xF >= 0x3:
 		parameter = request.remote_parameters.add()
 		parameter.local = False
 		parameter.alias = "scpv2"
@@ -116,7 +116,7 @@ if __name__ == '__main__':
 	parameter.local = False
 	parameter.alias = "persoKey"
 	parameter.name = args.perso
-	if args.targetId&0xF == 0x3:
+	if args.targetId&0xF >= 0x3:
 		parameter = request.remote_parameters.add()
 		parameter.local = False
 		parameter.alias = "scpv2"
@@ -171,7 +171,7 @@ if __name__ == '__main__':
 	parameter.local = False
 	parameter.alias = "firmwareKey"
 	parameter.name = args.firmwareKey
-	if args.targetId&0xF == 0x3:
+	if args.targetId&0xF >= 0x3:
 		parameter = request.remote_parameters.add()
 		parameter.local = False
 		parameter.alias = "scpv2"
