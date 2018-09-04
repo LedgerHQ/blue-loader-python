@@ -40,5 +40,6 @@ Use the following Target IDs (--targetId option) when running commands directly:
 
   * 0x31100002 on Nano S (until firmware 1.3.1, included)
   * 0x31100003 on Nano S (after firmware 1.3.1)
-  * 0x31000002 on Blue
+  * 0x31000002 on Blue (until firmware 2.0, included)
+  * 0x31010004 on Blue (after firmware 2.0)
 
