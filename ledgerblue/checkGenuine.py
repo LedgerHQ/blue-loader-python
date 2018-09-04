@@ -103,11 +103,11 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, issuerKey):
 		secret = last_pub_key.ecdh(binascii.unhexlify(ephemeralPrivate.serialize()))
 		if targetId&0xF == 0x2:
 			return secret[0:16]
-		elif targetId&0xF == 0x3:
+		elif targetId&0xF >= 0x3:
 			ret = {}
 			ret['ecdh_secret'] = secret
 			ret['devicePublicKey'] = devicePublicKey
-		return ret
+                return ret
 
 if __name__ == '__main__':
 	from .ecWrapper import PrivateKey, PublicKey
