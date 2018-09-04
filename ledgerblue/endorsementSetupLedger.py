@@ -70,7 +70,7 @@ if __name__ == '__main__':
 	if args.key != 1 and args.key != 2:
 			raise Exception("Invalid endorsement scheme number")
 	if args.targetId == None:
-		args.targetId = 0x31000002 # Ledger Blue by default
+		args.targetId = 0x31010004 # Ledger Blue by default
 
 	dongle = getDongle(args.apdu)
 
