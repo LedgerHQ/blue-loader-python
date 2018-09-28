@@ -451,7 +451,7 @@ class HexLoader:
 			if (targetVersion == None):
 				print("Target version is not set, application hash will not match!")
 			#encore targetId U4LE, and version string bytes
-			sha256.update(struct.pack('>I', targetId) + bytes(targetVersion))
+			sha256.update(struct.pack('>I', targetId) + bytes(targetVersion, 'utf-8'))
 		if self.createappParams:
 			sha256.update(self.createappParams)
 		areas = hexFile.getAreas()
