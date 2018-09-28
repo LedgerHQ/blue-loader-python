@@ -28,6 +28,9 @@ class IntelHexArea:
         def getData(self):
                 return self.data
 
+        def setData(self, data):
+                self.data = data
+
 def insertAreaSorted(areas, area):
         i=0
         while i < len(areas):
@@ -98,6 +101,13 @@ class IntelHexParser:
                                         startZone = (data[4] << 8) + data[5]
                         if recordType == 0x05:
                                         self.bootAddr = ((data[4]&0xFF) << 24) + ((data[5]&0xFF) << 16) + ((data[6]&0xFF) << 8) + (data[7]&0xFF)
+                #tail add of the last zone
+                if len(zoneData) != 0:
+                        self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
+                        zoneData = ""
+                        startZone = None
+                        startFirst = None
+                        current = None                                        
                 file.close()
 
         def getAreas(self):

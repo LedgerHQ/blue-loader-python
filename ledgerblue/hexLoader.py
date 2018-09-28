@@ -439,7 +439,7 @@ class HexLoader:
 		item['totalAppSlots'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
 		return item
 
-	def load(self, erase_u8, max_length_per_apdu, hexFile, reverse=False, doCRC=True):
+	def load(self, erase_u8, max_length_per_apdu, hexFile, reverse=False, doCRC=True, targetId=None, targetVersion=None):
 		if (max_length_per_apdu > self.max_mtu):
 			max_length_per_apdu = self.max_mtu
 		initialAddress = 0
@@ -447,6 +447,11 @@ class HexLoader:
 			initialAddress = hexFile.minAddr()
 		sha256 = hashlib.new('sha256')
 		# stat by hashing the create app params to ensure complete app signature
+		if (targetId != None and (targetId&0xF) > 3):
+			if (targetVersion == None):
+				print("Target version is not set, application hash will not match!")
+			#encore targetId U4LE, and version string bytes
+			sha256.update(struct.pack('>I', targetId) + bytes(targetVersion))
 		if self.createappParams:
 			sha256.update(self.createappParams)
 		areas = hexFile.getAreas()

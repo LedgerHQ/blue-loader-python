@@ -83,7 +83,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, signerCertChain=None, e
 	testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
 	targetid = bytearray(struct.pack('>I', targetId))
 
-	if targetId&0xF < 3:
+	if targetId&0xF < 2:
 		raise BaseException("Target ID does not support SCP V2")
 
 	# identify
