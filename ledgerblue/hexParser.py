@@ -75,7 +75,7 @@ class IntelHexParser:
                                         current = startFirst
                                 if address != current:
                                         self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                                        zoneData = ""
+                                        zoneData = b''
                                         startFirst = address
                                         current = address
                                 zoneData += data[4:4 + count]
@@ -83,7 +83,7 @@ class IntelHexParser:
                         if recordType == 0x01:
                                 if len(zoneData) != 0:
                                         self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                                        zoneData = ""
+                                        zoneData = b'' 
                                         startZone = None
                                         startFirst = None
                                         current = None                                        
@@ -94,7 +94,7 @@ class IntelHexParser:
                         if recordType == 0x04:
                                         if len(zoneData) != 0:
                                                 self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                                                zoneData = ""
+                                                zoneData = b'' 
                                                 startZone = None
                                                 startFirst = None
                                                 current = None                                                
@@ -104,7 +104,7 @@ class IntelHexParser:
                 #tail add of the last zone
                 if len(zoneData) != 0:
                         self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                        zoneData = ""
+                        zoneData = b'' 
                         startZone = None
                         startFirst = None
                         current = None                                        
@@ -208,7 +208,7 @@ class IntelHexPrinter:
                                 else:
                                         self._emit_binary(file, bytearray((hex(0x100+blocksize)[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00").decode('hex')) + area.data[off:off+blocksize])
 
-                                oldoff = off;
+                                oldoff = off
                                 off += blocksize
                                 
                 bootAddrHex = hex(0x100000000+self.bootAddr)[3:]
