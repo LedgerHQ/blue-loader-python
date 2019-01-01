@@ -120,7 +120,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		response = result[dataStart : dataLength + dataStart]
 		if self.debug:
 			print("HID <= %s%.2x" % (hexstr(response), sw))
-		if sw != 0x9000:
+		if sw != 0x9000 and ((sw >> 8) != 0x61):
 			possibleCause = "Unknown reason"
 			if sw == 0x6982:
 				possibleCause = "Have you uninstalled the existing CA with resetCustomCA first?"
