@@ -129,7 +129,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 			if sw == 0x6a84 or sw == 0x6a85:
 				possibleCause = "Not enough space?"
 			if sw == 0x6a83:
-				possibleCause = "You first need to install the correct lib dependency (app)."
+				possibleCause = "Maybe this app requires a library to be installed first?"
 			if sw == 0x6484:
 				possibleCause = "Are you using the correct targetId?"
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
