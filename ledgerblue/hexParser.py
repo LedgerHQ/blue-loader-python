@@ -183,7 +183,7 @@ class IntelHexPrinter:
 
         def _emit_binary(self, file, bin):
                 cks = self.checksum(bin)
-                s = (":" + binascii.hexlify(bin) + hex(0x100+cks)[3:] + self.eol).upper()
+                s = (":" + binascii.hexlify(bin).decode('utf-8') + hex(0x100+cks)[3:] + self.eol).upper()
                 if (file != None):
                         file.write(s)
                 else:
@@ -200,19 +200,19 @@ class IntelHexPrinter:
                         while off < len(area.data):
                                 # emit a offset selection record
                                 if ((off & 0xFFFF0000) != (oldoff & 0xFFFF0000) ):
-                                        self._emit_binary(file, bytearray(("02000004" + hex(0x10000+(area.start>>16))[3:7]).decode('hex')))
+                                        self._emit_binary(file, bytearray.fromhex("02000004" + hex(0x10000+(area.start>>16))[3:7]))
 
                                 # emit data record
                                 if (off+blocksize > len(area.data)):
-                                        self._emit_binary(file, bytearray((hex(0x100+(len(area.data)-off))[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00").decode('hex')) + area.data[off:len(area.data)])
+                                        self._emit_binary(file, bytearray.fromhex(hex(0x100+(len(area.data)-off))[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00") + area.data[off:len(area.data)])
                                 else:
-                                        self._emit_binary(file, bytearray((hex(0x100+blocksize)[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00").decode('hex')) + area.data[off:off+blocksize])
+                                        self._emit_binary(file, bytearray.fromhex(hex(0x100+blocksize)[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00") + area.data[off:off+blocksize])
 
                                 oldoff = off
                                 off += blocksize
                                 
                 bootAddrHex = hex(0x100000000+self.bootAddr)[3:]
-                s = ":04000005"+bootAddrHex+hex(0x100+self.checksum( bytearray(("04000005"+bootAddrHex).decode('hex'))))[3:]+self.eol
+                s = ":04000005"+bootAddrHex+hex(0x100+self.checksum( bytearray.fromhex("04000005"+bootAddrHex)))[3:]+self.eol
                 if (file != None):
                         file.write(s)
                 else:

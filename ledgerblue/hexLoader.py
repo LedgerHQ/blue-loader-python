@@ -39,6 +39,13 @@ BOLOS_TAG_DERIVEPATH = 0x04
 BOLOS_TAG_DATASIZE = 0x05
 BOLOS_TAG_DEPENDENCY = 0x06
 
+def string_to_bytes(x):
+	import sys
+	if sys.version_info.major == 3:
+		return bytes(x, 'ascii')
+	else:
+		return bytes(x)
+
 def encodelv(v):
 	l = len(v)
 	s = b""
@@ -452,7 +459,7 @@ class HexLoader:
 				print("Target version is not set, application hash will not match!")
 				targetVersion=""
 			#encore targetId U4LE, and version string bytes
-			sha256.update(struct.pack('>I', targetId) + bytearray.fromhex(targetVersion))
+			sha256.update(struct.pack('>I', targetId) + string_to_bytes(targetVersion))
 		if self.createappParams:
 			sha256.update(self.createappParams)
 		areas = hexFile.getAreas()
