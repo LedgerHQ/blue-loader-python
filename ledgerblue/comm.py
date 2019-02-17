@@ -120,7 +120,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		response = result[dataStart : dataLength + dataStart]
 		if self.debug:
 			print("HID <= %s%.2x" % (hexstr(response), sw))
-		if sw != 0x9000 and ((sw >> 8) != 0x61):
+		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
 			possibleCause = "Unknown reason"
 			if sw == 0x6982:
 				possibleCause = "Have you uninstalled the existing CA with resetCustomCA first?"
@@ -172,7 +172,7 @@ class DongleSmartcard(Dongle):
 		sw = (sw1 << 8) | sw2
 		if self.debug:
 			print("SC <= %s%.2x" % (hexstr(response).replace(" ", ""), sw))
-		if sw != 0x9000:
+		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
 			raise CommException("Invalid status %04x" % sw, sw, bytearray(response))
 		return bytearray(response)
 
