@@ -40,6 +40,10 @@ if "U2FKEY" in os.environ and len(os.environ["U2FKEY"]) != 0:
 MCUPROXY=None
 if "MCUPROXY" in os.environ and len(os.environ["MCUPROXY"]) != 0:
 	MCUPROXY=os.environ["MCUPROXY"]
+# Force use of the requested device index, 0 to match any
+DEVIDX=None
+if "DEVIDX" in os.environ and len(os.environ["DEVIDX"]) != 0:
+	DEVIDX=int(os.environ["DEVIDX"],0)
 	
 # Force use of MCUPROXY if required
 PCSC=None
@@ -198,7 +202,12 @@ def getDongle(debug=False, selectCommand=None):
 	for hidDevice in hid.enumerate(0, 0):
 		if hidDevice['vendor_id'] == 0x2c97:
 			if ('interface_number' in hidDevice and hidDevice['interface_number'] == 0) or ('usage_page' in hidDevice and hidDevice['usage_page'] == 0xffa0):
-				hidDevicePath = hidDevice['path']
+				global DEVIDX
+				if DEVIDX is None or DEVIDX == 0:
+					hidDevicePath = hidDevice['path']
+					break
+				elif DEVIDX:
+					DEVIDX -= 1
 	if hidDevicePath is not None:
 		dev = hid.device()
 		dev.open_path(hidDevicePath)
