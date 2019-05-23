@@ -27,6 +27,7 @@ import os
 import sys
 from .commU2F import getDongle as getDongleU2F
 from .commHTTP import getDongle as getDongleHTTP
+from .commTCP import getDongle as getDongleTCP
 import hid
 
 APDUGEN=None
@@ -40,6 +41,11 @@ if "U2FKEY" in os.environ and len(os.environ["U2FKEY"]) != 0:
 MCUPROXY=None
 if "MCUPROXY" in os.environ and len(os.environ["MCUPROXY"]) != 0:
 	MCUPROXY=os.environ["MCUPROXY"]
+# Force use of TCP PROXY if required
+TCP_PROXY=None
+if "LEDGER_PROXY_ADDRESS" in os.environ and len(os.environ["LEDGER_PROXY_ADDRESS"]) != 0 and \
+   "LEDGER_PROXY_PORT" in os.environ and len(os.environ["LEDGER_PROXY_PORT"]) != 0:
+	TCP_PROXY=(os.environ["LEDGER_PROXY_ADDRESS"], int(os.environ["LEDGER_PROXY_PORT"]))
 	
 # Force use of MCUPROXY if required
 PCSC=None
@@ -190,8 +196,10 @@ def getDongle(debug=False, selectCommand=None):
 
 	if not U2FKEY is None:
 		return getDongleU2F(scrambleKey=U2FKEY, debug=debug)
-	if MCUPROXY is not None:
+	elif MCUPROXY is not None:
 		return getDongleHTTP(remote_host=MCUPROXY, debug=debug)
+	elif TCP_PROXY is not None:
+		return getDongleTCP(server=TCP_PROXY[0], port=TCP_PROXY[1], debug=debug)
 	dev = None
 	hidDevicePath = None
 	ledger = True
