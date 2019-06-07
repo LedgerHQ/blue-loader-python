@@ -107,7 +107,8 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
 				else:
 						certificateSignedData = bytearray([0x12]) + deviceNonce + nonce + certificatePublicKey
 				if not last_pub_key.ecdsa_verify(bytes(certificateSignedData), certificateSignature):
-						return None
+					print("pub key not signed by last_pub_key")
+					return None
 				last_pub_key = PublicKey(bytes(certificatePublicKey), raw=True)
 				if index == 0:
 					device_pub_key = last_pub_key
@@ -138,7 +139,7 @@ if __name__ == '__main__':
 		raise Exception("Cannot specify both certificate and privateKey")
 
 	privateKey = PrivateKey()
-	publicKey = str(privateKey.pubkey.serialize(compressed=False))
+	publicKey = privateKey.pubkey.serialize(compressed=False)
 	args.rootPrivateKey = privateKey.serialize()
 
 	dongle = getDongle(args.apdu)
@@ -156,7 +157,7 @@ if __name__ == '__main__':
 			if not publicKey.ecdsa_verify(bytes(digest), signature, raw=True):
 				raise Exception("Issuer certificate not verified")
 			if args.privateKey != None:
-				privateKey = PrivateKey(bytes(args.privateKey.decode('hex')))
+				privateKey = PrivateKey(bytes.fromhex(args.privateKey))
 				dataToSign = bytes(bytearray([0xfe]) + response[0:65])
 				signature = privateKey.ecdsa_sign(bytes(dataToSign))
 				args.certificate = hexstr(privateKey.ecdsa_serialize(signature))
