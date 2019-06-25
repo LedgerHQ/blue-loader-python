@@ -195,8 +195,8 @@ class HIDDevice(U2FDevice):
             resp = b''.join(int2byte(v) for v in resp_vals)
             if resp[:4] != cid:
                 raise exc.DeviceError("Wrong CID from device!")
-            if byte2int(resp[4:5]) != seq & 0x7f:
-                raise exc.DeviceError("Wrong SEQ from device!")
+            if resp[4] != (seq & 0x7f):
+                raise exc.DeviceError("Wrong SEQ from device! {} != {}".format(resp[4], seq))
             seq += 1
             new_data = resp[5:min(5 + data_len, HID_RPT_SIZE)]
             data_len -= len(new_data)
@@ -214,7 +214,8 @@ class U2FTunnelDongle(Dongle, DongleWait):
 
   def __init__(self, device, scrambleKey="", ledger=False, debug=False):
     self.device = device
-    self.scrambleKey = scrambleKey
+    self.scrambleKey = scrambleKey.encode('ascii')
+    print(f"__init__ scrambleKey is {self.scrambleKey.hex()}")
     self.ledger = ledger    
     self.debug = debug
     self.waitImpl = self
@@ -223,18 +224,21 @@ class U2FTunnelDongle(Dongle, DongleWait):
 
   def exchange(self, apdu, timeout=TIMEOUT):
     if self.debug:
-      print("U2F => %s" % hexstr(apdu))
+      print("U2F => %s" % apdu.hex())
 
     if (len(apdu)>=256):
       raise CommException("Too long APDU to transport")  
     
+    print(f"exchange scrambleKey is {self.scrambleKey.hex()}")
+    print(f"exchange apdu is {apdu.hex()}")
     # wrap apdu
     i=0
-    keyHandle = ""
+    keyHandle = b""
     while i < len(apdu):
-      val = apdu[i:i+1]
+      val = apdu[i]
       if len(self.scrambleKey) > 0:
-        val = chr(ord(val) ^ ord(self.scrambleKey[i % len(self.scrambleKey)]))
+          val = (val ^ self.scrambleKey[i % len(self.scrambleKey)]).to_bytes(1, 'big')
+#        val = chr(ord(val) ^ ord(self.scrambleKey[i % len(self.scrambleKey)]))
       keyHandle += val
       i+=1
     
