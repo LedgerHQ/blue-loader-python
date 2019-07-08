@@ -111,7 +111,6 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
 					print("pub key not signed by last_pub_key")
 					return None
 				last_pub_key = PublicKey(bytes(certificatePublicKey), raw=True)
-				print(last_pub_key)
 				if index == 0:
 					device_pub_key = last_pub_key
 				index = index + 1
