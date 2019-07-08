@@ -214,8 +214,7 @@ class U2FTunnelDongle(Dongle, DongleWait):
 
   def __init__(self, device, scrambleKey="", ledger=False, debug=False):
     self.device = device
-    self.scrambleKey = scrambleKey.encode('ascii')
-    print(f"__init__ scrambleKey is {self.scrambleKey.hex()}")
+    self.scrambleKey = scrambleKey
     self.ledger = ledger    
     self.debug = debug
     self.waitImpl = self
@@ -224,21 +223,18 @@ class U2FTunnelDongle(Dongle, DongleWait):
 
   def exchange(self, apdu, timeout=TIMEOUT):
     if self.debug:
-      print("U2F => %s" % apdu.hex())
+      print("U2F => %s" % hexstr(apdu))
 
     if (len(apdu)>=256):
       raise CommException("Too long APDU to transport")  
     
-    print(f"exchange scrambleKey is {self.scrambleKey.hex()}")
-    print(f"exchange apdu is {apdu.hex()}")
     # wrap apdu
     i=0
-    keyHandle = b""
+    keyHandle = b''
     while i < len(apdu):
-      val = apdu[i]
+      val = apdu[i:i+1]
       if len(self.scrambleKey) > 0:
-          val = (val ^ self.scrambleKey[i % len(self.scrambleKey)]).to_bytes(1, 'big')
-#        val = chr(ord(val) ^ ord(self.scrambleKey[i % len(self.scrambleKey)]))
+        val = b'' + int2byte(ord(val) ^ ord(self.scrambleKey[i % len(self.scrambleKey)]))
       keyHandle += val
       i+=1
     
@@ -247,20 +243,31 @@ class U2FTunnelDongle(Dongle, DongleWait):
 
     request = client_param + app_param + int2byte(len(keyHandle)) + keyHandle
 
-    #p1 = 0x07 if check_only else 0x03
-    p1 = 0x03
-    p2 = 0
-    response = self.device.send_apdu(INS_SIGN, p1, p2, request)
+    start = time.time()
+    while time.time() - start < timeout:
 
-    if self.debug:
-      print("U2F <= %s%.2x" % (hexstr(response), 0x9000))
+      #p1 = 0x07 if check_only else 0x03
+      p1 = 0x03
+      p2 = 0
+      try:
+        response = self.device.send_apdu(INS_SIGN, p1, p2, request)
+      except exc.APDUError as e:
+        if e.code == 0x6985:
+          time.sleep(0.25)
+          continue
+        raise e
 
-    # check replied status words of the command (within the APDU tunnel)
-    if hexstr(response[-2:]) != "9000":
-      raise CommException("Invalid status words received: " + hexstr(response[-2:]));
+      if self.debug:
+        print("U2F <= %s%.2x" % (hexstr(response), 0x9000))
 
-    # api expect a byte array, remove the appended status words
-    return bytearray(response[:-2])
+      # check replied status words of the command (within the APDU tunnel)
+      if hexstr(response[-2:]) != "9000":
+        raise CommException("Invalid status words received: " + hexstr(response[-2:]));
+      else:
+        break
+
+    # api expect a byte array, remove the appended status words, remove the user presence and counter
+    return bytearray(response[5:-2])
 
   def apduMaxDataSize(self):
     return 256-5

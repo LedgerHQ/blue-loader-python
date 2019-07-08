@@ -29,6 +29,7 @@ encoded), if no private key is specified""")
 if no certificate is specified""")
 	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
 	parser.add_argument("--issuerKey", help="Issuer key (hex encoded, default is batch 1)")
+	parser.add_argument("--rootPrivateKey", help="SCP Host private key")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	return parser
 
@@ -110,6 +111,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
 					print("pub key not signed by last_pub_key")
 					return None
 				last_pub_key = PublicKey(bytes(certificatePublicKey), raw=True)
+				print(last_pub_key)
 				if index == 0:
 					device_pub_key = last_pub_key
 				index = index + 1
@@ -139,10 +141,16 @@ if __name__ == '__main__':
 		raise Exception("Cannot specify both certificate and privateKey")
 
 	privateKey = PrivateKey()
-	publicKey = privateKey.pubkey.serialize(compressed=False)
-	args.rootPrivateKey = privateKey.serialize()
+	publicKey = str(privateKey.pubkey.serialize(compressed=False))
+	if not args.rootPrivateKey:
+		args.rootPrivateKey = privateKey.serialize()
+	else:
+		# parse the issuer key from the rootprivate key
+		issuerPrivKey = PrivateKey(bytes(bytearray.fromhex(args.rootPrivateKey)))
+		args.issuerKey = binascii.hexlify(issuerPrivKey.pubkey.serialize(compressed=False)).decode('utf-8')
 
 	dongle = getDongle(args.apdu)
+	print(args.rootPrivateKey)
 	publicKey = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId, args.issuerKey)
 
 	if args.certificate == None:
@@ -157,7 +165,7 @@ if __name__ == '__main__':
 			if not publicKey.ecdsa_verify(bytes(digest), signature, raw=True):
 				raise Exception("Issuer certificate not verified")
 			if args.privateKey != None:
-				privateKey = PrivateKey(bytes.fromhex(args.privateKey))
+				privateKey = PrivateKey(bytes(bytearray.fromhex(args.privateKey)))
 				dataToSign = bytes(bytearray([0xfe]) + response[0:65])
 				signature = privateKey.ecdsa_sign(bytes(dataToSign))
 				args.certificate = hexstr(privateKey.ecdsa_serialize(signature))

@@ -22,11 +22,12 @@ import argparse
 def get_argparser():
 	parser = argparse.ArgumentParser(description="Delete the app with the specified name.")
 	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
-	parser.add_argument("--appName", help="The name of the application to delete")
+	parser.add_argument("--appName", help="The name of the application to delete", action='append')
 	parser.add_argument("--appHash", help="Set the application hash")
 	parser.add_argument("--rootPrivateKey", help="A private key used to establish a Secure Channel (hex encoded)")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
+	parser.add_argument("--offline", help="Request to only output application load APDUs into given filename")
 	return parser
 
 def auto_int(x):
@@ -42,16 +43,15 @@ if __name__ == '__main__':
 
 	args = get_argparser().parse_args()
 
-	if args.appName == None and args.appHash == None:
+	if (args.appName == None or len(args.appName) == 0) and args.appHash == None:
 		raise Exception("Missing appName or appHash")
-	if args.appName != None and args.appHash != None:
-		raise Exception("Set either appName or appHash")
 
-	if args.appName != None:
-		if (sys.version_info.major == 3):
-			args.appName = bytes(args.appName,'ascii')
-		if (sys.version_info.major == 2):
-			args.appName = bytes(args.appName)
+	if args.appName != None and len(args.appName) > 0:
+		for i in range(0, len(args.appName)):
+			if (sys.version_info.major == 3):
+				args.appName[i] = bytes(args.appName[i],'ascii')
+			if (sys.version_info.major == 2):
+				args.appName[i] = bytes(args.appName[i])
 
 	if args.appHash != None:
 		if (sys.version_info.major == 3):
@@ -69,15 +69,38 @@ if __name__ == '__main__':
 		print("Generated random root public key : %s" % publicKey)
 		args.rootPrivateKey = privateKey.serialize()
 
-	dongle = getDongle(args.apdu)
+	dongle = None
+	secret = None
+	if not args.offline:
+		dongle = getDongle(args.apdu)
 
-	if args.deployLegacy:
-		secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+		if args.deployLegacy:
+			secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+		else:
+			secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 	else:
-		secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
-	loader = HexLoader(dongle, 0xe0, True, secret)
+		fileTarget = open(args.offline, "wb")
+		class FileCard():
+			def __init__(self, target):
+				self.target = target
+			def exchange(self, apdu):
+				if (args.apdu):
+					print(binascii.hexlify(apdu))
+				apdu = binascii.hexlify(apdu)
+				if sys.version_info.major == 2:
+					self.target.write(str(apdu) + '\n')
+				else:
+					self.target.write(apdu + '\n'.encode())
+				return bytearray([])
+			def apduMaxDataSize(self):
+				# ensure to allow for encryption of those apdu afterward
+				return 240
+		dongle = FileCard(fileTarget)
 
-	if args.appName != None:
-		loader.deleteApp(args.appName)
+	loader = HexLoader(dongle, 0xe0, not(args.offline), secret)
+
+	if args.appName != None and len(args.appName) > 0:
+		for name in args.appName:
+			loader.deleteApp(name)
 	if args.appHash != None:
 		loader.deleteAppByHash(args.appHash)
