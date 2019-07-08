@@ -26,6 +26,7 @@ def get_argparser():
 (otherwise, a random one will be generated)""")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
+	parser.add_argument("--scp", help="Use a secure channel to list applications", action='store_true')
 	return parser
 
 def auto_int(x):
@@ -40,21 +41,25 @@ if __name__ == '__main__':
 
 	args = get_argparser().parse_args()
 
-	if args.targetId is None:
-		args.targetId = 0x31000002
-	if args.rootPrivateKey is None:
-		privateKey = PrivateKey()
-		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
-		print("Generated random root public key : %s" % publicKey)
-		args.rootPrivateKey = privateKey.serialize()
-
 	dongle = getDongle(args.apdu)
 
-	if args.deployLegacy:
-		secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+	if args.scp:
+		if args.targetId is None:
+			args.targetId = 0x31000002
+		if args.rootPrivateKey is None:
+			privateKey = PrivateKey()
+			publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
+			print("Generated random root public key : %s" % publicKey)
+			args.rootPrivateKey = privateKey.serialize()
+
+
+		if args.deployLegacy:
+			secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+		else:
+			secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 	else:
-		secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
-	loader = HexLoader(dongle, 0xe0, True, secret)
+		secret = None
+	loader = HexLoader(dongle, 0xe0, args.scp, secret)
 	apps = loader.listApp()
 	while len(apps) != 0:
 		print(apps)

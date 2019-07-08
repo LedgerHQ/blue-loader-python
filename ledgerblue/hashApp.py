@@ -22,6 +22,8 @@ import argparse
 def get_argparser():
 	parser = argparse.ArgumentParser(description="Calculate an application hash from the application's hex file.")
 	parser.add_argument("--hex", help="The application hex file to be hashed")
+	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
+	parser.add_argument("--targetVersion", help="Set the chip target version")
 	return parser
 
 def auto_int(x):
@@ -51,6 +53,13 @@ if __name__ == '__main__':
 
 	# prepare data
 	m = hashlib.sha256()
+
+	if (args.targetId):
+		m.update(struct.pack(">I", args.targetId))
+
+	if (args.targetVersion):
+		m.update(args.targetVersion)
+
 	# consider areas are ordered by ascending address and non-overlaped
 	for a in parser.getAreas():
 		m.update(a.data)

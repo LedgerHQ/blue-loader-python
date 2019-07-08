@@ -21,6 +21,12 @@ DEFAULT_ALIGNMENT = 1024
 PAGE_ALIGNMENT = 64
 
 import argparse
+import os
+
+NOCRC=False
+if "NOCRC" in os.environ and len(os.environ["NOCRC"]) != 0:
+	NOCRC=os.environ["NOCRC"]
+
 
 def get_argparser():
 	parser = argparse.ArgumentParser(description="Load an app onto the device from a hex file.")
@@ -48,10 +54,13 @@ a random one will be generated)""")
 	parser.add_argument("--tlv", help="Use install parameters for all variable length parameters", action='store_true')
 	parser.add_argument("--dataSize", help="The code section's size in the provided hex file (to separate data from code, if not provided the whole allocated NVRAM section for the application will remain readonly.", type=auto_int)
 	parser.add_argument("--appVersion", help="The application version (as a string)")
-	parser.add_argument("--offline", help="Request to only output application load APDUs", action="store_true")
+	parser.add_argument("--offline", help="Request to only output application load APDUs into given filename")
+	parser.add_argument("--offlineText", help="Request to only output application load APDUs into given filename in text mode", action='store_true')
 	parser.add_argument("--installparamsSize", help="The loaded install parameters section size (when parameters are already included within the .hex file.", type=auto_int)
 	parser.add_argument("--tlvraw", help="Add a custom install param with the hextag:hexvalue encoding", action='append')
 	parser.add_argument("--dep", help="Add a dependency over an appname[:appversion]", action='append')
+	parser.add_argument("--nocrc", help="Skip CRC generation when loading", action='store_true')
+
 	return parser
 
 def auto_int(x):
@@ -174,6 +183,24 @@ if __name__ == '__main__':
 			secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 		else:
 			secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+	else:
+		fileTarget = open(args.offline, "wb")
+		class FileCard():
+			def __init__(self, target):
+				self.target = target
+			def exchange(self, apdu):
+				if (args.apdu):
+					print(binascii.hexlify(apdu))
+				apdu = binascii.hexlify(apdu)
+				if sys.version_info.major == 2:
+					self.target.write(str(apdu) + '\n')
+				else:
+					self.target.write(apdu + '\n'.encode())
+				return bytearray([])
+			def apduMaxDataSize(self):
+				# ensure to allow for encryption of those apdu afterward
+				return 240
+		dongle = FileCard(fileTarget)
 
 	loader = HexLoader(dongle, 0xe0, not(args.offline), secret, cleardata_block_len=cleardata_block_len)
 
@@ -252,7 +279,7 @@ if __name__ == '__main__':
 		loader.createAppNoInstallParams(args.appFlags, appLength, args.appName, args.icon, path, None, None, string_to_bytes(args.appVersion))
 
 
-	hash = loader.load(0x0, 0xF0, printer, targetId=args.targetId, targetVersion=args.targetVersion)
+	hash = loader.load(0x0, 0xF0, printer, targetId=args.targetId, targetVersion=args.targetVersion, doCRC=not (args.nocrc or NOCRC)) 
 
 	print("Application full hash : " + hash)
 

@@ -195,8 +195,8 @@ class HIDDevice(U2FDevice):
             resp = b''.join(int2byte(v) for v in resp_vals)
             if resp[:4] != cid:
                 raise exc.DeviceError("Wrong CID from device!")
-            if byte2int(resp[4:5]) != seq & 0x7f:
-                raise exc.DeviceError("Wrong SEQ from device!")
+            if resp[4] != (seq & 0x7f):
+                raise exc.DeviceError("Wrong SEQ from device! {} != {}".format(resp[4], seq))
             seq += 1
             new_data = resp[5:min(5 + data_len, HID_RPT_SIZE)]
             data_len -= len(new_data)
@@ -230,11 +230,11 @@ class U2FTunnelDongle(Dongle, DongleWait):
     
     # wrap apdu
     i=0
-    keyHandle = ""
+    keyHandle = b''
     while i < len(apdu):
       val = apdu[i:i+1]
       if len(self.scrambleKey) > 0:
-        val = chr(ord(val) ^ ord(self.scrambleKey[i % len(self.scrambleKey)]))
+        val = b'' + int2byte(ord(val) ^ ord(self.scrambleKey[i % len(self.scrambleKey)]))
       keyHandle += val
       i+=1
     
@@ -243,20 +243,31 @@ class U2FTunnelDongle(Dongle, DongleWait):
 
     request = client_param + app_param + int2byte(len(keyHandle)) + keyHandle
 
-    #p1 = 0x07 if check_only else 0x03
-    p1 = 0x03
-    p2 = 0
-    response = self.device.send_apdu(INS_SIGN, p1, p2, request)
+    start = time.time()
+    while time.time() - start < timeout:
 
-    if self.debug:
-      print("U2F <= %s%.2x" % (hexstr(response), 0x9000))
+      #p1 = 0x07 if check_only else 0x03
+      p1 = 0x03
+      p2 = 0
+      try:
+        response = self.device.send_apdu(INS_SIGN, p1, p2, request)
+      except exc.APDUError as e:
+        if e.code == 0x6985:
+          time.sleep(0.25)
+          continue
+        raise e
 
-    # check replied status words of the command (within the APDU tunnel)
-    if hexstr(response[-2:]) != "9000":
-      raise CommException("Invalid status words received: " + hexstr(response[-2:]));
+      if self.debug:
+        print("U2F <= %s%.2x" % (hexstr(response), 0x9000))
 
-    # api expect a byte array, remove the appended status words
-    return bytearray(response[:-2])
+      # check replied status words of the command (within the APDU tunnel)
+      if hexstr(response[-2:]) != "9000":
+        raise CommException("Invalid status words received: " + hexstr(response[-2:]));
+      else:
+        break
+
+    # api expect a byte array, remove the appended status words, remove the user presence and counter
+    return bytearray(response[5:-2])
 
   def apduMaxDataSize(self):
     return 256-5

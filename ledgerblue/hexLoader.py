@@ -389,11 +389,18 @@ class HexLoader:
 		return result
 
 	def listApp(self, restart=True):
-		if restart:
-			data = b'\x0E'
+		if self.secure:
+			if restart:
+				data = b'\x0E'
+			else:
+				data = b'\x0F'
+			response = self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 		else:
-			data = b'\x0F'
-		response = self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+			if restart:
+				response = self.exchange(self.cla, 0xDE, 0x00, 0x00, b'')
+			else:
+				response = self.exchange(self.cla, 0xDF, 0x00, 0x00, b'')
+
 		if sys.version_info.major == 2:
 			response = bytearray(response)
 		#print binascii.hexlify(response[0])
