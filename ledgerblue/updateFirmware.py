@@ -81,7 +81,7 @@ if __name__ == '__main__':
 	# Get nonce and ephemeral key
 
 	request = Request()
-	request.reference = "distributeFirmware11"
+	request.reference = "distributeFirmware11_scan"
 	parameter = request.remote_parameters.add()
 	parameter.local = False
 	parameter.alias = "persoKey"
@@ -100,6 +100,12 @@ if __name__ == '__main__':
 	remotePublicKey = response.response[offset : offset + 65]
 	offset += 65
 	nonce = response.response[offset : offset + 8]
+	if args.targetId&0xF >= 0x3:
+		offset += 8
+		masterPublicKey = response.response[offset : offset + 65]
+		offset += 65
+		masterPublicKeySignatureLength = response.response[offset + 1] + 2
+		masterPublicKeySignature = response.response[offset : offset + masterPublicKeySignatureLength]
 
 	# Initialize chain
 
@@ -110,17 +116,12 @@ if __name__ == '__main__':
 	# Get remote certificate
 
 	request = Request()
-	request.reference = "distributeFirmware11"
+	request.reference = "distributeFirmware11_scan"
 	request.id = response.id
 	parameter = request.remote_parameters.add()
 	parameter.local = False
 	parameter.alias = "persoKey"
 	parameter.name = args.perso
-	if args.targetId&0xF >= 0x3:
-		parameter = request.remote_parameters.add()
-		parameter.local = False
-		parameter.alias = "scpv2"
-		parameter.name = "dummy"	
 	request.parameters = bytes(deviceNonce)	
 	request.largeStack = True
 
@@ -152,7 +153,7 @@ if __name__ == '__main__':
 			if len(certificate) == 0:
 				break
 			request = Request()
-			request.reference = "distributeFirmware11"
+			request.reference = "distributeFirmware11_scan"
 			request.id = response.id
 			request.parameters = bytes(certificate)
 			request.largeStack = True
@@ -162,15 +163,7 @@ if __name__ == '__main__':
 	# Commit agreement and send firmware
 
 	request = Request()
-	request.reference = "distributeFirmware11"
-	parameter = request.remote_parameters.add()
-	parameter.local = False
-	parameter.alias = "firmware"
-	parameter.name = args.firmware
-	parameter = request.remote_parameters.add()
-	parameter.local = False
-	parameter.alias = "firmwareKey"
-	parameter.name = args.firmwareKey
+	request.reference = "distributeFirmware11_scan"
 	if args.targetId&0xF >= 0x3:
 		parameter = request.remote_parameters.add()
 		parameter.local = False
@@ -183,6 +176,40 @@ if __name__ == '__main__':
 	responseData = bytearray(response.response)
 
 	dongle.exchange(bytearray.fromhex('E053000000'))
+
+	for i in range(100):
+		if len(responseData) == 0:
+			break
+		if (bytes(responseData[0:4]) == b"SECU"):
+			raise Exception("Security exception " + chr(responseData[4]))
+
+		responseData = dongle.exchange(responseData)
+
+		request = Request()
+		request.reference = "distributeFirmware11_scan"
+		request.parameters = b"\xFF" + b"\xFF" + bytes(responseData)
+		request.id = response.id
+		request.largeStack = True
+
+		response = serverQuery(request, args.url)
+		responseData = bytearray(response.response)
+
+
+	request = Request()
+	request.reference = "distributeFirmware11_scan"
+	parameter = request.remote_parameters.add()
+	parameter.local = False
+	parameter.alias = "firmware"
+	parameter.name = args.firmware
+	parameter = request.remote_parameters.add()
+	parameter.local = False
+	parameter.alias = "firmwareKey"
+	parameter.name = args.firmwareKey
+	request.id = response.id
+	request.largeStack = True
+
+	response = serverQuery(request, args.url)
+	responseData = bytearray(response.response)
 
 	offset = 0
 	while offset < len(responseData):
