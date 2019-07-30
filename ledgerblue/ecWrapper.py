@@ -141,4 +141,4 @@ class PrivateKey(object):
 				h.update(msg)
 				msg = h.digest()
 			signature = SIGNER.sign(msg, self.obj, True)
-			return bytearray(signature)
+			return signature
