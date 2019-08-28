@@ -24,6 +24,12 @@ This package can optionally work with [libsecp256k1](https://github.com/ludbb/se
 SECP_BUNDLED_EXPERIMENTAL=1 pip --no-cache-dir install --no-binary secp256k1 secp256k1
 ```
 
+To install the custom secp256k1 package on MacOS, you previously need to run:
+```
+brew install libtool
+```
+Which would end up installing glibtool and glibtoolize utilities required for the build process.
+
 ## Giving permissions on udev
 
 When running on Linux, make sure the following rules have been added to `/etc/udev/rules.d/`:
