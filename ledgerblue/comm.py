@@ -139,9 +139,9 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 			if sw == 0x6484:
 				possibleCause = "Are you using the correct targetId?"
 			if sw == 0x6d00:
-				possibleCause = "Unexpected state of device: try closing the Bitcoin app?"
+				possibleCause = "Unexpected state of device: verify that the right application is opened?"
 			if sw == 0x6e00:
-				possibleCause = "Unexpected state of device: try opening U2F app?"
+				possibleCause = "Unexpected state of device: verify that the right application is opened?"
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		return response
 
