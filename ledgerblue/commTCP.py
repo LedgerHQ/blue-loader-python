@@ -47,6 +47,9 @@ class DongleServer(object):
 			raise CommException("Invalid status %04x" % sw, sw)
 		return bytearray(response)
 
+	def apduMaxDataSize(self):
+		return 240
+
 	def close(self):
 		try:
 			self.socket.close()
