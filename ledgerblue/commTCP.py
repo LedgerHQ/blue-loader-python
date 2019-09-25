@@ -28,6 +28,7 @@ class DongleServer(object):
 		self.port = port
 		self.debug = debug
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.opened = True
 		try:
 			self.socket.connect((self.server, self.port))
 		except:
@@ -53,8 +54,10 @@ class DongleServer(object):
 	def close(self):
 		try:
 			self.socket.close()
+			self.socket = None
 		except:
 			pass
+		self.opened = False
 
 def getDongle(server="127.0.0.1", port=9999, debug=False):
     return DongleServer(server, port, debug)

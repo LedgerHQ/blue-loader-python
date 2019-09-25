@@ -23,8 +23,8 @@ project = u'BOLOS Python Loader'
 copyright = u'2017, Ledger Team'
 author = u'Ledger Team'
 
-version = u'0.1.15'
-release = u'0.1.15'
+version = u'0.1.30'
+release = u'0.1.30'
 
 pygments_style = 'sphinx'
 
