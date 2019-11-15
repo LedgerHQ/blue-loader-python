@@ -38,6 +38,7 @@ def get_argparser():
 "ed25519"), can be repeated""", action='append')
 	parser.add_argument("--path", help="""A BIP 32 path to which derivation is locked (format decimal a'/b'/c), can be
 repeated""", action='append')
+	parser.add_argument("--path_slip21", help="""A SLIP 21 path to which derivation is locked""", action='append')
 	parser.add_argument("--appName", help="The name to give the application after loading it")
 	parser.add_argument("--signature", help="A signature of the application (hex encoded)")
 	parser.add_argument("--signApp", help="Sign application with provided signPrivateKey", action='store_true')
@@ -82,6 +83,12 @@ def parse_bip32_path(path, apilevel):
 						result = result + struct.pack(">I", 0x80000000 | int(element[0]))
 		return result
 
+def parse_slip21_path(path):
+	import struct
+	result = struct.pack('>B', 0x80 | (len(path) + 1))
+	result = result + b'\x00' + string_to_bytes(path)
+	return result
+
 def string_to_bytes(x):
 	import sys
 	if sys.version_info.major == 3:
@@ -104,13 +111,15 @@ if __name__ == '__main__':
 	args = get_argparser().parse_args()
 
 	if args.apilevel == None:
-		args.apilevel = 5
+		args.apilevel = 10
 	if args.targetId == None:
 		args.targetId = 0x31000002
 	if args.fileName == None:
 		raise Exception("Missing fileName")
 	if args.appName == None:
 		raise Exception("Missing appName")
+	if args.path_slip21 != None and args.apilevel < 10:
+		raise Exception("SLIP 21 path not supported using this API level")
 	if args.appFlags == None:
 		args.appFlags = 0
 	if args.rootPrivateKey == None:
@@ -139,12 +148,20 @@ if __name__ == '__main__':
 			else:
 				raise Exception("Unknown curve " + curve)
 
-	if args.apilevel >= 5:
+	if args.apilevel >= 5:		
+		if (args.path_slip21 != None):
+			curveMask |= 0x08
 		path += struct.pack('>B',curveMask)
 		if args.path != None:
 			for item in args.path:
 				if len(item) != 0:
 					path += parse_bip32_path(item, args.apilevel)
+		if args.path_slip21 != None:
+			for item in args.path_slip21:
+				if len(item) != 0:
+					path += parse_slip21_path(item)
+			if (args.path == None) or ((len(args.path) == 1) and (len(args.path[0]) == 0)):
+				path += struct.pack('>B', 0) # Unrestricted, authorize all paths for regular derivation
 	else:
 		if args.curve != None:
 			print("Curve not supported using this API level, ignoring")
