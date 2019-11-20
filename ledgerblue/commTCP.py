@@ -35,17 +35,36 @@ class DongleServer(object):
 			raise CommException("Proxy connection failed")
 
 	def exchange(self, apdu, timeout=20000):
-		if self.debug:
-			print("=> %s" % hexlify(apdu))		
-		self.socket.send(struct.pack(">I", len(apdu)))
-		self.socket.send(apdu)
-		size = struct.unpack(">I", self.socket.recv(4))[0]
-		response = self.socket.recv(size)
-		sw = struct.unpack(">H", self.socket.recv(2))[0]
-		if self.debug:
-			print("<= %s%.2x" % (hexlify(response), sw))
+
+		def send_apdu(apdu):
+			if self.debug:
+				print("=> %s" % hexlify(apdu))
+			self.socket.send(struct.pack(">I", len(apdu)))
+			self.socket.send(apdu)
+
+		def get_data():
+			size = struct.unpack(">I", self.socket.recv(4))[0]
+			response = self.socket.recv(size)
+			sw = struct.unpack(">H", self.socket.recv(2))[0]
+			if self.debug:
+				print("<= %s%.2x" % (hexlify(response), sw))
+			return (sw, response)
+
+
+		send_apdu(apdu)
+		(sw, response) = get_data()
 		if sw != 0x9000:
-			raise CommException("Invalid status %04x" % sw, sw)
+			# handle the get response case:
+			# When more data is available, the chip sends 0x61XX
+			# So 0x61xx as a SW must not be interpreted as an error
+			if (sw & 0xFF00) != 0x6100:
+				raise CommException("Invalid status %04x" % sw, sw)
+			else:
+				while (sw & 0xFF00) == 0x6100:
+					send_apdu(bytes.fromhex("00c0000000"))  # GET RESPONSE
+					(sw, data) = get_data()
+					response += data
+
 		return bytearray(response)
 
 	def apduMaxDataSize(self):
