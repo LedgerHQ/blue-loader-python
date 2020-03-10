@@ -18,16 +18,17 @@
 """
 
 from .commException import CommException
-from binascii import hexlify
+from binascii import hexlify, unhexlify
 import socket
 import struct
 
 class DongleServer(object):
-	def __init__(self, server, port, debug=False):
+	def __init__(self, server, port, debug=False, hex_mode=False):
 		self.server = server
 		self.port = port
 		self.debug = debug
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.hex_mode = hex_mode
 		self.opened = True
 		try:
 			self.socket.connect((self.server, self.port))
@@ -39,13 +40,27 @@ class DongleServer(object):
 		def send_apdu(apdu):
 			if self.debug:
 				print("=> %s" % hexlify(apdu))
-			self.socket.send(struct.pack(">I", len(apdu)))
-			self.socket.send(apdu)
+
+			if self.hex_mode:
+				self.socket.send(hexlify(apdu) + b"\n")
+			else:
+				self.socket.send(struct.pack(">I", len(apdu)))
+				self.socket.send(apdu)
 
 		def get_data():
-			size = struct.unpack(">I", self.socket.recv(4))[0]
-			response = self.socket.recv(size)
-			sw = struct.unpack(">H", self.socket.recv(2))[0]
+			if self.hex_mode:
+				response = b""
+				while not response.endswith(b"\n"):
+					response += self.socket.recv(1)
+				response = unhexlify(response[:-1])
+				# The SW is included in what we've received.
+				sw = struct.unpack(">H", response[-2:])[0]
+			else:
+				size = struct.unpack(">I", self.socket.recv(4))[0]
+				response = self.socket.recv(size)
+				# The SW is to be received.
+				sw = struct.unpack(">H", self.socket.recv(2))[0]
+
 			if self.debug:
 				print("<= %s%.2x" % (hexlify(response), sw))
 			return (sw, response)
@@ -85,5 +100,5 @@ class DongleServer(object):
 			pass
 		self.opened = False
 
-def getDongle(server="127.0.0.1", port=9999, debug=False):
-    return DongleServer(server, port, debug)
+def getDongle(server="127.0.0.1", port=9999, debug=False, hex_mode=False):
+    return DongleServer(server, port, debug, hex_mode)

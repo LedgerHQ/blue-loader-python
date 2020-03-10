@@ -46,7 +46,11 @@ TCP_PROXY=None
 if "LEDGER_PROXY_ADDRESS" in os.environ and len(os.environ["LEDGER_PROXY_ADDRESS"]) != 0 and \
    "LEDGER_PROXY_PORT" in os.environ and len(os.environ["LEDGER_PROXY_PORT"]) != 0:
 	TCP_PROXY=(os.environ["LEDGER_PROXY_ADDRESS"], int(os.environ["LEDGER_PROXY_PORT"]))
-	
+# Change the format of the commands/responses.
+TCP_HEX=None
+if "TCP_HEX" in os.environ and len(os.environ["TCP_HEX"]) != 0:
+	TCP_HEX=os.environ["TCP_HEX"].split(':')
+	TCP_PROXY = (TCP_HEX[0], int(TCP_HEX[1], 0))
 # Force use of MCUPROXY if required
 PCSC=None
 if "PCSC" in os.environ and len(os.environ["PCSC"]) != 0:
@@ -203,7 +207,7 @@ def getDongle(debug=False, selectCommand=None):
 	elif MCUPROXY is not None:
 		return getDongleHTTP(remote_host=MCUPROXY, debug=debug)
 	elif TCP_PROXY is not None:
-		return getDongleTCP(server=TCP_PROXY[0], port=TCP_PROXY[1], debug=debug)
+		return getDongleTCP(server=TCP_PROXY[0], port=TCP_PROXY[1], debug=debug, hex_mode=(TCP_HEX is not None))
 	dev = None
 	hidDevicePath = None
 	ledger = True
