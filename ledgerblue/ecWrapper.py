@@ -132,7 +132,7 @@ class PrivateKey(object):
 		else:
 			return raw_sig		
 
-	def ecdsa_sign(self, msg, raw=False, digest=hashlib.sha256):	
+	def ecdsa_sign(self, msg, raw=False, digest=hashlib.sha256, rfc6979=False):	
 		if USE_SECP:
 			return self.obj.ecdsa_sign(msg, raw, digest)
 		else:
@@ -140,5 +140,8 @@ class PrivateKey(object):
 				h = digest()
 				h.update(msg)
 				msg = h.digest()
-			signature = SIGNER.sign(msg, self.obj, True)
+			if rfc6979:
+				signature = SIGNER.sign_rfc6979(msg, self.obj, digest, True)
+			else:
+				signature = SIGNER.sign(msg, self.obj, True)
 			return signature
