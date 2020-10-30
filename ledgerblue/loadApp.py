@@ -146,7 +146,7 @@ if __name__ == '__main__':
 			elif curve == 'ed25519':
 				curveMask |= 0x04
 			elif curve == 'bls12381g1':
-				curveMask |= 0x08
+				curveMask |= 0x10
 			else:
 				raise Exception("Unknown curve " + curve)
 
