@@ -21,7 +21,7 @@ import argparse
 
 def get_argparser():
 	parser = argparse.ArgumentParser("Update the firmware by using Ledger to open a Secure Channel.")
-	parser.add_argument("--url", help="Websocket URL", default="wss://api.ledgerwallet.com/update/genuine")
+	parser.add_argument("--url", help="Websocket URL", default="wss://scriptrunner.api.live.ledger.com/update/genuine")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--perso", help="""A reference to the personalization key; this is a reference to the specific
 Issuer keypair used by Ledger to sign the device's Issuer Certificate""", default="perso_11")
