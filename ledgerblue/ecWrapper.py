@@ -21,7 +21,7 @@ import hashlib
 try:
 	import secp256k1
 	USE_SECP = secp256k1.HAS_ECDH
-except ImportError:
+except (ImportError, AttributeError):
 	USE_SECP = False
 
 if not USE_SECP:
