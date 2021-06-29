@@ -18,11 +18,13 @@
 """
 
 import argparse
+import ssl
 
 def get_argparser():
 	parser = argparse.ArgumentParser(description="""Generate an attestation keypair, using Ledger to sign the Owner
 certificate.""")
 	parser.add_argument("--url", help="Server URL", default="https://hsmprod.hardwarewallet.com/hsm/process")
+	parser.add_argument("--bypass-ssl-check", help="Keep going even if remote certificate verification fails", action='store_true', default=False)
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--perso", help="""A reference to the personalization key; this is a reference to the specific
 Issuer keypair used by Ledger to sign the device's Issuer Certificate""", default="perso_11")
@@ -39,7 +41,10 @@ def serverQuery(request, url):
 	data = request.SerializeToString()
 	urll = urlparse.urlparse(args.url)
 	req = urllib2.Request(args.url, data, {"Content-type": "application/octet-stream" })
-	res = urllib2.urlopen(req)
+	if args.bypass_ssl_check:
+		res = urllib2.urlopen(req, context=ssl._create_unverified_context())
+	else:
+		res = urllib2.urlopen(req)
 	data = res.read()
 	response = Response()
 	response.ParseFromString(data)
