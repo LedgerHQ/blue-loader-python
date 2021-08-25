@@ -10,6 +10,12 @@ source ledger/bin/activate
 pip install ledgerblue
 ```
 
+## Supported devices 
+
+At the moment these tools work for all Nano S and Blue devices, but only for special Nano X developer units which are not available to the general public.
+
+Please check [Ledger Developer Portal](https://developers.ledger.com/docs/nano-app/introduction/) to see how to debug your application on a Nano X simulator.
+
 ## Installation pre-requisites
 
 
