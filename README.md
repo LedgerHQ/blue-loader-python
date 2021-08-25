@@ -56,4 +56,4 @@ Use the following Target IDs (--targetId option) when running commands directly:
   * 0x31000002 on Blue with firmware <= 2.0
   * 0x31000004 on Blue with firmware 2.1.x
   * 0x31010004 on Blue v2 with firmware 2.1.x
-  * 0x33000004 on Nano X with firmware 1.x
+  * 0x33000004 on Nano X with firmware 1.x (**developer units only**)
