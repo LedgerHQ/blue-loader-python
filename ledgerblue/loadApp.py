@@ -34,7 +34,7 @@ def get_argparser():
 	parser.add_argument("--targetVersion", help="Set the chip target version")
 	parser.add_argument("--fileName", help="The application hex file to be loaded onto the device")
 	parser.add_argument("--icon", help="The icon content to use (hex encoded)")
-	parser.add_argument("--curve", help="""A curve on which BIP 32 derivation is locked ("secp256k1", "prime256r1",
+	parser.add_argument("--curve", help="""A curve on which BIP 32 derivation is locked ("secp256k1", "secp256r1",
 "ed25519" or "bls12381g1"), can be repeated""", action='append')
 	parser.add_argument("--path", help="""A BIP 32 path to which derivation is locked (format decimal a'/b'/c), can be
 repeated""", action='append')
@@ -141,7 +141,7 @@ if __name__ == '__main__':
 		for curve in args.curve:
 			if curve == 'secp256k1':
 				curveMask |= 0x01
-			elif curve == 'prime256r1':
+			elif curve == 'secp256r1':
 				curveMask |= 0x02
 			elif curve == 'ed25519':
 				curveMask |= 0x04
