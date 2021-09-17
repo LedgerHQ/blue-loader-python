@@ -43,5 +43,5 @@ if __name__ == '__main__':
 	get_argparser().parse_args()
 	privateKey = PrivateKey()
 	publicKey = hexstr(privateKey.pubkey.serialize(compressed=False))
-	print("Public key : %s" % publicKey)
+	print("Public key: %s" % publicKey)
 	print("Private key: %s" % privateKey.serialize())
