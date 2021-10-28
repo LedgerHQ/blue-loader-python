@@ -95,3 +95,4 @@ if __name__ == '__main__':
 			result = dongle.exchange(bytearray(data))
 		if args.apdu:
 			print("<= Clear " + str(result))
+	dongle.close()		
