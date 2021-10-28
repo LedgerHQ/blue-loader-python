@@ -195,9 +195,10 @@ if __name__ == '__main__':
 
 	dongle = None
 	secret = None
+	dongle_open = False
 	if not args.offline:
 		dongle = getDongle(args.apdu)
-
+		dongle_open = True
 		if args.deployLegacy:
 			secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 		else:
@@ -311,3 +312,5 @@ if __name__ == '__main__':
 		loader.commit(signature)
 	else:
 		loader.run(args.bootAddr-printer.minAddr(), signature)
+	if(dongle_open == True):
+		dongle.close()
