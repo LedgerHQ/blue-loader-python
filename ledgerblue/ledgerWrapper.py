@@ -23,8 +23,8 @@ from .commException import CommException
 def wrapCommandAPDU(channel, command, packetSize, ble=False):
 	if packetSize < 3:
 		raise CommException("Can't handle Ledger framing with less than 3 bytes for the report")
-	sequenceIdx = 0		
-	offset = 0	
+	sequenceIdx = 0
+	offset = 0
 	if not ble:
 		result = struct.pack(">H", channel)
 		extraHeaderSize = 2
@@ -41,7 +41,7 @@ def wrapCommandAPDU(channel, command, packetSize, ble=False):
 	offset = offset + blockSize
 	while offset != len(command):
 		if not ble:
-			result += struct.pack(">H", channel) 		
+			result += struct.pack(">H", channel)
 		result += struct.pack(">BH", 0x05, sequenceIdx)
 		sequenceIdx = sequenceIdx + 1
 		if (len(command) - offset) > packetSize - 3 - extraHeaderSize:
@@ -50,18 +50,18 @@ def wrapCommandAPDU(channel, command, packetSize, ble=False):
 			blockSize = len(command) - offset
 		result += command[offset : offset + blockSize]
 		offset = offset + blockSize
-	if not ble:		
+	if not ble:
 		while (len(result) % packetSize) != 0:
 			result += b"\x00"
 	return bytearray(result)
 
 def unwrapResponseAPDU(channel, data, packetSize, ble=False):
-	sequenceIdx = 0		
+	sequenceIdx = 0
 	offset = 0
 	if not ble:
 		extraHeaderSize = 2
 	else:
-		extraHeaderSize = 0	
+		extraHeaderSize = 0
 	if (data is None) or (len(data) < 5 + extraHeaderSize + 5):
 		return None
 	if not ble:

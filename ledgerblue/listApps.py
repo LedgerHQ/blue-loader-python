@@ -62,3 +62,5 @@ if __name__ == '__main__':
 	while len(apps) != 0:
 		print(apps)
 		apps = loader.listApp(False)
+
+	dongle.close()

@@ -49,3 +49,5 @@ if __name__ == '__main__':
 		passphrase = unicodedata.normalize('NFKD', passphrase)
 		apdu = bytearray([0xE0, 0xD0, p1, 0x00, len(passphrase)]) + bytearray(passphrase, 'utf8')
 		dongle.exchange(apdu, timeout=300)
+
+	dongle.close()

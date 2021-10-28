@@ -46,12 +46,12 @@ TCP_PROXY=None
 if "LEDGER_PROXY_ADDRESS" in os.environ and len(os.environ["LEDGER_PROXY_ADDRESS"]) != 0 and \
    "LEDGER_PROXY_PORT" in os.environ and len(os.environ["LEDGER_PROXY_PORT"]) != 0:
 	TCP_PROXY=(os.environ["LEDGER_PROXY_ADDRESS"], int(os.environ["LEDGER_PROXY_PORT"]))
-	
+
 # Force use of MCUPROXY if required
 PCSC=None
 if "PCSC" in os.environ and len(os.environ["PCSC"]) != 0:
 	PCSC=os.environ["PCSC"]
-if PCSC:	
+if PCSC:
 	try:
 		from smartcard.Exceptions import NoCardException
 		from smartcard.System import readers
@@ -63,7 +63,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 
 	def __init__(self, device, ledger=False, debug=False):
 		self.device = device
-		self.ledger = ledger		
+		self.ledger = ledger
 		self.debug = debug
 		self.waitImpl = self
 		self.opened = True
@@ -76,7 +76,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		if self.debug:
 			print("HID => %s" % apdu.hex())
 		if self.ledger:
-			apdu = wrapCommandAPDU(0x0101, apdu, 64)		
+			apdu = wrapCommandAPDU(0x0101, apdu, 64)
 		padSize = len(apdu) % 64
 		tmp = apdu
 		if padSize != 0:
@@ -89,7 +89,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 				raise BaseException("Error while writing")
 			offset += 64
 		dataLength = 0
-		dataStart = 2		
+		dataStart = 2
 		result = self.waitImpl.waitFirstResponse(timeout)
 		if not self.ledger:
 			if result[0] == 0x61: # 61xx : data available
@@ -221,9 +221,9 @@ def getDongle(debug=False, selectCommand=None):
 		for reader in readers():
 			try:
 				connection = reader.createConnection()
-				connection.connect()				
+				connection.connect()
 				if selectCommand != None:
-					response, sw1, sw2 = connection.transmit(toBytes("00A4040010FF4C4547522E57414C5430312E493031"))																  
+					response, sw1, sw2 = connection.transmit(toBytes("00A4040010FF4C4547522E57414C5430312E493031"))
 					sw = (sw1 << 8) | sw2
 					if sw == 0x9000:
 						break
@@ -238,4 +238,3 @@ def getDongle(debug=False, selectCommand=None):
 		if connection is not None:
 			return DongleSmartcard(connection, debug)
 	raise CommException("No dongle found")
-

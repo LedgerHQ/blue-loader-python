@@ -34,7 +34,7 @@ def getDeployedSecretV1(dongle, masterPrivate, targetId):
 	apdu = bytearray([0xe0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
 	dongle.exchange(apdu)
 
-	# walk the chain 
+	# walk the chain
 	batch_info = bytearray(dongle.exchange(bytearray.fromhex('E050000000')))
 	cardKey = batch_info[5:5 + batch_info[4]]
 
@@ -60,7 +60,7 @@ def getDeployedSecretV1(dongle, masterPrivate, targetId):
 		if len(certificate) == 0:
 			break
 		certificatePublic = certificate[1 : 1 + certificate[0]]
-		certificateSignature = last_pub_key.ecdsa_deserialize(bytes(certificate[2 + certificate[0] :]))		
+		certificateSignature = last_pub_key.ecdsa_deserialize(bytes(certificate[2 + certificate[0] :]))
 		if not last_pub_key.ecdsa_verify(bytes(certificatePublic), certificateSignature):
 			if index == 0:
 				# Not an error if loading from user key
@@ -87,7 +87,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, signerCertChain=None, e
 	apdu = bytearray([0xe0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
 	dongle.exchange(apdu)
 
-	# walk the chain 
+	# walk the chain
 	nonce = os.urandom(8)
 	apdu = bytearray([0xe0, 0x50, 0x00, 0x00]) + bytearray([len(nonce)]) + nonce
 	auth_info = dongle.exchange(apdu)
@@ -110,7 +110,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, signerCertChain=None, e
 		certificate = bytearray([len(testMasterPublic)]) + testMasterPublic + bytearray([len(signature)]) + signature
 		apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(certificate)]) + certificate
 		dongle.exchange(apdu)
-	
+
 	# provide the ephemeral certificate
 	ephemeralPrivate = PrivateKey()
 	ephemeralPublic = bytearray(ephemeralPrivate.pubkey.serialize(compressed=False))
@@ -127,7 +127,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, signerCertChain=None, e
 	last_dev_pub_key = PublicKey(bytes(testMasterPublic), raw=True)
 	devicePublicKey = None
 	while True:
-		if index == 0:			
+		if index == 0:
 			certificate = bytearray(dongle.exchange(bytearray.fromhex('E052000000')))
 		elif index == 1:
 			certificate = bytearray(dongle.exchange(bytearray.fromhex('E052800000')))

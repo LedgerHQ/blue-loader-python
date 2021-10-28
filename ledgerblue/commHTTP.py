@@ -31,7 +31,7 @@ class HTTPProxy(object):
     def exchange(self, apdu):
         if self.debug:
             print("=> %s" % apdu.hex())
-    
+
         try:
             ret = requests.post(self.remote_host + "/send_apdu", params={"data": apdu.hex()})
 
@@ -87,12 +87,5 @@ class HTTPProxy(object):
         except Exception as e:
             print(e)
 
-
-
-
-
-
-
 def getDongle(remote_host="localhost", debug=False):
-
     return HTTPProxy(remote_host, debug)

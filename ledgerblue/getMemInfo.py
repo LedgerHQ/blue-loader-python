@@ -54,3 +54,5 @@ loader = HexLoader(dongle, 0xe0, True, secret)
 # apps = loader.listApp()
 memInfo = loader.getMemInfo()
 print(memInfo)
+
+dongle.close()

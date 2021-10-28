@@ -136,12 +136,6 @@ class HexLoader:
 			if not self.card is None:
 				self.max_mtu = min(self.max_mtu, self.card.apduMaxDataSize()&0xF0)
 
-		# except:
-		# 	pass
-
-
-	
-		
 	def crc16(self, data):
 		TABLE_CRC16_CCITT = [
 			0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -268,7 +262,7 @@ class HexLoader:
 
 			if SCP_DEBUG:
 				print(binascii.hexlify(data))
-		else:		
+		else:
 			cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
 			decryptedData = cipher.decrypt(data)
 			if SCP_DEBUG:
@@ -294,11 +288,11 @@ class HexLoader:
 
 	def flushSegment(self):
 		data = b'\x07'
-		self.exchange(self.cla, 0x00, 0x00, 0x00, data)				
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def crcSegment(self, offsetSegment, lengthSegment, crcExpected):
 		data = b'\x08' + struct.pack('>H', offsetSegment) + struct.pack('>I', lengthSegment) + struct.pack('>H', crcExpected)
-		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def validateTargetId(self, targetId):
 		data = struct.pack('>I', targetId)
@@ -339,7 +333,7 @@ class HexLoader:
 
 		# in previous version, appparams are not part of the application hash yet
 		self.createappParams = None #data[1:]
-		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def createApp(self, code_length, data_length=0, install_params_length=0, flags=0, bootOffset=1):
 		#keep the create app parameters to be included in the load app hash
@@ -349,7 +343,7 @@ class HexLoader:
 
 	def deleteApp(self, appname):
 		data = b'\x0C' +  struct.pack('>B',len(appname)) +  appname
-		self.exchange(self.cla, 0x00, 0x00, 0x00, data)						
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def deleteAppByHash(self, appfullhash):
 		if len(appfullhash) != 32:

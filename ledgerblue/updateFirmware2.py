@@ -58,7 +58,7 @@ def process(dongle, request):
 		except:
 			response['response'] = "I/O" # or error, and SW in data
 
-	return response			
+	return response
 
 if __name__ == '__main__':
 	import urllib.parse as urlparse
@@ -90,3 +90,5 @@ if __name__ == '__main__':
 	ws.close()
 
 	print("Script executed successfully")
+
+	dongle.close()

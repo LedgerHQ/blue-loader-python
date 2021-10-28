@@ -165,3 +165,5 @@ if __name__ == '__main__':
 	apdu = bytearray([0xe0, 0xC2, 0x00, 0x00, len(certificate)]) + certificate
 	dongle.exchange(apdu)
 	print("Endorsement setup finalized")
+
+	dongle.close()
