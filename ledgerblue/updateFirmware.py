@@ -111,7 +111,7 @@ if __name__ == '__main__':
 	parameter.local = False
 	parameter.alias = "persoKey"
 	parameter.name = args.perso
-	request.parameters = bytes(deviceNonce)	
+	request.parameters = bytes(deviceNonce)
 	request.largeStack = True
 
 	response = serverQuery(request, args.url)
@@ -154,7 +154,7 @@ if __name__ == '__main__':
 		parameter = request.remote_parameters.add()
 		parameter.local = False
 		parameter.alias = "scpv2"
-		parameter.name = "dummy"	
+		parameter.name = "dummy"
 	request.id = response.id
 	request.largeStack = True
 
@@ -202,3 +202,5 @@ if __name__ == '__main__':
 		apdu = responseData[offset : offset + 5 + responseData[offset + 4]]
 		dongle.exchange(apdu)
 		offset += 5 + responseData[offset + 4]
+
+	dongle.close()

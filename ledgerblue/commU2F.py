@@ -209,7 +209,7 @@ class U2FTunnelDongle(Dongle, DongleWait):
   def __init__(self, device, scrambleKey="", ledger=False, debug=False):
     self.device = device
     self.scrambleKey = scrambleKey
-    self.ledger = ledger    
+    self.ledger = ledger
     self.debug = debug
     self.waitImpl = self
     self.opened = True
@@ -220,8 +220,8 @@ class U2FTunnelDongle(Dongle, DongleWait):
       print("U2F => %s" % apdu.hex())
 
     if len(apdu) >= 256:
-      raise CommException("Too long APDU to transport")  
-    
+      raise CommException("Too long APDU to transport")
+
     # wrap apdu
     i=0
     keyHandle = b''
@@ -231,7 +231,7 @@ class U2FTunnelDongle(Dongle, DongleWait):
         val = b'' + int2byte(ord(val) ^ ord(self.scrambleKey[i % len(self.scrambleKey)]))
       keyHandle += val
       i+=1
-    
+
     client_param = sha256("u2f_tunnel".encode('utf8')).digest()
     app_param = sha256("u2f_tunnel".encode('utf8')).digest()
 
@@ -323,16 +323,4 @@ def getDongle(path=None, dev_class=None, scrambleKey="", debug=False):
           except (exc.DeviceError, IOError, OSError):
               traceback.print_exc()
               pass
-      # unknown devices
-      # else:
-      #     device = HIDDevice(d['path'])
-      #     try:
-      #         device.open()
-      #         # try a ping command to ensure a FIDO device, else timeout (BEST here, modulate the timeout, 2 seconds is way too big)
-      #         device.ping()
-      #         device.close()
-      #         return U2FTunnelDongle(dev_class(d['path']),scrambleKey, debug=debug)
-      #     except (exc.DeviceError, IOError, OSError):
-      #         traceback.print_exc()
-      #         pass
   raise CommException("No dongle found")

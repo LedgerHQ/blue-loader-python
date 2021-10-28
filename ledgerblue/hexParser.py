@@ -63,7 +63,7 @@ class IntelHexParser:
                                 continue
                         if data[0] != ':':
                                 raise Exception("Invalid data at line %d" % lineNumber)
-                        data = bytearray.fromhex(data[1:])                
+                        data = bytearray.fromhex(data[1:])
                         count = data[0]
                         address = (data[1] << 8) + data[2]
                         recordType = data[3]
@@ -83,10 +83,10 @@ class IntelHexParser:
                         if recordType == 0x01:
                                 if len(zoneData) != 0:
                                         self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                                        zoneData = b'' 
+                                        zoneData = b''
                                         startZone = None
                                         startFirst = None
-                                        current = None                                        
+                                        current = None
                         if recordType == 0x02:
                                         raise Exception("Unsupported record 02")
                         if recordType == 0x03:
@@ -94,25 +94,25 @@ class IntelHexParser:
                         if recordType == 0x04:
                                         if len(zoneData) != 0:
                                                 self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                                                zoneData = b'' 
+                                                zoneData = b''
                                                 startZone = None
                                                 startFirst = None
-                                                current = None                                                
+                                                current = None
                                         startZone = (data[4] << 8) + data[5]
                         if recordType == 0x05:
                                         self.bootAddr = ((data[4]&0xFF) << 24) + ((data[5]&0xFF) << 16) + ((data[6]&0xFF) << 8) + (data[7]&0xFF)
                 #tail add of the last zone
                 if len(zoneData) != 0:
                         self._addArea(IntelHexArea((startZone << 16) + startFirst, zoneData))
-                        zoneData = b'' 
+                        zoneData = b''
                         startZone = None
                         startFirst = None
-                        current = None                                        
+                        current = None
                 file.close()
 
         def getAreas(self):
                 return self.areas
-            
+
         def getBootAddr(self):
                 return self.bootAddr
 
@@ -140,7 +140,7 @@ class IntelHexPrinter:
                 else:
                         #order by start address
                         self.areas = insertAreaSorted(self.areas, IntelHexArea(startaddress, data))
-                
+
         def __init__(self, parser=None, eol="\r\n"):
                 self.areas = []
                 self.eol = eol
@@ -210,7 +210,7 @@ class IntelHexPrinter:
 
                                 oldoff = off
                                 off += blocksize
-                                
+
                 bootAddrHex = hex(0x100000000+self.bootAddr)[3:]
                 s = ":04000005"+bootAddrHex+hex(0x100+self.checksum( bytearray.fromhex("04000005"+bootAddrHex)))[3:]+self.eol
                 if file != None:

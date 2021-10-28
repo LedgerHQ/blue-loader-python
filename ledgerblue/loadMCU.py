@@ -52,4 +52,5 @@ if __name__ == '__main__':
     loader.validateTargetId(args.targetId)
     hash = loader.load(0xFF, 0xF0, parser, reverse=args.reverse, doCRC=(not args.nocrc))
     loader.run(args.bootAddr)
-    
+
+    dongle.close()

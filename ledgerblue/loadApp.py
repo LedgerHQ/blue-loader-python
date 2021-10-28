@@ -135,7 +135,7 @@ if __name__ == '__main__':
 			else:
 				raise Exception("Unknown curve " + curve)
 
-	if args.apilevel >= 5:		
+	if args.apilevel >= 5:
 		if args.path_slip21 != None:
 			curveMask |= 0x08
 		path += struct.pack('>B',curveMask)
@@ -160,11 +160,11 @@ if __name__ == '__main__':
 
 	if not args.icon is None:
 		args.icon = bytearray.fromhex(args.icon)
-	
+
 	signature = None
 	if not args.signature is None:
 		signature = bytearray.fromhex(args.signature)
-	
+
 	#prepend app's data with the icon content (could also add other various install parameters)
 	printer = IntelHexPrinter(parser)
 
@@ -182,7 +182,6 @@ if __name__ == '__main__':
 	secret = None
 	if not args.offline:
 		dongle = getDongle(args.apdu)
-
 		if args.deployLegacy:
 			secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 		else:
@@ -293,3 +292,5 @@ if __name__ == '__main__':
 		loader.commit(signature)
 	else:
 		loader.run(args.bootAddr-printer.minAddr(), signature)
+
+	dongle.close()

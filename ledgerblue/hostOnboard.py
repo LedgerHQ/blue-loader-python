@@ -86,3 +86,5 @@ if __name__ == '__main__':
 
 	apdu = bytearray([0xE0, 0xD0, args.id, 0x00, len(apdudata)]) + apdudata
 	dongle.exchange(apdu, timeout=3000)
+
+	dongle.close()

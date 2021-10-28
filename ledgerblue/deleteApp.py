@@ -91,3 +91,5 @@ if __name__ == '__main__':
 			loader.deleteApp(name)
 	if args.appHash != None:
 		loader.deleteAppByHash(args.appHash)
+
+	dongle.close()

@@ -58,3 +58,5 @@ if __name__ == '__main__':
 	loader = HexLoader(dongle, 0xe0, True, secret)
 
 	loader.setupCustomCA(args.name, public)
+
+	dongle.close()

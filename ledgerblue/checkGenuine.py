@@ -149,7 +149,7 @@ if __name__ == '__main__':
                         customCA = True
                 apps = loader.listApp(False)
         except:
-            genuine = False        
+            genuine = False
     if genuine:
         if ui:
             print ("WARNING : Product is genuine but has a UI application loaded")
@@ -163,3 +163,5 @@ if __name__ == '__main__':
             print ("MCU Hash " + binascii.hexlify(version['mcuHash']).decode('ascii'))
     else:
         print ("Product is NOT genuine")
+
+    dongle.close()

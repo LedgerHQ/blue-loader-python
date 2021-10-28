@@ -50,3 +50,5 @@ if __name__ == '__main__':
 	loader = HexLoader(dongle, 0xe0)
 
 	loader.runApp(args.appName)
+
+	dongle.close()
