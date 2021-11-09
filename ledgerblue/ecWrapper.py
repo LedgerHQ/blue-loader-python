@@ -34,11 +34,9 @@ if not USE_SECP:
 	SIGNER = ECDSA()
 
 class PublicKey(object):
-	def __init__(self, pubkey=None, raw=False, flags=None, ctx=None):
+	def __init__(self, pubkey=None, raw=False):
 		if USE_SECP:
-			if flags == None:
-				flags = secp256k1.FLAG_VERIFY
-			self.obj = secp256k1.PublicKey(pubkey, raw, flags, ctx)
+			self.obj = secp256k1.PublicKey(pubkey, raw)
 		else:
 			if not raw:
 				raise Exception("Non raw init unsupported")
@@ -46,7 +44,7 @@ class PublicKey(object):
 			x = int.from_bytes(pubkey[0:32], 'big')
 			y = int.from_bytes(pubkey[32:], 'big')
 			self.obj = ECPublicKey(Point(x, y, CURVE_SECP256K1))
-					
+
 	def ecdsa_deserialize(self, ser_sig):
 		if USE_SECP:
 			return self.obj.ecdsa_deserialize(ser_sig)
@@ -100,11 +98,9 @@ class PublicKey(object):
 
 class PrivateKey(object):
 
-	def __init__(self, privkey=None, raw=True, flags=None, ctx=None):	
+	def __init__(self, privkey=None, raw=True):
 		if USE_SECP:
-			if flags == None:
-				flags = secp256k1.ALL_FLAGS
-			self.obj = secp256k1.PrivateKey(privkey, raw, flags, ctx)
+			self.obj = secp256k1.PrivateKey(privkey, raw)
 			self.pubkey = self.obj.pubkey
 		else:
 			if not raw:
@@ -130,9 +126,9 @@ class PrivateKey(object):
 		if USE_SECP:
 			return self.obj.ecdsa_serialize(raw_sig)
 		else:
-			return raw_sig		
+			return raw_sig
 
-	def ecdsa_sign(self, msg, raw=False, digest=hashlib.sha256, rfc6979=False):	
+	def ecdsa_sign(self, msg, raw=False, digest=hashlib.sha256, rfc6979=False):
 		if USE_SECP:
 			return self.obj.ecdsa_sign(msg, raw, digest)
 		else:
