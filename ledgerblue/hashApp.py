@@ -18,6 +18,7 @@
 """
 
 import argparse
+import struct
 
 def get_argparser():
 	parser = argparse.ArgumentParser(description="Calculate an application hash from the application's hex file.")
