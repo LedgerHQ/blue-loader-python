@@ -41,12 +41,12 @@ def auto_int(x):
 	return int(x, 0)
 
 if __name__ == '__main__':
+	import binascii
+	import sys
+
 	from .comm import getDongle
 	from .deployed import getDeployedSecretV2
 	from .ecWrapper import PrivateKey
-	import sys
-	import fileinput
-	import binascii
 	from .hexLoader import HexLoader
 
 	args = get_argparser().parse_args()

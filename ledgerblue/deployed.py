@@ -19,10 +19,7 @@
 
 from .ecWrapper import PrivateKey, PublicKey
 import os
-import sys
 import struct
-from .hexParser import IntelHexParser
-from .hexLoader import HexLoader
 import binascii
 
 def getDeployedSecretV1(dongle, masterPrivate, targetId):

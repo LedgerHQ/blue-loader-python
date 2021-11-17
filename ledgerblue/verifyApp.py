@@ -32,10 +32,8 @@ def auto_int(x):
 
 if __name__ == '__main__':
 	from .hexParser import IntelHexParser
-	from .hexParser import IntelHexPrinter
 	from .ecWrapper import PublicKey
 	import hashlib
-	import binascii
 
 	args = get_argparser().parse_args()
 

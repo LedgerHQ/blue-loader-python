@@ -45,20 +45,14 @@
 
 import os
 import traceback
-from abc import ABCMeta, abstractmethod
-from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
-from binascii import hexlify
 from .Dongle import *
 
-import binascii
 import time
-import sys
 import hid
 from u2flib_host.device import U2FDevice
 from u2flib_host.yubicommon.compat import byte2int, int2byte
-from u2flib_host.constants import INS_ENROLL, INS_SIGN
-from u2flib_host import u2f, exc
-from u2flib_host.utils import websafe_decode, websafe_encode
+from u2flib_host.constants import INS_SIGN
+from u2flib_host import exc
 from hashlib import sha256
 
 from .commException import CommException

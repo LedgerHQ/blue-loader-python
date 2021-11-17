@@ -17,18 +17,18 @@
 ********************************************************************************
 """
 
-from abc import ABCMeta, abstractmethod
-from .commException import CommException
-from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
-from .Dongle import *
 from binascii import hexlify
-import time
+import hid
 import os
-import sys
-from .commU2F import getDongle as getDongleU2F
+import time
+
+from .commException import CommException
 from .commHTTP import getDongle as getDongleHTTP
 from .commTCP import getDongle as getDongleTCP
-import hid
+from .commU2F import getDongle as getDongleU2F
+from .Dongle import Dongle, DongleWait, TIMEOUT, hexstr
+from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
+
 
 APDUGEN=None
 if "APDUGEN" in os.environ and len(os.environ["APDUGEN"]) != 0:
