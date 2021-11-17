@@ -26,7 +26,7 @@ from .commException import CommException
 from .commHTTP import getDongle as getDongleHTTP
 from .commTCP import getDongle as getDongleTCP
 from .commU2F import getDongle as getDongleU2F
-from .Dongle import Dongle, DongleWait, TIMEOUT, hexstr
+from .Dongle import Dongle, DongleWait, TIMEOUT
 from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
 
 
@@ -70,11 +70,11 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 
 	def exchange(self, apdu, timeout=TIMEOUT):
 		if APDUGEN:
-			print("%s" % hexstr(apdu))
+			print(apdu.hex())
 			return
 
 		if self.debug:
-			print("HID => %s" % hexstr(apdu))
+			print("HID => %s" % apdu.hex())
 		if self.ledger:
 			apdu = wrapCommandAPDU(0x0101, apdu, 64)		
 		padSize = len(apdu) % 64
@@ -125,7 +125,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		sw = (result[swOffset] << 8) + result[swOffset + 1]
 		response = result[dataStart : dataLength + dataStart]
 		if self.debug:
-			print("HID <= %s%.2x" % (hexstr(response), sw))
+			print("HID <= %s%.2x" % (response.hex(), sw))
 		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
 			possibleCause = "Unknown reason"
 			if sw == 0x6982:
@@ -177,11 +177,11 @@ class DongleSmartcard(Dongle):
 
 	def exchange(self, apdu, timeout=TIMEOUT):
 		if self.debug:
-			print("SC => %s" % hexstr(apdu))
+			print("SC => %s" % apdu.hex())
 		response, sw1, sw2 = self.device.transmit(toBytes(hexlify(apdu)))
 		sw = (sw1 << 8) | sw2
 		if self.debug:
-			print("SC <= %s%.2x" % (hexstr(response).replace(" ", ""), sw))
+			print("SC <= %s%.2x" % (response.hex(), sw))
 		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
 			raise CommException("Invalid status %04x" % sw, sw, bytearray(response))
 		return bytearray(response)

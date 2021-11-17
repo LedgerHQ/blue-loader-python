@@ -31,9 +31,6 @@ Issuer keypair used by Ledger to sign the device's Issuer Certificate""", defaul
 def auto_int(x):
 	return int(x, 0)
 
-def hexstr(bstr):
-	return binascii.hexlify(bstr).decode()
-
 def process(dongle, request):
 	response = {}
 	apdusList = []
@@ -52,7 +49,7 @@ def process(dongle, request):
 	if len(apdusList) != 0:
 		try:
 			for apdu in apdusList:
-				response['data'] = hexstr(dongle.exchange(apdu))
+				response['data'] = dongle.exchange(apdu).hex()
 			if len(response['data']) == 0:
 				response['data'] = "9000"
 			response['response'] = "success"

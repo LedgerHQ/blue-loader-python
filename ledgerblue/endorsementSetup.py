@@ -36,9 +36,6 @@ if no certificate is specified""")
 def auto_int(x):
 		return int(x, 0)
 
-def hexstr(bstr):
-	return binascii.hexlify(bstr).decode()
-
 def getDeployedSecretV2(dongle, masterPrivate, targetid, issuerKey):
 		testMaster = PrivateKey(bytes(masterPrivate))
 		testMasterPublic = bytearray(testMaster.pubkey.serialize(compressed=False))
@@ -119,7 +116,6 @@ if __name__ == '__main__':
 	import hashlib
 	import struct
 	import os
-	import sys
 	import binascii
 
 	args = get_argparser().parse_args()
@@ -151,7 +147,7 @@ if __name__ == '__main__':
 	if args.certificate == None:
 			apdu = bytearray([0xe0, 0xC0, args.key, 0x00, 0x00])
 			response = dongle.exchange(apdu)
-			print("Public key " + hexstr(response[0:65]))
+			print("Public key " + response[0:65].hex())
 			m = hashlib.sha256()
 			m.update(bytes(b"\xff")) # Endorsement role
 			m.update(bytes(response[0:65]))
@@ -163,7 +159,7 @@ if __name__ == '__main__':
 				privateKey = PrivateKey(bytes(bytearray.fromhex(args.privateKey)))
 				dataToSign = bytes(bytearray([0xfe]) + response[0:65])
 				signature = privateKey.ecdsa_sign(bytes(dataToSign))
-				args.certificate = hexstr(privateKey.ecdsa_serialize(signature))
+				args.certificate = privateKey.ecdsa_serialize(signature).hex()
 
 	if args.certificate != None:
 			certificate = bytearray.fromhex(args.certificate)

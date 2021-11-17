@@ -17,14 +17,9 @@
 ********************************************************************************
 """
 
-from binascii import hexlify
 import time
 
 import requests
-
-def hexstr(bstr):
-    return hexlify(bstr).decode()
-
 
 class HTTPProxy(object):
 
@@ -35,10 +30,10 @@ class HTTPProxy(object):
 
     def exchange(self, apdu):
         if self.debug:
-            print("=> %s" % hexstr(apdu))
+            print("=> %s" % apdu.hex())
     
         try:
-            ret = requests.post(self.remote_host + "/send_apdu", params={"data": hexstr(apdu)})
+            ret = requests.post(self.remote_host + "/send_apdu", params={"data": apdu.hex()})
 
             while True:
                 ret = requests.post(self.remote_host + "/fetch_apdu")
@@ -57,7 +52,7 @@ class HTTPProxy(object):
 
     def exchange_seph_event(self, event):
         if self.debug >= 3:
-            print("=> %s" % hexstr(event))
+            print("=> %s" % event.hex())
 
         try:
             ret = requests.post(self.remote_host + "/send_seph_event", params={"data": event.encode("hex")})
