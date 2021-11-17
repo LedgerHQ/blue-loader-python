@@ -3,7 +3,6 @@
 
 from setuptools import setup, find_packages
 from os.path import dirname, join
-import os
 
 here = dirname(__file__)
 setup(

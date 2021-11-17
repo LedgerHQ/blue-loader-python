@@ -34,14 +34,12 @@ def auto_int(x):
 	return int(x, 0)
 
 if __name__ == '__main__':
-	from .ecWrapper import PrivateKey
-	from .comm import getDongle
-	from .hexParser import IntelHexParser, IntelHexPrinter
-	from .hexLoader import HexLoader
-	from .deployed import getDeployedSecretV1, getDeployedSecretV2
-	import struct
 	import binascii
-	import sys
+
+	from .comm import getDongle
+	from .deployed import getDeployedSecretV2
+	from .ecWrapper import PrivateKey
+	from .hexLoader import HexLoader
 
 	args = get_argparser().parse_args()
 

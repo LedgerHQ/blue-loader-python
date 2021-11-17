@@ -112,7 +112,6 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, issuerKey):
 if __name__ == '__main__':
     from .ecWrapper import PrivateKey, PublicKey
     from .comm import getDongle
-    from .commException import CommException
     from .hexLoader import HexLoader
     import struct
     import os

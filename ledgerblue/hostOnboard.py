@@ -37,15 +37,10 @@ def auto_int(x):
 	return int(x, 0)
 
 if __name__ == '__main__':
-	from .ecWrapper import PrivateKey
-	from .comm import getDongle
-	from .hexParser import IntelHexParser, IntelHexPrinter
-	from .hexLoader import HexLoader
-	import struct
-	import binascii
-	import sys
 	import getpass
 	import unicodedata
+
+	from .comm import getDongle
 
 	args = get_argparser().parse_args()
 

@@ -17,7 +17,6 @@
 ********************************************************************************
 """
 
-from abc import ABCMeta, abstractmethod
 from ledgerblue.comm import Dongle
 from ledgerblue.commException import CommException
 from ledgerblue.ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU

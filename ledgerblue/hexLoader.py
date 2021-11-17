@@ -22,11 +22,9 @@ import sys
 import struct
 import hashlib
 import binascii
-from .ecWrapper import PrivateKey, PublicKey
-from builtins import int
+from .ecWrapper import PrivateKey
 from ecpy.curves import Curve
 import os
-#from builtins import str
 
 LOAD_SEGMENT_CHUNK_HEADER_LENGTH = 3
 MIN_PADDING_LENGTH = 1

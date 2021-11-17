@@ -17,15 +17,11 @@
 ********************************************************************************
 """
 
-from abc import ABCMeta, abstractmethod
-from .commException import CommException
-from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
 from binascii import hexlify
-import time
-import os
 import sys
+import time
+
 import requests
-import json
 
 def hexstr(bstr):
 	if (sys.version_info.major == 3):

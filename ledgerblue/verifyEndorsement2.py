@@ -28,10 +28,10 @@ def get_argparser():
 	return parser
 
 if __name__ == '__main__':
-	from .ecWrapper import PublicKey
 	import hashlib
 	import hmac
-	import binascii
+
+	from .ecWrapper import PublicKey
 
 	args = get_argparser().parse_args()
 

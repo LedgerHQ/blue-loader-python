@@ -54,14 +54,13 @@ def serverQuery(request, url):
 
 if __name__ == '__main__':
 	import sys
-	import os
 	import struct
 	if sys.version_info.major == 3:
 		import urllib.request as urllib2
 		import urllib.parse as urlparse
 	else:
 		import urllib2, urlparse
-	from .BlueHSMServer_pb2 import Request, Response, Parameter
+	from .BlueHSMServer_pb2 import Request, Response
 	from .comm import getDongle
 
 	args = get_argparser().parse_args()

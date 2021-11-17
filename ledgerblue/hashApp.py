@@ -39,7 +39,6 @@ def hexstr(bstr):
 
 if __name__ == '__main__':
 	from .hexParser import IntelHexParser
-	from .hexParser import IntelHexPrinter
 	import sys
 	import hashlib
 	import binascii
