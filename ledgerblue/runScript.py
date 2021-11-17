@@ -25,7 +25,7 @@ device. The file must be formatted as hex, with one CAPDU per line.""")
 	parser.add_argument("--fileName", help="The name of the APDU script to load")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--scp", help="Open a Secure Channel to exchange APDU", action='store_true')
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Nano S)", type=auto_int)
+	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Nano S)", type=auto_int, default=0x31100002)
 	parser.add_argument("--rootPrivateKey", help="""The Signer private key used to establish a Secure Channel (otherwise
 a random one will be generated)""")
 	return parser
@@ -44,8 +44,6 @@ if __name__ == '__main__':
 
 	args = get_argparser().parse_args()
 
-	if args.targetId is None:
-		args.targetId = 0x31100002
 	if not args.fileName:
 		#raise Exception("Missing fileName")
 		file = sys.stdin

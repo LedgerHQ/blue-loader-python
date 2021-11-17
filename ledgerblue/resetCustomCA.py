@@ -22,7 +22,7 @@ import argparse
 def get_argparser():
 	parser = argparse.ArgumentParser(description="""Remove all Custom CA public keys previously enrolled onto the
 device.""")
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
+	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int, default=0x31000002)
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--rootPrivateKey", help="""The Signer private key used to establish a Secure Channel (otherwise
 a random one will be generated)""")
@@ -41,8 +41,6 @@ if __name__ == '__main__':
 
 	args = get_argparser().parse_args()
 
-	if args.targetId is None:
-		args.targetId = 0x31000002
 	if args.rootPrivateKey is None:
 		privateKey = PrivateKey()
 		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))

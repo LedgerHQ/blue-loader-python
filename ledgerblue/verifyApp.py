@@ -22,9 +22,9 @@ import argparse
 def get_argparser():
 	parser = argparse.ArgumentParser("""Verify that the provided signature is a valid signature of the provided
 application.""")
-	parser.add_argument("--hex", help="The hex file of the signed application")
-	parser.add_argument("--key", help="The Custom CA public key with which to verify the signature (hex encoded)")
-	parser.add_argument("--signature", help="The signature to be verified (hex encoded)")
+	parser.add_argument("--hex", help="The hex file of the signed application", required=True)
+	parser.add_argument("--key", help="The Custom CA public key with which to verify the signature (hex encoded)", required=True)
+	parser.add_argument("--signature", help="The signature to be verified (hex encoded)", required=True)
 	return parser
 
 def auto_int(x):
@@ -36,13 +36,6 @@ if __name__ == '__main__':
 	import hashlib
 
 	args = get_argparser().parse_args()
-
-	if args.hex == None:
-		raise Exception("Missing hex filename to verify")
-	if args.key == None:
-		raise Exception("Missing public key")
-	if args.signature == None:
-		raise Exception("Missing signature")
 
 	# parse
 	parser = IntelHexParser(args.hex)

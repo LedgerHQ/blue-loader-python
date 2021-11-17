@@ -19,16 +19,19 @@
 
 import argparse
 
+DEFAULT_ISSUER_KEY = "0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609"
+
+
 def get_argparser():
 	parser = argparse.ArgumentParser(description="""Generate an attestation keypair, using the provided Owner private
 key to sign the Owner Certificate.""")
-	parser.add_argument("--key", help="Which endorsement scheme to use (1 or 2)", type=auto_int)
+	parser.add_argument("--key", help="Which endorsement scheme to use", type=auto_int, choices=(1, 2), required=True)
 	parser.add_argument("--certificate", help="""Optional certificate to store if finalizing the endorsement (hex
 encoded), if no private key is specified""")
 	parser.add_argument("--privateKey", help="""Optional private key to use to create a test certificate (hex encoded),
 if no certificate is specified""")
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
-	parser.add_argument("--issuerKey", help="Issuer key (hex encoded, default is batch 1)")
+	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int, default=0x31000002)
+	parser.add_argument("--issuerKey", help="Issuer key (hex encoded, default is batch 1)", default=DEFAULT_ISSUER_KEY)
 	parser.add_argument("--rootPrivateKey", help="SCP Host private key")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	return parser
@@ -120,14 +123,6 @@ if __name__ == '__main__':
 
 	args = get_argparser().parse_args()
 
-	if args.key == None:
-			raise Exception("Missing endorsement scheme number")
-	if args.key != 1 and args.key != 2:
-			raise Exception("Invalid endorsement scheme number")
-	if args.targetId == None:
-			args.targetId = 0x31000002
-	if args.issuerKey == None:
-			args.issuerKey = "0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609"
 	if (args.privateKey != None) and (args.certificate != None):
 		raise Exception("Cannot specify both certificate and privateKey")
 

@@ -21,7 +21,7 @@ import argparse
 
 def get_argparser():
 	parser = argparse.ArgumentParser(description="List all apps on the device.")
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
+	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int, default=0x31000002)
 	parser.add_argument("--rootPrivateKey", help="""The Signer private key used to establish a Secure Channel
 (otherwise, a random one will be generated)""")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
@@ -44,8 +44,6 @@ if __name__ == '__main__':
 	dongle = getDongle(args.apdu)
 
 	if args.scp:
-		if args.targetId is None:
-			args.targetId = 0x31000002
 		if args.rootPrivateKey is None:
 			privateKey = PrivateKey()
 			publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))

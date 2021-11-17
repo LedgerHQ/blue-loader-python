@@ -22,7 +22,7 @@ import struct
 
 def get_argparser():
 	parser = argparse.ArgumentParser(description="Calculate an application hash from the application's hex file.")
-	parser.add_argument("--hex", help="The application hex file to be hashed")
+	parser.add_argument("--hex", help="The application hex file to be hashed", required=True)
 	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
 	parser.add_argument("--targetVersion", help="Set the chip target version")
 	return parser
@@ -35,9 +35,6 @@ if __name__ == '__main__':
 	import hashlib
 
 	args = get_argparser().parse_args()
-
-	if args.hex == None:
-		raise Exception("Missing hex filename to hash")
 
 	# parse
 	parser = IntelHexParser(args.hex)

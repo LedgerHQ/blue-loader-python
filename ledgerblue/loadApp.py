@@ -30,26 +30,26 @@ if "NOCRC" in os.environ and len(os.environ["NOCRC"]) != 0:
 
 def get_argparser():
 	parser = argparse.ArgumentParser(description="Load an app onto the device from a hex file.")
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
+	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int, default=0x31000002)
 	parser.add_argument("--targetVersion", help="Set the chip target version")
-	parser.add_argument("--fileName", help="The application hex file to be loaded onto the device")
+	parser.add_argument("--fileName", help="The application hex file to be loaded onto the device", required=True)
 	parser.add_argument("--icon", help="The icon content to use (hex encoded)")
 	parser.add_argument("--curve", help="""A curve on which BIP 32 derivation is locked ("secp256k1", "secp256r1",
 "ed25519" or "bls12381g1"), can be repeated""", action='append')
 	parser.add_argument("--path", help="""A BIP 32 path to which derivation is locked (format decimal a'/b'/c), can be
 repeated""", action='append')
 	parser.add_argument("--path_slip21", help="""A SLIP 21 path to which derivation is locked""", action='append')
-	parser.add_argument("--appName", help="The name to give the application after loading it")
+	parser.add_argument("--appName", help="The name to give the application after loading it", required=True)
 	parser.add_argument("--signature", help="A signature of the application (hex encoded)")
 	parser.add_argument("--signApp", help="Sign application with provided signPrivateKey", action='store_true')
-	parser.add_argument("--appFlags", help="The application flags", type=auto_int)
+	parser.add_argument("--appFlags", help="The application flags", type=auto_int, default=0)
 	parser.add_argument("--bootAddr", help="The application's boot address", type=auto_int)
 	parser.add_argument("--rootPrivateKey", help="""The Signer private key used to establish a Secure Channel (otherwise
 a random one will be generated)""")
 	parser.add_argument("--signPrivateKey", help="Set the private key used to sign the loaded app")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
-	parser.add_argument("--apilevel", help="Use given API level when interacting with the device", type=auto_int)
+	parser.add_argument("--apilevel", help="Use given API level when interacting with the device", type=auto_int, default=10)
 	parser.add_argument("--delete", help="Delete the app with the same name before loading the provided one", action='store_true')
 	parser.add_argument("--params", help="Store icon and install parameters in a parameter section before the code", action='store_true')
 	parser.add_argument("--tlv", help="Use install parameters for all variable length parameters", action='store_true')
@@ -102,22 +102,11 @@ if __name__ == '__main__':
 	from .deployed import getDeployedSecretV1, getDeployedSecretV2
 	import struct
 	import binascii
-	import sys
 
 	args = get_argparser().parse_args()
 
-	if args.apilevel == None:
-		args.apilevel = 10
-	if args.targetId == None:
-		args.targetId = 0x31000002
-	if args.fileName == None:
-		raise Exception("Missing fileName")
-	if args.appName == None:
-		raise Exception("Missing appName")
-	if args.path_slip21 != None and args.apilevel < 10:
+	if args.path_slip21 is not None and args.apilevel < 10:
 		raise Exception("SLIP 21 path not supported using this API level")
-	if args.appFlags == None:
-		args.appFlags = 0
 	if args.rootPrivateKey == None:
 		privateKey = PrivateKey()
 		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))

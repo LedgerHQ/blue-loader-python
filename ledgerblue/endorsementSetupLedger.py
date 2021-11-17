@@ -31,7 +31,7 @@ Issuer keypair used by Ledger to sign the device's Issuer Certificate""", defaul
 	parser.add_argument("--endorsement", help="""A reference to the endorsement key to use; this is a reference to the
 specific Owner keypair to be used by Ledger to sign the Owner Certificate""", default="attest_1")
 	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
-	parser.add_argument("--key", help="Which endorsement scheme to use (1 or 2)", type=auto_int)
+	parser.add_argument("--key", help="Which endorsement scheme to use", type=auto_int, choices=(1, 2), required=True)
 	return parser
 
 def auto_int(x):
@@ -61,14 +61,6 @@ if __name__ == '__main__':
 
 	args = get_argparser().parse_args()
 
-	if args.url == None:
-		raise Exception("No URL specified")
-	if args.perso == None:
-		raise Exception("No personalization specified")
-	if args.endorsement == None:
-		raise Exception("No endorsement specified")
-	if args.key != 1 and args.key != 2:
-			raise Exception("Invalid endorsement scheme number")
 	if args.targetId == None:
 		args.targetId = 0x31000002 # Ledger Blue by default
 

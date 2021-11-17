@@ -21,10 +21,10 @@ import argparse
 
 def get_argparser():
 	parser = argparse.ArgumentParser(description="Verify a message signature created with Endorsement Scheme #1.")
-	parser.add_argument("--key", help="The endorsement public key with which to verify the signature (hex encoded)")
-	parser.add_argument("--codehash", help="The hash of the app associated with the endorsement request (hex encoded)")
-	parser.add_argument("--message", help="The message associated to the endorsement request (hex encoded)")
-	parser.add_argument("--signature", help="The signature to be verified (hex encoded)")
+	parser.add_argument("--key", help="The endorsement public key with which to verify the signature (hex encoded)", required=True)
+	parser.add_argument("--codehash", help="The hash of the app associated with the endorsement request (hex encoded)", required=True)
+	parser.add_argument("--message", help="The message associated to the endorsement request (hex encoded)", required=True)
+	parser.add_argument("--signature", help="The signature to be verified (hex encoded)", required=True)
 	return parser
 
 if __name__ == '__main__':
@@ -33,15 +33,6 @@ if __name__ == '__main__':
 	from .ecWrapper import PublicKey
 
 	args = get_argparser().parse_args()
-
-	if args.key == None:
-		raise Exception("Missing public key")
-	if args.codehash == None:
-		raise Exception("Missing code hash")
-	if args.message == None:
-		raise Exception("Missing message")
-	if args.signature == None:
-		raise Exception("Missing signature")
 
 	# prepare data
 	m = hashlib.sha256()
