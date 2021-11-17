@@ -32,11 +32,7 @@ def auto_int(x):
 	return int(x, 0)
 
 def hexstr(bstr):
-	if (sys.version_info.major == 3):
-		return binascii.hexlify(bstr).decode()
-	if (sys.version_info.major == 2):
-		return binascii.hexlify(bstr)
-	return ""
+	return binascii.hexlify(bstr).decode()
 
 def process(dongle, request):
 	response = {}
@@ -66,16 +62,11 @@ def process(dongle, request):
 	return response			
 
 if __name__ == '__main__':
-	import sys
-	if sys.version_info.major == 3:
-		import urllib.parse as urlparse
-	else:
-		import urllib, urlparse
+	import urllib.parse as urlparse
 	from .comm import getDongle
 	from websocket import create_connection
 	import json
 	import binascii
-	import sys
 
 	args = get_argparser().parse_args()
 	if args.url == None:
@@ -91,10 +82,7 @@ if __name__ == '__main__':
 	queryParameters = {}
 	queryParameters['targetId'] = args.targetId
 	queryParameters['perso'] = args.perso
-	if sys.version_info.major == 3:
-  		queryString = urlparse.urlencode(queryParameters)
-	else:
-		queryString = urllib.urlencode(queryParameters)
+	queryString = urlparse.urlencode(queryParameters)
 	ws = create_connection(args.url + '?' + queryString)
 	while True:
 		result = json.loads(ws.recv())

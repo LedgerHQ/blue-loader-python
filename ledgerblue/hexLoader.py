@@ -38,11 +38,7 @@ BOLOS_TAG_DATASIZE = 0x05
 BOLOS_TAG_DEPENDENCY = 0x06
 
 def string_to_bytes(x):
-	import sys
-	if sys.version_info.major == 3:
-		return bytes(x, 'ascii')
-	else:
-		return bytes(x)
+	return bytes(x, 'ascii')
 
 def encodelv(v):
 	l = len(v)
@@ -212,8 +208,6 @@ class HexLoader:
 			if SCP_DEBUG:
 				print(binascii.hexlify(paddedData))
 			cipher = AES.new(self.scp_enc_key, AES.MODE_CBC, self.scp_enc_iv)
-			if sys.version_info.major == 2:
-				paddedData = bytes(paddedData)
 			encryptedData = cipher.encrypt(paddedData)
 			self.scp_enc_iv = encryptedData[-16:]
 			if SCP_DEBUG:
@@ -244,10 +238,7 @@ class HexLoader:
 		if not self.secure or data is None or len(data) == 0 or len(data) == 2:
 			return data
 
-		if sys.version_info.major == 3:
-			padding_char = 0x80
-		else:
-			padding_char = chr(0x80)
+		padding_char = 0x80
 
 		if self.scpVersion == 3:
 			if SCP_DEBUG:
@@ -369,8 +360,6 @@ class HexLoader:
 	def getVersion(self):
 		data = b'\x10'
 		response = self.exchange(self.cla, 0x00, 0x00, 0x00, data)
-		if sys.version_info.major == 2:
-			response = bytearray(response)
 		result = {}
 		offset = 0
 		result['targetId'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
@@ -399,8 +388,6 @@ class HexLoader:
 			else:
 				response = self.exchange(self.cla, 0xDF, 0x00, 0x00, b'')
 
-		if sys.version_info.major == 2:
-			response = bytearray(response)
 		#print binascii.hexlify(response[0])
 		result = []
 		offset = 0
@@ -436,8 +423,6 @@ class HexLoader:
 
 	def getMemInfo(self):
 		response = self.exchange(self.cla, 0x00, 0x00, 0x00, b'\x11')
-		if sys.version_info.major == 2:
-			response = bytearray(response)
 		item = {}
 		offset = 0
 		item['systemSize'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
