@@ -30,13 +30,9 @@ def get_argparser():
 def auto_int(x):
 	return int(x, 0)
 
-def hexstr(bstr):
-	return binascii.hexlify(bstr).decode()
-
 if __name__ == '__main__':
 	from .hexParser import IntelHexParser
 	import hashlib
-	import binascii
 
 	args = get_argparser().parse_args()
 
@@ -60,4 +56,4 @@ if __name__ == '__main__':
 		m.update(a.data)
 	dataToSign = m.digest()
 
-	print(hexstr(dataToSign))
+	print(dataToSign.hex())

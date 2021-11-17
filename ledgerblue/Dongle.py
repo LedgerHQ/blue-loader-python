@@ -17,12 +17,8 @@
 ********************************************************************************
 """
 from abc import ABCMeta, abstractmethod
-from binascii import hexlify
 
 TIMEOUT=20000
-
-def hexstr(bstr):
-	return hexlify(bstr).decode()
 
 class DongleWait(object):
 	__metaclass__ = ABCMeta

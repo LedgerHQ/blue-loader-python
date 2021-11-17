@@ -30,9 +30,6 @@ device. The file must be formatted as hex, with one CAPDU per line.""")
 a random one will be generated)""")
 	return parser
 
-def hexstr(bstr):
-	return binascii.hexlify(bstr).decode()
-
 def auto_int(x):
 	return int(x, 0)
 

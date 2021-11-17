@@ -45,7 +45,7 @@
 
 import os
 import traceback
-from .Dongle import *
+from .Dongle import Dongle, DongleWait
 
 import time
 import hid
@@ -217,7 +217,7 @@ class U2FTunnelDongle(Dongle, DongleWait):
 
   def exchange(self, apdu, timeout=TIMEOUT):
     if self.debug:
-      print("U2F => %s" % hexstr(apdu))
+      print("U2F => %s" % apdu.hex())
 
     if (len(apdu)>=256):
       raise CommException("Too long APDU to transport")  
@@ -252,11 +252,11 @@ class U2FTunnelDongle(Dongle, DongleWait):
         raise e
 
       if self.debug:
-        print("U2F <= %s%.2x" % (hexstr(response), 0x9000))
+        print("U2F <= %s%.2x" % (response.hex(), 0x9000))
 
       # check replied status words of the command (within the APDU tunnel)
-      if hexstr(response[-2:]) != "9000":
-        raise CommException("Invalid status words received: " + hexstr(response[-2:]));
+      if response[-2:] != b"\x90\x00":
+        raise CommException("Invalid status words received: " + response[-2:].hex())
       else:
         break
 
