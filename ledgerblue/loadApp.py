@@ -90,11 +90,7 @@ def parse_slip21_path(path):
 	return result
 
 def string_to_bytes(x):
-	import sys
-	if sys.version_info.major == 3:
-		return bytes(x, 'ascii')
-	else:
-		return bytes(x)
+	return bytes(x, 'ascii')
 
 
 if __name__ == '__main__':
@@ -211,10 +207,7 @@ if __name__ == '__main__':
 				if (args.apdu):
 					print(binascii.hexlify(apdu))
 				apdu = binascii.hexlify(apdu)
-				if sys.version_info.major == 2:
-					self.target.write(str(apdu) + '\n')
-				else:
-					self.target.write(apdu + '\n'.encode())
+				self.target.write(apdu + '\n'.encode())
 				return bytearray([])
 			def apduMaxDataSize(self):
 				# ensure to allow for encryption of those apdu afterward

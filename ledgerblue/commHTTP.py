@@ -18,17 +18,12 @@
 """
 
 from binascii import hexlify
-import sys
 import time
 
 import requests
 
 def hexstr(bstr):
-	if (sys.version_info.major == 3):
-		return hexlify(bstr).decode()
-	if (sys.version_info.major == 2):
-		return hexlify(bstr)
-	return "<undecoded APDU<"
+    return hexlify(bstr).decode()
 
 
 class HTTPProxy(object):

@@ -24,11 +24,7 @@ def get_argparser():
 	return parser
 
 def hexstr(bstr):
-	if (sys.version_info.major == 3):
-		return binascii.hexlify(bstr).decode()
-	if (sys.version_info.major == 2):
-		return binascii.hexlify(bstr)
-	return ""
+	return binascii.hexlify(bstr).decode()
 
 if __name__ == '__main__':
 	import binascii

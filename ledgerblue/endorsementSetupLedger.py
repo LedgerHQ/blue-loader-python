@@ -53,13 +53,9 @@ def serverQuery(request, url):
 	return response
 
 if __name__ == '__main__':
-	import sys
 	import struct
-	if sys.version_info.major == 3:
-		import urllib.request as urllib2
-		import urllib.parse as urlparse
-	else:
-		import urllib2, urlparse
+	import urllib.request as urllib2
+	import urllib.parse as urlparse
 	from .BlueHSMServer_pb2 import Request, Response
 	from .comm import getDongle
 
@@ -122,10 +118,7 @@ if __name__ == '__main__':
 
 	offset = 0
 
-	if sys.version_info.major == 2:
-		responseLength = ord(response.response[offset + 1])
-	else:
-		responseLength = response.response[offset + 1]
+	responseLength = response.response[offset + 1]
 	remotePublicKeySignatureLength = responseLength + 2
 	remotePublicKeySignature = response.response[offset : offset + remotePublicKeySignatureLength]
 

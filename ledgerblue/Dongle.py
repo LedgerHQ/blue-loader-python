@@ -18,16 +18,11 @@
 """
 from abc import ABCMeta, abstractmethod
 from binascii import hexlify
-import sys
 
 TIMEOUT=20000
 
 def hexstr(bstr):
-	if (sys.version_info.major == 3):
-		return hexlify(bstr).decode()
-	if (sys.version_info.major == 2):
-		return hexlify(bstr)
-	return "<undecoded APDU<"
+	return hexlify(bstr).decode()
 
 class DongleWait(object):
 	__metaclass__ = ABCMeta

@@ -48,16 +48,10 @@ if __name__ == '__main__':
 
 	if args.appName != None and len(args.appName) > 0:
 		for i in range(0, len(args.appName)):
-			if (sys.version_info.major == 3):
-				args.appName[i] = bytes(args.appName[i],'ascii')
-			if (sys.version_info.major == 2):
-				args.appName[i] = bytes(args.appName[i])
+			args.appName[i] = bytes(args.appName[i], 'ascii')
 
 	if args.appHash != None:
-		if (sys.version_info.major == 3):
-			args.appHash = bytes(args.appHash,'ascii')
-		if (sys.version_info.major == 2):
-			args.appHash = bytes(args.appHash)
+		args.appHash = bytes(args.appHash,'ascii')
 		args.appHash = bytearray.fromhex(args.appHash)
 
 
@@ -87,10 +81,7 @@ if __name__ == '__main__':
 				if (args.apdu):
 					print(binascii.hexlify(apdu))
 				apdu = binascii.hexlify(apdu)
-				if sys.version_info.major == 2:
-					self.target.write(str(apdu) + '\n')
-				else:
-					self.target.write(apdu + '\n'.encode())
+				self.target.write(apdu + '\n'.encode())
 				return bytearray([])
 			def apduMaxDataSize(self):
 				# ensure to allow for encryption of those apdu afterward
