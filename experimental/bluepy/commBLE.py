@@ -59,7 +59,7 @@ class BLEDongle(Dongle):
 			print("=> %s" % hexlify(apdu))
 		apdu = wrapCommandAPDU(0, apdu, DEFAULT_BLE_CHUNK, True)		
 		offset = 0
-		while(offset < len(apdu)):			
+		while offset < len(apdu):
 			data = apdu[offset:offset + DEFAULT_BLE_CHUNK]
 			self.writeCharacteristic.write(data, withResponse=True)
 			offset += DEFAULT_BLE_CHUNK

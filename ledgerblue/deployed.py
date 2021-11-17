@@ -98,7 +98,7 @@ def getDeployedSecretV2(dongle, masterPrivate, targetId, signerCertChain=None, e
 	#if cardKey != testMasterPublic:
 	#	raise Exception("Invalid batch public key")
 
-	if (signerCertChain):
+	if signerCertChain:
 		for cert in signerCertChain:
 			apdu = bytearray([0xE0, 0x51, 0x00, 0x00]) + bytearray([len(cert)]) + cert
 			dongle.exchange(apdu)

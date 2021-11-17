@@ -52,4 +52,4 @@ if __name__ == '__main__':
 
 	secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 	loader = HexLoader(dongle, 0xe0, True, secret)
-	loader.exchange(0xE0, 0, 0, 0, loader.encryptAES(b'\xB0'));
+	loader.exchange(0xE0, 0, 0, 0, loader.encryptAES(b'\xB0'))

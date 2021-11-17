@@ -119,14 +119,14 @@ class IntelHexParser:
         def maxAddr(self):
                 addr = 0
                 for a in self.areas:
-                        if (a.start+len(a.data) > addr):
+                        if a.start+len(a.data) > addr:
                                 addr = a.start+len(a.data)
                 return addr
 
         def minAddr(self):
                 addr = 0xFFFFFFFF
                 for a in self.areas:
-                        if (a.start < addr):
+                        if a.start < addr:
                                 addr = a.start
                 return addr
 
@@ -135,7 +135,7 @@ import binascii
 class IntelHexPrinter:
         def addArea(self, startaddress, data, insertFirst=False):
                 #self.areas.append(IntelHexArea(startaddress, data))
-                if (insertFirst):
+                if insertFirst:
                         self.areas = [IntelHexArea(startaddress, data)] + self.areas
                 else:
                         #order by start address
@@ -146,9 +146,9 @@ class IntelHexPrinter:
                 self.eol = eol
                 self.bootAddr = 0
                 # build bound to the parser
-                if (parser):
+                if parser:
                         for a in parser.areas:
-                                self.addArea(a.start, a.data);
+                                self.addArea(a.start, a.data)
                         self.bootAddr = parser.bootAddr
 
         def getAreas(self):
@@ -160,14 +160,14 @@ class IntelHexPrinter:
         def maxAddr(self):
                 addr = 0
                 for a in self.areas:
-                        if (a.start+len(a.data) > addr):
+                        if a.start+len(a.data) > addr:
                                 addr = a.start+len(a.data)
                 return addr
 
         def minAddr(self):
                 addr = 0xFFFFFFFF
                 for a in self.areas:
-                        if (a.start < addr):
+                        if a.start < addr:
                                 addr = a.start
                 return addr
 
@@ -184,14 +184,14 @@ class IntelHexPrinter:
         def _emit_binary(self, file, bin):
                 cks = self.checksum(bin)
                 s = (":" + binascii.hexlify(bin).decode('utf-8') + hex(0x100+cks)[3:] + self.eol).upper()
-                if (file != None):
+                if file != None:
                         file.write(s)
                 else:
                         print(s)
 
         def writeTo(self, fileName, blocksize=32):
                 file = None
-                if(fileName != None):
+                if fileName != None:
                         file = open(fileName, "w")
                 for area in self.areas:
                         off = 0
@@ -199,11 +199,11 @@ class IntelHexPrinter:
                         oldoff = area.start + 0x10000
                         while off < len(area.data):
                                 # emit a offset selection record
-                                if ((off & 0xFFFF0000) != (oldoff & 0xFFFF0000) ):
+                                if (off & 0xFFFF0000) != (oldoff & 0xFFFF0000):
                                         self._emit_binary(file, bytearray.fromhex("02000004" + hex(0x10000+(area.start>>16))[3:7]))
 
                                 # emit data record
-                                if (off+blocksize > len(area.data)):
+                                if off+blocksize > len(area.data):
                                         self._emit_binary(file, bytearray.fromhex(hex(0x100+(len(area.data)-off))[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00") + area.data[off:len(area.data)])
                                 else:
                                         self._emit_binary(file, bytearray.fromhex(hex(0x100+blocksize)[3:] + hex(0x10000+off+(area.start&0xFFFF))[3:] + "00") + area.data[off:off+blocksize])
@@ -213,17 +213,17 @@ class IntelHexPrinter:
                                 
                 bootAddrHex = hex(0x100000000+self.bootAddr)[3:]
                 s = ":04000005"+bootAddrHex+hex(0x100+self.checksum( bytearray.fromhex("04000005"+bootAddrHex)))[3:]+self.eol
-                if (file != None):
+                if file != None:
                         file.write(s)
                 else:
                         print(s)
 
                 s = ":00000001FF"+self.eol
 
-                if (file != None):
+                if file != None:
                         file.write(s)
                 else:
                         print(s)
 
-                if (file != None):
+                if file != None:
                         file.close()

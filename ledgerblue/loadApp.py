@@ -147,7 +147,7 @@ if __name__ == '__main__':
 				raise Exception("Unknown curve " + curve)
 
 	if args.apilevel >= 5:		
-		if (args.path_slip21 != None):
+		if args.path_slip21 != None:
 			curveMask |= 0x08
 		path += struct.pack('>B',curveMask)
 		if args.path != None:
@@ -200,11 +200,11 @@ if __name__ == '__main__':
 			secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 	else:
 		fileTarget = open(args.offline, "wb")
-		class FileCard():
+		class FileCard:
 			def __init__(self, target):
 				self.target = target
 			def exchange(self, apdu):
-				if (args.apdu):
+				if args.apdu:
 					print(binascii.hexlify(apdu))
 				apdu = binascii.hexlify(apdu)
 				self.target.write(apdu + '\n'.encode())
@@ -214,13 +214,13 @@ if __name__ == '__main__':
 				return 240
 		dongle = FileCard(fileTarget)
 
-	loader = HexLoader(dongle, 0xe0, not(args.offline), secret, cleardata_block_len=cleardata_block_len)
+	loader = HexLoader(dongle, 0xe0, not args.offline, secret, cleardata_block_len=cleardata_block_len)
 
 	#tlv mode does not support explicit by name removal, would require a list app before to identify the hash to be removed
 	if (not (args.appFlags & 2)) and args.delete:
 			loader.deleteApp(args.appName)
 
-	if (args.tlv):
+	if args.tlv:
 		#if code length is not provided, then consider the whole provided hex file is the code and no data section is split
 		code_length = printer.maxAddr() - printer.minAddr()
 		if not args.dataSize is None:
@@ -231,20 +231,20 @@ if __name__ == '__main__':
 		installparams = b""
 
 		# express dependency
-		if (args.dep):
+		if args.dep:
 			for dep in args.dep:
 				appname = dep
 				appversion = None
 				# split if version is specified
-				if (dep.find(":") != -1):
+				if dep.find(":") != -1:
 					(appname,appversion) = dep.split(":")
 				depvalue = encodelv(string_to_bytes(appname))
-				if(appversion):
+				if appversion:
 					depvalue += encodelv(string_to_bytes(appversion))
 				installparams += encodetlv(BOLOS_TAG_DEPENDENCY, depvalue)
 
 		#add raw install parameters as requested
-		if (args.tlvraw):
+		if args.tlvraw:
 			for tlvraw in args.tlvraw:
 				(hextag,hexvalue) = tlvraw.split(":")
 				installparams += encodetlv(int(hextag, 16), binascii.unhexlify(hexvalue))
@@ -274,7 +274,7 @@ if __name__ == '__main__':
 		if args.bootAddr > printer.minAddr():
 			args.bootAddr -= printer.minAddr()
 		loader.createApp(code_length, args.dataSize, paramsSize, args.appFlags, args.bootAddr|1)
-	elif (args.params):
+	elif args.params:
 		paramsSectionContent = []
 		if not args.icon is None:
 			paramsSectionContent = args.icon
@@ -295,12 +295,12 @@ if __name__ == '__main__':
 
 	print("Application full hash : " + hash)
 
-	if (signature == None and args.signApp):
+	if signature == None and args.signApp:
 		masterPrivate = PrivateKey(bytes(bytearray.fromhex(args.signPrivateKey)))
 		signature = masterPrivate.ecdsa_serialize(masterPrivate.ecdsa_sign(bytes(binascii.unhexlify(hash)), raw=True))
 		print("Application signature: " + str(binascii.hexlify(signature)))
 
-	if (args.tlv):
+	if args.tlv:
 		loader.commit(signature)
 	else:
 		loader.run(args.bootAddr-printer.minAddr(), signature)

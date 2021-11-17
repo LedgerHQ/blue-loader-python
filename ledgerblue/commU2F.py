@@ -93,7 +93,7 @@ U2FHID_YUBIKEY_DEVICE_CONFIG = U2F_VENDOR_FIRST
 STAT_ERR = 0xbf
 
 def _read_timeout(dev, size, timeout=TIMEOUT):
-    if (timeout > 0):
+    if timeout > 0:
       timeout += time.time()
     while timeout == 0 or time.time() < timeout:
         resp = dev.read(size)
@@ -219,7 +219,7 @@ class U2FTunnelDongle(Dongle, DongleWait):
     if self.debug:
       print("U2F => %s" % apdu.hex())
 
-    if (len(apdu)>=256):
+    if len(apdu) >= 256:
       raise CommException("Too long APDU to transport")  
     
     # wrap apdu

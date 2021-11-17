@@ -145,9 +145,9 @@ if __name__ == '__main__':
             apps = loader.listApp()
             while len(apps) != 0:
                 for app in apps:
-                    if (app['flags'] & 0x08):
+                    if app['flags'] & 0x08:
                         ui = True
-                    if (app['flags'] & 0x400):
+                    if app['flags'] & 0x400:
                         customCA = True
                 apps = loader.listApp(False)
         except:

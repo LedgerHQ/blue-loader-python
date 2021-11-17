@@ -38,9 +38,9 @@ def process(dongle, request):
 	apdusList = []
 	try:
 		response['nonce'] = request['nonce']
-		if (request['query'] == "exchange"):
+		if request['query'] == "exchange":
 			apdusList.append(binascii.unhexlify(request['data']))
-		elif (request['query'] == "bulk"):
+		elif request['query'] == "bulk":
 			for apdu in request['data']:
 				apdusList.append(binascii.unhexlify(apdu))
 		else:

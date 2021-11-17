@@ -74,11 +74,11 @@ if __name__ == '__main__':
 			secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
 	else:
 		fileTarget = open(args.offline, "wb")
-		class FileCard():
+		class FileCard:
 			def __init__(self, target):
 				self.target = target
 			def exchange(self, apdu):
-				if (args.apdu):
+				if args.apdu:
 					print(binascii.hexlify(apdu))
 				apdu = binascii.hexlify(apdu)
 				self.target.write(apdu + '\n'.encode())
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 				return 240
 		dongle = FileCard(fileTarget)
 
-	loader = HexLoader(dongle, 0xe0, not(args.offline), secret)
+	loader = HexLoader(dongle, 0xe0, not args.offline, secret)
 
 	if args.appName != None and len(args.appName) > 0:
 		for name in args.appName:
