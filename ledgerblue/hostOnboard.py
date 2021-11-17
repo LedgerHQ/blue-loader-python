@@ -56,7 +56,7 @@ if __name__ == '__main__':
 			strg = unicodedata.normalize('NFKD', u''+strg)
 		return strg
 
-	if (args.id < 2):
+	if args.id < 2:
 		args.pin = enter_if_none_and_normalize("PIN: ", args.pin)
 		if args.pin is None or len(args.pin) == 0:
 			raise Exception("Missing PIN for persistent identity")

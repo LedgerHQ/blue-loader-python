@@ -45,10 +45,10 @@ if __name__ == '__main__':
 	# prepare data
 	m = hashlib.sha256()
 
-	if (args.targetId):
+	if args.targetId:
 		m.update(struct.pack(">I", args.targetId))
 
-	if (args.targetVersion):
+	if args.targetVersion:
 		m.update(args.targetVersion)
 
 	# consider areas are ordered by ascending address and non-overlaped

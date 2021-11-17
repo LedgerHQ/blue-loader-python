@@ -48,7 +48,7 @@ class DongleServer(object):
 			sw = struct.unpack(">H", self.socket.recv(2))[0]
 			if self.debug:
 				print("<= %s%.2x" % (hexlify(response), sw))
-			return (sw, response)
+			return sw, response
 
 
 		send_apdu(apdu)

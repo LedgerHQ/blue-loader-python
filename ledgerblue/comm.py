@@ -82,7 +82,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		if padSize != 0:
 			tmp.extend([0] * (64 - padSize))
 		offset = 0
-		while(offset != len(tmp)):
+		while offset != len(tmp):
 			data = tmp[offset:offset + 64]
 			data = bytearray([0]) + data
 			if self.device.write(data) < 0:
@@ -98,7 +98,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 				dataLength += 2
 				if dataLength > 62:
 					remaining = dataLength - 62
-					while(remaining != 0):
+					while remaining != 0:
 						if remaining > 64:
 							blockLength = 64
 						else:

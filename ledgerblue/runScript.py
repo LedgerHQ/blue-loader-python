@@ -60,10 +60,10 @@ if __name__ == '__main__':
 			self.loader = HexLoader(dongle, 0xe0, True, secret)
 
 		def encryptAES(self, data):
-			return self.loader.scpWrap(data);
+			return self.loader.scpWrap(data)
 
 		def decryptAES(self, data):
-			return self.loader.scpUnwrap(data);
+			return self.loader.scpUnwrap(data)
 
 	dongle = getDongle(args.apdu)
 	if args.scp:
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 			apduData = scp.encryptAES(bytes(apduData))
 			apdu = bytearray([data[0], data[1], data[2], data[3], len(apduData)]) + bytearray(apduData)
 			result = dongle.exchange(apdu)
-			result = scp.decryptAES((result))
+			result = scp.decryptAES(result)
 		else:
 			result = dongle.exchange(bytearray(data))
 		if args.apdu:

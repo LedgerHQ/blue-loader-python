@@ -176,7 +176,7 @@ if __name__ == '__main__':
 	for i in range(100):
 		if len(responseData) == 0:
 			break
-		if (bytes(responseData[0:4]) == b"SECU"):
+		if bytes(responseData[0:4]) == b"SECU":
 			raise Exception("Security exception " + chr(responseData[4]))
 
 		responseData = dongle.exchange(responseData)

@@ -259,7 +259,7 @@ class HexLoader:
 			self.scp_enc_iv = bytes(data[-16:])
 			data = cipher.decrypt(bytes(data))
 			l = len(data) - 1
-			while (data[l] != padding_char):
+			while data[l] != padding_char:
 				l-=1
 				if l == -1:
 					raise BaseException("Invalid SCP ENC padding")
@@ -274,7 +274,7 @@ class HexLoader:
 			if SCP_DEBUG:
 				print("unwrap_old: "+binascii.hexlify(decryptedData))
 			l = len(decryptedData) - 1
-			while (decryptedData[l] != padding_char):
+			while decryptedData[l] != padding_char:
 				l-=1
 				if l == -1:
 					raise BaseException("Invalid SCP ENC padding")
@@ -308,13 +308,13 @@ class HexLoader:
 		# Force jump into Thumb mode
 		bootadr |= 1
 		data = b'\x09' + struct.pack('>I', bootadr)
-		if (signature != None):
+		if signature != None:
 			data += struct.pack('>B', len(signature)) + signature
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def commit(self, signature=None):
 		data = b'\x09'
-		if (signature != None):
+		if signature != None:
 			data += struct.pack('>B', len(signature)) + signature
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
@@ -371,7 +371,7 @@ class HexLoader:
 		offset += 4
 		result['mcuVersion'] = response[offset + 1 : offset + 1 + response[offset] - 1].decode('utf-8')
 		offset += 1 + response[offset]
-		if (offset < len(response)):
+		if offset < len(response):
 			result['mcuHash'] = response[offset : offset + 32]
 		return result
 
@@ -437,15 +437,15 @@ class HexLoader:
 		return item
 
 	def load(self, erase_u8, max_length_per_apdu, hexFile, reverse=False, doCRC=True, targetId=None, targetVersion=None):
-		if (max_length_per_apdu > self.max_mtu):
+		if max_length_per_apdu > self.max_mtu:
 			max_length_per_apdu = self.max_mtu
 		initialAddress = 0
 		if self.relative:
 			initialAddress = hexFile.minAddr()
 		sha256 = hashlib.new('sha256')
 		# stat by hashing the create app params to ensure complete app signature
-		if (targetId != None and (targetId&0xF) > 3):
-			if (targetVersion == None):
+		if targetId != None and (targetId&0xF) > 3:
+			if targetVersion == None:
 				print("Target version is not set, application hash will not match!")
 				targetVersion=""
 			#encore targetId U4LE, and version string bytes
@@ -468,7 +468,7 @@ class HexLoader:
 			length = len(data)
 			if reverse:
 				offset = length
-			while (length > 0):
+			while length > 0:
 				if length > max_length_per_apdu - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH - SCP_MAC_LENGTH:
 					chunkLen = max_length_per_apdu - LOAD_SEGMENT_CHUNK_HEADER_LENGTH - MIN_PADDING_LENGTH - SCP_MAC_LENGTH
 					if (chunkLen%16) != 0:
@@ -477,9 +477,9 @@ class HexLoader:
 					chunkLen = length
 
 				if self.cleardata_block_len and chunkLen%self.cleardata_block_len:
-					if (chunkLen < self.cleardata_block_len):
+					if chunkLen < self.cleardata_block_len:
 						raise Exception("Cannot transport not block aligned data with fixed block len")
-					chunkLen -= chunkLen%self.cleardata_block_len;
+					chunkLen -= chunkLen%self.cleardata_block_len
 				# pad with 00's when not complete block and performing NENC
 				if reverse:
 					chunk = data[offset-chunkLen : offset]

@@ -62,7 +62,7 @@ def unwrapResponseAPDU(channel, data, packetSize, ble=False):
 		extraHeaderSize = 2
 	else:
 		extraHeaderSize = 0	
-	if ((data is None) or (len(data) < 5 + extraHeaderSize + 5)):
+	if (data is None) or (len(data) < 5 + extraHeaderSize + 5):
 		return None
 	if not ble:
 		if struct.unpack(">H", data[offset : offset + 2])[0] != channel:
@@ -84,9 +84,9 @@ def unwrapResponseAPDU(channel, data, packetSize, ble=False):
 		blockSize = responseLength
 	result = data[offset : offset + blockSize]
 	offset += blockSize
-	while (len(result) != responseLength):
+	while len(result) != responseLength:
 		sequenceIdx = sequenceIdx + 1
-		if (offset == len(data)):
+		if offset == len(data):
 			return None
 		if not ble:
 			if struct.unpack(">H", data[offset : offset + 2])[0] != channel:
