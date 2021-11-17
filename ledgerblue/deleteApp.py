@@ -21,7 +21,7 @@ import argparse
 
 def get_argparser():
 	parser = argparse.ArgumentParser(description="Delete the app with the specified name.")
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
+	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int, default=0x31000002)
 	parser.add_argument("--appName", help="The name of the application to delete", action='append')
 	parser.add_argument("--appHash", help="Set the application hash")
 	parser.add_argument("--rootPrivateKey", help="A private key used to establish a Secure Channel (hex encoded)")
@@ -39,7 +39,6 @@ if __name__ == '__main__':
 	from .deployed import getDeployedSecretV1, getDeployedSecretV2
 	from .hexLoader import HexLoader
 	import binascii
-	import sys
 
 	args = get_argparser().parse_args()
 
@@ -54,9 +53,6 @@ if __name__ == '__main__':
 		args.appHash = bytes(args.appHash,'ascii')
 		args.appHash = bytearray.fromhex(args.appHash)
 
-
-	if args.targetId == None:
-		args.targetId = 0x31000002
 	if args.rootPrivateKey == None:
 		privateKey = PrivateKey()
 		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))

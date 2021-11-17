@@ -19,11 +19,15 @@
 
 import argparse
 
+DEFAULT_ISSUER_KEY = "0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609"
+
+
 def get_argparser():
     parser = argparse.ArgumentParser(description="""Use attestation to determine if the device is a genuine Ledger
 device.""")
-    parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
-    parser.add_argument("--issuerKey", help="Issuer key (hex encoded, default is batch 1)")
+    parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)",
+                        type=auto_int, default=0x31000002)
+    parser.add_argument("--issuerKey", help="Issuer key (hex encoded, default is batch 1)", default=DEFAULT_ISSUER_KEY)
     parser.add_argument("--apdu", help="Display APDU log", action='store_true')
     return parser
 
@@ -118,12 +122,6 @@ if __name__ == '__main__':
     import binascii
 
     args = get_argparser().parse_args()
-
-    if args.targetId == None:
-        args.targetId = 0x31000002
-
-    if args.issuerKey == None:
-        args.issuerKey = "0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609"
 
     privateKey = PrivateKey()
     publicKey = str(privateKey.pubkey.serialize(compressed=False))

@@ -25,9 +25,9 @@ def get_argparser():
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--perso", help="""A reference to the personalization key; this is a reference to the specific
 Issuer keypair used by Ledger to sign the device's Issuer Certificate""", default="perso_11")
-	parser.add_argument("--firmware", help="A reference to the firmware to load")
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
-	parser.add_argument("--firmwareKey", help="A reference to the firmware key to use")
+	parser.add_argument("--firmware", help="A reference to the firmware to load", required=True)
+	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int, default=0x31000002)
+	parser.add_argument("--firmwareKey", help="A reference to the firmware key to use", required=True)
 	return parser
 
 def auto_int(x):
@@ -68,16 +68,6 @@ if __name__ == '__main__':
 	import binascii
 
 	args = get_argparser().parse_args()
-	if args.url == None:
-		raise Exception("No URL specified")
-	if args.perso == None:
-		raise Exception("No personalization specified")
-	if args.firmware == None:
-		raise Exception("No firmware specified")
-	if args.firmwareKey == None:
-		raise Exception("No firmware key specified")
-	if args.targetId == None:
-		args.targetId = 0x31000002 # Ledger Blue by default
 
 	dongle = getDongle(args.apdu)
 

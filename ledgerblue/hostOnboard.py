@@ -26,7 +26,7 @@ def get_argparser():
    Using this script undermines the security of the device. Caveat emptor.
 """)
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
-	parser.add_argument("--id", help="Identity to initialize", type=auto_int)
+	parser.add_argument("--id", help="Identity to initialize", type=auto_int, choices=(0, 1, 2), required=True)
 	parser.add_argument("--pin", help="Set a PINs to backup the seed for future use")
 	parser.add_argument("--prefix", help="Derivation prefix")
 	parser.add_argument("--passphrase", help="Derivation passphrase")
@@ -43,9 +43,6 @@ if __name__ == '__main__':
 	from .comm import getDongle
 
 	args = get_argparser().parse_args()
-
-	if (args.id is None) or args.id > 2:
-		raise Exception("Missing identity number [0-2]")
 
 	dongle = getDongle(args.apdu)
 
