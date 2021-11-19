@@ -71,7 +71,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 	def exchange(self, apdu, timeout=TIMEOUT):
 		if APDUGEN:
 			print(apdu.hex())
-			return
+			return b""
 
 		if self.debug:
 			print("HID => %s" % apdu.hex())
