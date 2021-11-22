@@ -82,6 +82,8 @@ if __name__ == '__main__':
 			def apduMaxDataSize(self):
 				# ensure to allow for encryption of those apdu afterward
 				return 240
+			def close(self):
+				self.target.close()
 		dongle = FileCard(fileTarget)
 
 	loader = HexLoader(dongle, 0xe0, not args.offline, secret)
