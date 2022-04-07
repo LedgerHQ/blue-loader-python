@@ -7,7 +7,7 @@ from os.path import dirname, join
 here = dirname(__file__)
 setup(
     name='ledgerblue',
-    version='0.1.41',
+    version='0.1.42',
     author='Ledger',
     author_email='hello@ledger.fr',
     description='Python library to communicate with Ledger Blue/Nano S',
