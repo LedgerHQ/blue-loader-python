@@ -32,6 +32,7 @@ def get_argparser():
 	parser = argparse.ArgumentParser(description="Load an app onto the device from a hex file.")
 	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int, default=0x31000002)
 	parser.add_argument("--targetVersion", help="Set the chip target version")
+	parser.add_argument("--apiLevel", help="Set the API level of the SDK used to build the app", type=auto_int, default=0)
 	parser.add_argument("--fileName", help="The application hex file to be loaded onto the device", required=True)
 	parser.add_argument("--icon", help="The icon content to use (hex encoded)")
 	parser.add_argument("--curve", help="""A curve on which BIP 32 derivation is locked ("secp256k1", "secp256r1",
@@ -263,7 +264,7 @@ if __name__ == '__main__':
 		#ensure the boot address is an offset
 		if args.bootAddr > printer.minAddr():
 			args.bootAddr -= printer.minAddr()
-		loader.createApp(code_length, args.dataSize, paramsSize, args.appFlags, args.bootAddr|1)
+		loader.createApp(code_length, args.apiLevel, args.dataSize, paramsSize, args.appFlags, args.bootAddr|1)
 	elif args.params:
 		paramsSectionContent = []
 		if not args.icon is None:
