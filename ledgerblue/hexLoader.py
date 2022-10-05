@@ -335,9 +335,13 @@ class HexLoader:
 		self.createappParams = None #data[1:]
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
-	def createApp(self, code_length, data_length=0, install_params_length=0, flags=0, bootOffset=1):
-		#keep the create app parameters to be included in the load app hash
-		self.createappParams = struct.pack('>IIIII', code_length, data_length, install_params_length, flags, bootOffset)
+	def createApp(self, code_length, api_level=0, data_length=0, install_params_length=0, flags=0, bootOffset=1):
+		# keep the create app parameters to be included in the load app hash
+		# maintain compatibility with SDKs not handling API level
+		if api_level:
+			self.createappParams = struct.pack('>BIIIII', api_level, code_length, data_length, install_params_length, flags, bootOffset)
+		else:
+			self.createappParams = struct.pack('>IIIII', code_length, data_length, install_params_length, flags, bootOffset)
 		data = b'\x0B' + self.createappParams
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
