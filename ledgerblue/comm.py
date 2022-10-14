@@ -22,6 +22,9 @@ import hid
 import os
 import time
 
+import nfc
+from nfc.clf import RemoteTarget
+
 from .commException import CommException
 from .commHTTP import getDongle as getDongleHTTP
 from .commTCP import getDongle as getDongleTCP
@@ -46,6 +49,9 @@ TCP_PROXY=None
 if "LEDGER_PROXY_ADDRESS" in os.environ and len(os.environ["LEDGER_PROXY_ADDRESS"]) != 0 and \
    "LEDGER_PROXY_PORT" in os.environ and len(os.environ["LEDGER_PROXY_PORT"]) != 0:
 	TCP_PROXY=(os.environ["LEDGER_PROXY_ADDRESS"], int(os.environ["LEDGER_PROXY_PORT"]))
+NFC_PROXY=None
+if "LEDGER_NFC_PROXY" in os.environ:
+	NFC_PROXY=True
 
 # Force use of MCUPROXY if required
 PCSC=None
@@ -167,6 +173,100 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 				pass
 		self.opened = False
 
+from nfc.tag.tt4 import Type4TagCommandError
+
+NFC_CLA = 0x00
+NFC_INS_WRITE = 0x5e
+NFC_INS_READ = 0x5f
+NFC_P1 = 0x00
+NFC_P2 = 0x00
+
+DEBUG_NFC_APDU = False
+
+class DongleNFC(Dongle, DongleWait):
+	def __init__(self, debug = False):
+		self.waitImpl = self
+		self.opened = True
+		self.debug = debug
+		self.clf = nfc.ContactlessFrontend('usb')
+		self.tag = self.clf.connect(rdwr={'on-connect': lambda tag: False})
+		print(self.tag)
+		if self.tag.ndef is not None:
+			for record in self.tag.ndef.records:
+				print(record)
+
+	def _exchange_write(self, apdu, timeout=TIMEOUT):
+		success = False
+		nb_ex = 0
+		while success is False:
+			try:
+				if DEBUG_NFC_APDU:
+					debug = bytearray([NFC_CLA, NFC_INS_WRITE, NFC_P1, NFC_P2, len(apdu)]) + apdu
+					print(debug.hex())
+				response = self.tag.send_apdu(NFC_CLA, NFC_INS_WRITE, NFC_P1, NFC_P2, apdu, check_status=False)
+				if DEBUG_NFC_APDU:
+					print(response.hex())
+				sw = (response[-2] << 8) + response[-1]
+				if (sw&0xF000) != 0x9000 and (sw&0xFF00) != 0x6100 and (sw&0xFF00) != 0x6C00:
+					raise BaseException("Invalid status word received: " + hex(sw))
+			except Type4TagCommandError as ex:
+				print(ex)
+				print("write")
+				if (nb_ex > 2):
+					raise ex
+				time.sleep(0.1)
+				nb_ex = nb_ex+1
+				if nb_ex:
+					print(f"nb ex {nb_ex}")
+				continue
+			success = True
+		return response
+
+	def _exchange_read(self, timeout=TIMEOUT):
+		# success = False
+		sw = 0x6100
+		nb_ex = 0
+		while sw == 0x6100:
+			try:
+				if DEBUG_NFC_APDU:
+					debug = bytearray([NFC_CLA, NFC_INS_READ, NFC_P1, NFC_P2])
+					print(debug.hex())
+				response = self.tag.send_apdu(NFC_CLA, NFC_INS_READ, NFC_P1, NFC_P2, None, check_status=False)
+				if DEBUG_NFC_APDU:
+					print(response.hex())
+				sw = (response[-2] << 8) + response[-1]
+				if (sw&0xF000) != 0x9000 and (sw&0xFF00) != 0x6100 and (sw&0xFF00) != 0x6C00:
+					raise BaseException("Invalid status word received: " + hex(sw))
+			except Type4TagCommandError as ex:
+				print(ex)
+				print("read")
+				if (nb_ex > 2):
+					raise ex
+				time.sleep(0.1)
+				nb_ex = nb_ex+1
+			time.sleep(0.001)
+			if nb_ex:
+				print(f"nb ex {nb_ex}")
+			# success = True
+		return response
+
+	def exchange(self, apdu, timeout=TIMEOUT):
+		if self.debug:
+			print(f"[NFC] => {apdu.hex()}")
+		response = self._exchange_write(apdu, timeout)
+		sw = (response[-2] << 8) + response[-1]
+		if response != 0x9000:
+			response = self._exchange_read(timeout)
+		if self.debug:
+			print(f"[NFC] <= {response.hex()}")
+		return response
+
+	def apduMaxDataSize(self):
+		return 184
+
+	def close(self):
+		pass
+
 class DongleSmartcard(Dongle):
 
 	def __init__(self, device, debug=False):
@@ -204,6 +304,8 @@ def getDongle(debug=False, selectCommand=None):
 		return getDongleHTTP(remote_host=MCUPROXY, debug=debug)
 	elif TCP_PROXY is not None:
 		return getDongleTCP(server=TCP_PROXY[0], port=TCP_PROXY[1], debug=debug)
+	elif NFC_PROXY:
+		return DongleNFC(debug)
 	dev = None
 	hidDevicePath = None
 	ledger = True
