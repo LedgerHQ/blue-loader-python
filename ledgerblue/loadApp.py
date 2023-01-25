@@ -50,7 +50,6 @@ a random one will be generated)""")
 	parser.add_argument("--signPrivateKey", help="Set the private key used to sign the loaded app")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
-	parser.add_argument("--apilevel", help="Use given API level when interacting with the device", type=auto_int, default=10)
 	parser.add_argument("--delete", help="Delete the app with the same name before loading the provided one", action='store_true')
 	parser.add_argument("--params", help="Store icon and install parameters in a parameter section before the code", action='store_true')
 	parser.add_argument("--tlv", help="Use install parameters for all variable length parameters", action='store_true')
@@ -68,21 +67,19 @@ a random one will be generated)""")
 def auto_int(x):
 	return int(x, 0)
 
-def parse_bip32_path(path, apilevel):
-		import struct
-		if len(path) == 0:
-				return b""
-		result = b""
-		elements = path.split('/')
-		if apilevel >= 5:
-			result = result + struct.pack('>B', len(elements))
-		for pathElement in elements:
-				element = pathElement.split('\'')
-				if len(element) == 1:
-						result = result + struct.pack(">I", int(element[0]))
-				else:
-						result = result + struct.pack(">I", 0x80000000 | int(element[0]))
-		return result
+def parse_bip32_path(path):
+	import struct
+	if len(path) == 0:
+		return b""
+	elements = path.split('/')
+	result = struct.pack('>B', len(elements))
+	for pathElement in elements:
+		element = pathElement.split('\'')
+		if len(element) == 1:
+			result = result + struct.pack(">I", int(element[0]))
+		else:
+			result = result + struct.pack(">I", 0x80000000 | int(element[0]))
+	return result
 
 def parse_slip21_path(path):
 	import struct
@@ -106,8 +103,6 @@ if __name__ == '__main__':
 
 	args = get_argparser().parse_args()
 
-	if args.path_slip21 is not None and args.apilevel < 10:
-		raise Exception("SLIP 21 path not supported using this API level")
 	if args.rootPrivateKey == None:
 		privateKey = PrivateKey()
 		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
@@ -136,28 +131,19 @@ if __name__ == '__main__':
 			else:
 				raise Exception("Unknown curve " + curve)
 
-	if args.apilevel >= 5:
-		if args.path_slip21 != None:
-			curveMask |= 0x08
-		path += struct.pack('>B',curveMask)
-		if args.path != None:
-			for item in args.path:
-				if len(item) != 0:
-					path += parse_bip32_path(item, args.apilevel)
-		if args.path_slip21 != None:
-			for item in args.path_slip21:
-				if len(item) != 0:
-					path += parse_slip21_path(item)
-			if (args.path == None) or ((len(args.path) == 1) and (len(args.path[0]) == 0)):
-				path += struct.pack('>B', 0) # Unrestricted, authorize all paths for regular derivation
-	else:
-		if args.curve != None:
-			print("Curve not supported using this API level, ignoring")
-		if args.path != None:
-			if len(args.path) > 1:
-				print("Multiple path levels not supported using this API level, ignoring")
-			else:
-				path = parse_bip32_path(args.path[0], args.apilevel)
+	if args.path_slip21 != None:
+		curveMask |= 0x08
+	path += struct.pack('>B',curveMask)
+	if args.path != None:
+		for item in args.path:
+			if len(item) != 0:
+				path += parse_bip32_path(item)
+	if args.path_slip21 != None:
+		for item in args.path_slip21:
+			if len(item) != 0:
+				path += parse_slip21_path(item)
+		if (args.path == None) or ((len(args.path) == 1) and (len(args.path[0]) == 0)):
+			path += struct.pack('>B', 0) # Unrestricted, authorize all paths for regular derivation
 
 	if not args.icon is None:
 		args.icon = bytearray.fromhex(args.icon)
