@@ -63,6 +63,12 @@ URI_ID_DICT = dict([
 	(0x23, "urn:nfc:")
 ])
 
+INS_NFC_TAG_UPDATE = 0x18
+P1_NFC_TAG_RESET = 0x00
+P1_NFC_TAG_SET_TEXT = 0x01
+P1_NFC_TAG_SET_URI = 0x02
+P1_NFC_FACTORY_TEST_ACTIVATE = 0x03
+
 def get_argparser():
 	parser = argparse.ArgumentParser(description="""
 .. warning::
@@ -85,13 +91,12 @@ if __name__ == '__main__':
 	dongle = getDongle(args.apdu)
 
 	if args.erase:
-		apdu = bytearray([0xE0, 0x18, 0x00, 0x00, 0x00])
+		apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_ERASE, 0x00, 0x00])
 	if args.text:
-		p1 = 0x01
 		uriIdKey = 0xFF #not applicable
 		text_length = len(args.text)
 		sub_text_length = 0
-		apdu = bytearray([0xE0, 0x18, p1, uriIdKey, 2+len(args.text)])
+		apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_SET_TEXT, uriIdKey, 2+len(args.text)])
 		apdu.append(text_length)
 		for c in args.text:
 			apdu.append(ord(c))
@@ -113,7 +118,7 @@ if __name__ == '__main__':
 		text = args.uri.replace(v, "")
 		text_length = len(text)
 		sub_text_length = 0
-		apdu = bytearray([0xE0, 0x18, p1, k, 2+len(text)])
+		apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_SET_URI, k, 2+len(text)])
 		apdu.append(text_length)
 		for c in text:
 			apdu.append(ord(c))
@@ -126,6 +131,6 @@ if __name__ == '__main__':
 		else:
 			apdu.append(sub_text_length)
 	if args.activate:
-		apdu = bytearray([0xE0, 0x18, 0x03, 0x00, 0x00])
+		apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_FACTORY_TEST_ACTIVATE, 0x00, 0x00])
 	dongle.exchange(apdu)
 	dongle.close()
