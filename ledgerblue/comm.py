@@ -210,20 +210,15 @@ class DongleNFC(Dongle, DongleWait):
 				if (sw&0xF000) != 0x9000 and (sw&0xFF00) != 0x6100 and (sw&0xFF00) != 0x6C00:
 					raise BaseException("Invalid status word received: " + hex(sw))
 			except Type4TagCommandError as ex:
-				print(ex)
-				print("write")
 				if (nb_ex > 2):
 					raise ex
 				time.sleep(0.1)
 				nb_ex = nb_ex+1
-				if nb_ex:
-					print(f"nb ex {nb_ex}")
 				continue
 			success = True
 		return response
 
 	def _exchange_read(self, timeout=TIMEOUT):
-		# success = False
 		sw = 0x6100
 		nb_ex = 0
 		while sw == 0x6100:
@@ -238,16 +233,11 @@ class DongleNFC(Dongle, DongleWait):
 				if (sw&0xF000) != 0x9000 and (sw&0xFF00) != 0x6100 and (sw&0xFF00) != 0x6C00:
 					raise BaseException("Invalid status word received: " + hex(sw))
 			except Type4TagCommandError as ex:
-				print(ex)
-				print("read")
 				if (nb_ex > 2):
 					raise ex
 				time.sleep(0.1)
 				nb_ex = nb_ex+1
 			time.sleep(0.001)
-			if nb_ex:
-				print(f"nb ex {nb_ex}")
-			# success = True
 		return response
 
 	def exchange(self, apdu, timeout=TIMEOUT):

@@ -83,10 +83,10 @@ def get_argparser():
 	parser.add_argument("--activate", help="Activate NFC, only available in FTM", action='store_true')
 	return parser
 
-def handle_erase():
+def handle_erase() -> bytes:
 	return bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_RESET, 0x00, 0x00])
 
-def handle_set_text(text:str):
+def handle_set_text(text:str) -> bytes:
 	uriIdKey = 0xFF #not applicable
 	text_length = len(text)
 	sub_text_length = 0
@@ -97,7 +97,7 @@ def handle_set_text(text:str):
 	apdu.append(sub_text_length)
 	return apdu
 
-def handle_set_uri(uri):
+def handle_set_uri(uri: str) -> bytes:
 	uriIdKey = None
 	for k, v in URI_ID_DICT.items():
 		if v in args.uri:
@@ -114,7 +114,7 @@ def handle_set_uri(uri):
 		apdu.append(ord(c))
 	return apdu
 
-def handle_set_info(apdu, info):
+def handle_set_info(apdu: bytes, info: str) -> bytes:
 	info_length = len(info)
 	apdu.append(info_length)
 	apdu[4] = apdu[4] + info_length
@@ -122,7 +122,7 @@ def handle_set_info(apdu, info):
 		apdu.append(ord(c))
 	return apdu
 
-def handle_activate():
+def handle_activate() -> bytes:
 	return bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_FACTORY_TEST_ACTIVATE, 0x00, 0x00])
 
 if __name__ == '__main__':
