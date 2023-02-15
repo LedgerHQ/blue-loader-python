@@ -83,6 +83,48 @@ def get_argparser():
 	parser.add_argument("--activate", help="Activate NFC, only available in FTM", action='store_true')
 	return parser
 
+def handle_erase():
+	return bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_RESET, 0x00, 0x00])
+
+def handle_set_text(text:str):
+	uriIdKey = 0xFF #not applicable
+	text_length = len(text)
+	sub_text_length = 0
+	apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_SET_TEXT, uriIdKey, 2+len(text)])
+	apdu.append(text_length)
+	for c in text:
+		apdu.append(ord(c))
+	apdu.append(sub_text_length)
+	return apdu
+
+def handle_set_uri(uri):
+	uriIdKey = None
+	for k, v in URI_ID_DICT.items():
+		if v in args.uri:
+			if v != "":
+				uriIdKey = k
+				break
+	if uriIdKey is None:
+		raise UnknownUriHeader
+	text = args.uri.replace(v, "")
+	text_length = len(text)
+	apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_SET_URI, k, 2+len(text)])
+	apdu.append(text_length)
+	for c in text:
+		apdu.append(ord(c))
+	return apdu
+
+def handle_set_info(apdu, info):
+	info_length = len(info)
+	apdu.append(info_length)
+	apdu[4] = apdu[4] + info_length
+	for c in info:
+		apdu.append(ord(c))
+	return apdu
+
+def handle_activate():
+	return bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_FACTORY_TEST_ACTIVATE, 0x00, 0x00])
+
 if __name__ == '__main__':
 	from .comm import getDongle
 
@@ -91,46 +133,17 @@ if __name__ == '__main__':
 	dongle = getDongle(args.apdu)
 
 	if args.erase:
-		apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_ERASE, 0x00, 0x00])
+		apdu = handle_erase()
 	if args.text:
-		uriIdKey = 0xFF #not applicable
-		text_length = len(args.text)
-		sub_text_length = 0
-		apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_SET_TEXT, uriIdKey, 2+len(args.text)])
-		apdu.append(text_length)
-		for c in args.text:
-			apdu.append(ord(c))
-		apdu.append(sub_text_length)
+		apdu = handle_set_text(args.text)
 	if args.uri:
-		uriIdKey = None
-		uriIdValue = None
-		p1 = 0x02
-		for k, v in URI_ID_DICT.items():
-			if v in args.uri:
-				if v != "":
-					uriIdKey = k
-					uriIdValue = v
-					break
-		if uriIdKey:
-			print(uriIdKey, uriIdValue)
-		else:
-			raise UnknownUriHeader
-		text = args.uri.replace(v, "")
-		text_length = len(text)
-		sub_text_length = 0
-		apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_TAG_SET_URI, k, 2+len(text)])
-		apdu.append(text_length)
-		for c in text:
-			apdu.append(ord(c))
+		info_length = 0
+		apdu = handle_set_uri(args.uri)
 		if args.info:
-			sub_text_length = len(args.info)
-			apdu.append(sub_text_length)
-			apdu[4] = apdu[4] + sub_text_length
-			for c in args.info:
-				apdu.append(ord(c))
+			apdu = handle_set_info(apdu, args.info)
 		else:
-			apdu.append(sub_text_length)
+			apdu.append(info_length)
 	if args.activate:
-		apdu = bytearray([0xE0, INS_NFC_TAG_UPDATE, P1_NFC_FACTORY_TEST_ACTIVATE, 0x00, 0x00])
+		apdu = handle_activate()
 	dongle.exchange(apdu)
 	dongle.close()
