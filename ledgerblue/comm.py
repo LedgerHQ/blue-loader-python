@@ -252,7 +252,7 @@ class DongleNFC(Dongle, DongleWait):
 		return response
 
 	def apduMaxDataSize(self):
-		return 184
+		return 255
 
 	def close(self):
 		pass
