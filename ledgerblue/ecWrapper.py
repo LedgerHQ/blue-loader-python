@@ -64,15 +64,19 @@ class PublicKey(object):
 				out += self.obj.W.x.to_bytes(32, 'big')
 			return out
 
-	def ecdh(self, scalar):
+	def ecdh(self, scalar, scpv3=False):
 		if USE_SECP:
 			return self.obj.ecdh(scalar)
 		else:
 			scalar = int.from_bytes(scalar, 'big')
 			point = self.obj.W * scalar
-			# libsecp256k1 style secret
-			out = b"\x03" if ((point.y & 1) != 0) else b"\x02"
-			out += point.x.to_bytes(32, 'big')
+			if not scpv3:
+				# libsecp256k1 style secret
+				out = b"\x03" if ((point.y & 1) != 0) else b"\x02"
+				out += point.x.to_bytes(32, 'big')
+			else:
+				out = point.x.to_bytes(32, 'big')
+				out += b"\x00\x00\x00\x01"
 			hash = hashlib.sha256()
 			hash.update(out)
 			return hash.digest()
