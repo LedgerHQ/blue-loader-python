@@ -77,7 +77,7 @@ if __name__ == '__main__':
 		if len(data) < 5:
 			continue
 		if args.scp:
-			apduData = data[4:]
+			apduData = data[5:]
 			apduData = scp.encryptAES(bytes(apduData))
 			apdu = bytearray([data[0], data[1], data[2], data[3], len(apduData)]) + bytearray(apduData)
 			result = dongle.exchange(apdu)
