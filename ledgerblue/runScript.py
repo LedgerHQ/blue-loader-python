@@ -25,7 +25,8 @@ device. The file must be formatted as hex, with one CAPDU per line.""")
 	parser.add_argument("--fileName", help="The name of the APDU script to load")
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--scp", help="Open a Secure Channel to exchange APDU", action='store_true')
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Nano S)", type=auto_int, default=0x31100002)
+	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Nano S). If --elfFile is used, the targetId from the ELF file will be used instead.", type=auto_int, default=0x31100002)
+	parser.add_argument("--elfFile", help="ELF file from which the target ID is fetched. Overrides '--targetId'")
 	parser.add_argument("--rootPrivateKey", help="""The Signer private key used to establish a Secure Channel (otherwise
 a random one will be generated)""")
 	return parser
@@ -41,6 +42,7 @@ if __name__ == '__main__':
 	from .deployed import getDeployedSecretV2
 	from .ecWrapper import PrivateKey
 	from .hexLoader import HexLoader
+	from .readElfMetadata import get_elf_file, get_elf_section_value
 
 	args = get_argparser().parse_args()
 
@@ -64,13 +66,20 @@ if __name__ == '__main__':
 			return self.loader.scpUnwrap(data)
 
 	dongle = getDongle(args.apdu)
+
+	targetId = args.targetId
+
+	if args.elfFile:
+		with get_elf_file(args.elfFile) as elf:
+			targetId = auto_int(get_elf_section_value(elf,"target_id"))
+
 	if args.scp:
 		if args.rootPrivateKey is None:
 			privateKey = PrivateKey()
 			publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
 			print("Generated random root public key : %s" % publicKey)
 			args.rootPrivateKey = privateKey.serialize()
-			scp = SCP(dongle, args.targetId, bytearray.fromhex(args.rootPrivateKey))
+			scp = SCP(dongle, targetId, bytearray.fromhex(args.rootPrivateKey))
 
 	for data in file:
 		data = binascii.unhexlify(data.replace("\n", ""))

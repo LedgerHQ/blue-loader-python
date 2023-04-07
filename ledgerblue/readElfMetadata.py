@@ -1,0 +1,83 @@
+"""
+*******************************************************************************
+*   Ledger Blue
+*   (c) 2023 Ledger
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+********************************************************************************
+"""
+
+import argparse
+from contextlib import contextmanager
+from elftools.elf.elffile import ELFFile
+
+@contextmanager
+def get_elf_file(filename):
+    with open(filename, 'rb') as fp:
+        yield ELFFile(fp)
+
+def get_elf_section_value(elf,section_name):
+    section = elf.get_section_by_name(f"ledger.{section_name}")
+    section_value = ""
+    if section :
+        section_value = section.data().decode("utf-8").strip()
+    return section_value
+
+def get_argparser(sections):
+    sections_copy = sections.copy()
+    sections_copy.append("all")
+    parser = argparse.ArgumentParser(
+        description="""Read the metadata of a Ledger device's ELF binary file.""")
+    parser.add_argument(
+        "--fileName", help="The name of the ELF binary file to read")
+    parser.add_argument(
+        "--section", help=f"The name of the metadata section to be read. If no value is provided, all sections are read.", choices=sections_copy, default="all")
+    return parser
+
+
+def auto_int(x):
+    return int(x, 0)
+
+
+if __name__ == '__main__':
+    import binascii
+    import sys
+    import os
+
+    __ELF_METADATA_SECTIONS = [
+        "target",
+        "target_name",
+        "target_id",
+        "app_name",
+        "app_version",
+        "api_level"
+        "sdk_version",
+        "sdk_name",
+        "sdk_hash",
+    ]
+
+    args = get_argparser(__ELF_METADATA_SECTIONS).parse_args()
+
+    if not args.fileName:
+        # raise Exception("Missing fileName")
+        file = sys.stdin
+    else:
+        file = open(args.fileName, "r")
+
+    with get_elf_file(args.fileName) as elf:
+        if(args.section == "all"):
+            for section_name in __ELF_METADATA_SECTIONS:
+                section_value = get_elf_section_value(elf,section_name)
+                print(f"{section_name} : {section_value}")
+        else:
+            print(get_elf_section_value(elf,args.section))      
