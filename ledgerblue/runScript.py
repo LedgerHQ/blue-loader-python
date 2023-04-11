@@ -70,7 +70,7 @@ if __name__ == '__main__':
 	targetId = args.targetId
 
 	if args.elfFile:
-		targetId = get_target_id_from_elf(args.elfFile)
+		targetId = auto_int(get_target_id_from_elf(args.elfFile))
   
 	if args.scp:
 		if args.rootPrivateKey is None:

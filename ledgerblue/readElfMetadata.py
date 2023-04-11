@@ -18,9 +18,21 @@
 """
 
 import argparse
+import os
 from contextlib import contextmanager
 from elftools.elf.elffile import ELFFile
 
+__ELF_METADATA_SECTIONS = [
+    "target",
+    "target_name",
+    "target_id",
+    "app_name",
+    "app_version",
+    "api_level"
+    "sdk_version",
+    "sdk_name",
+    "sdk_hash",
+]
 
 @contextmanager
 def _get_elf_file(filename):
@@ -31,60 +43,41 @@ def _get_elf_file(filename):
         raise FileNotFoundError(f"File {filename} does not exist.")
 
 
-def _get_elf_section_value(elf,section_name):
+def _get_elf_section_value(elf, section_name):
     section = elf.get_section_by_name(f"ledger.{section_name}")
     section_value = ""
-    if section :
+    if section:
         section_value = section.data().decode("utf-8").strip()
     return section_value
 
 
-def get_elf_section_value(filename,section_name):
+def get_elf_section_value(filename, section_name):
     with _get_elf_file(filename) as elf:
-        return _get_elf_section_value(elf,section_name)
+        return _get_elf_section_value(elf, section_name)
 
 
 def get_target_id_from_elf(filename):
-    return get_elf_section_value(filename,"target_id")
+    return get_elf_section_value(filename, "target_id")
 
 
-def get_argparser(sections):
-    sections_copy = sections.copy()
-    sections_copy.append("all")
+def get_argparser():
     parser = argparse.ArgumentParser(
         description="""Read the metadata of a Ledger device's ELF binary file.""")
     parser.add_argument(
         "--fileName", help="The name of the ELF binary file to read", required=True)
     parser.add_argument(
-        "--section", help=f"The name of the metadata section to be read. If no value is provided, all sections are read.", choices=sections_copy, default="all")
+        "--section", help=f"The name of the metadata section to be read. If no value is provided, all sections are read.", choices=__ELF_METADATA_SECTIONS + ["all"], default="all")
     return parser
 
 
-def auto_int(x):
-    return int(x, 0)
-
-
 if __name__ == '__main__':
-    import os
 
-    __ELF_METADATA_SECTIONS = [
-        "target",
-        "target_name",
-        "target_id",
-        "app_name",
-        "app_version",
-        "api_level"
-        "sdk_version",
-        "sdk_name",
-        "sdk_hash",
-    ]
-
-    args = get_argparser(__ELF_METADATA_SECTIONS).parse_args()
+    args = get_argparser().parse_args()
 
     with _get_elf_file(args.fileName) as elf:
         if(args.section == "all"):
             for section_name in __ELF_METADATA_SECTIONS:
-                section_value = _get_elf_section_value(elf,section_name)
+                section_value = _get_elf_section_value(elf, section_name)
                 print(f"{section_name} : {section_value}")
         else:
-            print(_get_elf_section_value(elf,args.section))      
+            print(_get_elf_section_value(elf, args.section))      
