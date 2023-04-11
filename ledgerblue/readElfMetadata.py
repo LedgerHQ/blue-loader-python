@@ -21,17 +21,32 @@ import argparse
 from contextlib import contextmanager
 from elftools.elf.elffile import ELFFile
 
-@contextmanager
-def get_elf_file(filename):
-    with open(filename, 'rb') as fp:
-        yield ELFFile(fp)
 
-def get_elf_section_value(elf,section_name):
+@contextmanager
+def _get_elf_file(filename):
+    if os.path.exists(filename):
+        with open(filename, 'rb') as fp:
+            yield ELFFile(fp)
+    else:
+        raise FileNotFoundError(f"File {filename} does not exist.")
+
+
+def _get_elf_section_value(elf,section_name):
     section = elf.get_section_by_name(f"ledger.{section_name}")
     section_value = ""
     if section :
         section_value = section.data().decode("utf-8").strip()
     return section_value
+
+
+def get_elf_section_value(filename,section_name):
+    with _get_elf_file(filename) as elf:
+        return _get_elf_section_value(elf,section_name)
+
+
+def get_target_id_from_elf(filename):
+    return get_elf_section_value(filename,"target_id")
+
 
 def get_argparser(sections):
     sections_copy = sections.copy()
@@ -39,7 +54,7 @@ def get_argparser(sections):
     parser = argparse.ArgumentParser(
         description="""Read the metadata of a Ledger device's ELF binary file.""")
     parser.add_argument(
-        "--fileName", help="The name of the ELF binary file to read")
+        "--fileName", help="The name of the ELF binary file to read", required=True)
     parser.add_argument(
         "--section", help=f"The name of the metadata section to be read. If no value is provided, all sections are read.", choices=sections_copy, default="all")
     return parser
@@ -50,8 +65,6 @@ def auto_int(x):
 
 
 if __name__ == '__main__':
-    import binascii
-    import sys
     import os
 
     __ELF_METADATA_SECTIONS = [
@@ -68,16 +81,10 @@ if __name__ == '__main__':
 
     args = get_argparser(__ELF_METADATA_SECTIONS).parse_args()
 
-    if not args.fileName:
-        # raise Exception("Missing fileName")
-        file = sys.stdin
-    else:
-        file = open(args.fileName, "r")
-
-    with get_elf_file(args.fileName) as elf:
+    with _get_elf_file(args.fileName) as elf:
         if(args.section == "all"):
             for section_name in __ELF_METADATA_SECTIONS:
-                section_value = get_elf_section_value(elf,section_name)
+                section_value = _get_elf_section_value(elf,section_name)
                 print(f"{section_name} : {section_value}")
         else:
-            print(get_elf_section_value(elf,args.section))      
+            print(_get_elf_section_value(elf,args.section))      

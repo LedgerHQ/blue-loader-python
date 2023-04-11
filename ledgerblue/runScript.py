@@ -42,7 +42,7 @@ if __name__ == '__main__':
 	from .deployed import getDeployedSecretV2
 	from .ecWrapper import PrivateKey
 	from .hexLoader import HexLoader
-	from .readElfMetadata import get_elf_file, get_elf_section_value
+	from .readElfMetadata import get_target_id_from_elf
 
 	args = get_argparser().parse_args()
 
@@ -70,9 +70,8 @@ if __name__ == '__main__':
 	targetId = args.targetId
 
 	if args.elfFile:
-		with get_elf_file(args.elfFile) as elf:
-			targetId = auto_int(get_elf_section_value(elf,"target_id"))
-
+		targetId = get_target_id_from_elf(args.elfFile)
+  
 	if args.scp:
 		if args.rootPrivateKey is None:
 			privateKey = PrivateKey()
