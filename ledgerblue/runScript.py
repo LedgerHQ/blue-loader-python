@@ -78,7 +78,7 @@ if __name__ == '__main__':
 			publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
 			print("Generated random root public key : %s" % publicKey)
 			args.rootPrivateKey = privateKey.serialize()
-			scp = SCP(dongle, targetId, bytearray.fromhex(args.rootPrivateKey))
+		scp = SCP(dongle, targetId, bytearray.fromhex(args.rootPrivateKey))
 
 	for data in file:
 		data = binascii.unhexlify(data.replace("\n", ""))
