@@ -137,7 +137,7 @@ class BleDevice(object):
     def __read(self) -> bytes:
         return self.loop.run_until_complete(_read())
 
-    def exchange(self, data: bytes, timeout=1000):
+    def exchange(self, data: bytes, timeout=1000) -> bytes:
         self.__write(data)
         return self.__read()
 
@@ -168,8 +168,7 @@ if __name__ == "__main__":
                     devices_str += f"  -{device_idx+1}- mac=\"{device[0]}\" name=\"{device[1]}\"\n"
                     device_idx += 1
                 index = int(input(f"Select device by index\n{devices_str}"))
-                os.environ['LEDGER_BLE_MAC']=scanner.devices[index-1][0]
-                print(f"Environment variable LEDGER_BLE_MAC succesfully set to '{scanner.devices[index-1][0]}'")
+                print(f"Please run 'export LEDGER_BLE_MAC=\"{scanner.devices[index-1][0]}\"' to select which device to connect to")
             else:
                 raise NoLedgerDeviceDetected
     except NoLedgerDeviceDetected as ex:

@@ -31,6 +31,7 @@ from .commTCP import getDongle as getDongleTCP
 from .commU2F import getDongle as getDongleU2F
 from .Dongle import Dongle, DongleWait, TIMEOUT
 from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
+from .BleComm import BleDevice
 
 
 APDUGEN=None
@@ -52,6 +53,10 @@ if "LEDGER_PROXY_ADDRESS" in os.environ and len(os.environ["LEDGER_PROXY_ADDRESS
 NFC_PROXY=None
 if "LEDGER_NFC_PROXY" in os.environ:
 	NFC_PROXY=True
+
+BLE_PROXY=None
+if "LEDGER_BLE_PROXY" in os.environ:
+	BLE_PROXY=True
 
 # Force use of MCUPROXY if required
 PCSC=None
@@ -257,6 +262,50 @@ class DongleNFC(Dongle, DongleWait):
 	def close(self):
 		pass
 
+class DongleBLE(Dongle, DongleWait):
+	def __init__(self, debug = False):
+		self.waitImpl = self
+		self.debug = debug
+		try:
+			self.device = BleDevice(os.environ['LEDGER_BLE_MAC'])
+			self.device.open()
+		except Exception as ex:
+			print(f"Please run 'python -m ledgerblue.BleComm' to select wich device to connect to")
+			raise ex
+		self.opened = self.device.opened
+
+	def exchange(self, apdu, timeout=TIMEOUT):
+		if self.debug:
+			print(f"[BLE] => {apdu.hex()}")
+		response = self.device.exchange(apdu, timeout)
+		sw = (response[-2] << 8) + response[-1]
+		if self.debug:
+			print(f"[BLE] <= {response.hex()}")
+		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
+			possibleCause = "Unknown reason"
+			if sw == 0x6982:
+				possibleCause = "Have you uninstalled the existing CA with resetCustomCA first?"
+			if sw == 0x6985:
+				possibleCause = "Condition of use not satisfied (denied by the user?)"
+			if sw == 0x6a84 or sw == 0x6a85:
+				possibleCause = "Not enough space?"
+			if sw == 0x6a83:
+				possibleCause = "Maybe this app requires a library to be installed first?"
+			if sw == 0x6484:
+				possibleCause = "Are you using the correct targetId?"
+			if sw == 0x6d00:
+				possibleCause = "Unexpected state of device: verify that the right application is opened?"
+			if sw == 0x6e00:
+				possibleCause = "Unexpected state of device: verify that the right application is opened?"
+			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
+		return response
+
+	def apduMaxDataSize(self):
+		return 0x99
+
+	def close(self):
+		self.device.close()
+
 class DongleSmartcard(Dongle):
 
 	def __init__(self, device, debug=False):
@@ -296,6 +345,8 @@ def getDongle(debug=False, selectCommand=None):
 		return getDongleTCP(server=TCP_PROXY[0], port=TCP_PROXY[1], debug=debug)
 	elif NFC_PROXY:
 		return DongleNFC(debug)
+	elif BLE_PROXY:
+		return DongleBLE(debug)
 	dev = None
 	hidDevicePath = None
 	ledger = True
