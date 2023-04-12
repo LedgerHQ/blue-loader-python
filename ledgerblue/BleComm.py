@@ -147,8 +147,12 @@ if __name__ == "__main__":
         if args.show:
             print(f"Environment variable LEDGER_BLE_MAC currently set to '{os.environ['LEDGER_BLE_MAC']}'")
         elif args.demo:
+            try:
+                ble_device = BleDevice(os.environ['LEDGER_BLE_MAC'])
+            except Exception as ex:
+                print(f"Please run 'python -m ledgerblue.BleComm' to select wich device to connect to")
+                raise ex
             print("-----------------------------Get version BLE demo------------------------------")
-            ble_device = BleDevice(os.environ['LEDGER_BLE_MAC'])
             ble_device.open()
             print(f"Connected to {ble_device.address}")
             get_version_apdu = bytes.fromhex("e001000000")
