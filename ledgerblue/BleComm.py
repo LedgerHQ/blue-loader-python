@@ -6,7 +6,8 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from typing import List
 
-LEDGER_SERVICE_UUID = "13d63400-2c97-6004-0000-4c6564676572"
+LEDGER_SERVICE_UUID_STAX = "13d63400-2c97-6004-0000-4c6564676572"
+LEDGER_SERVICE_UUID_NANOX = "13d63400-2c97-0004-0000-4c6564676572"
 HANDLE_CHAR_ENABLE_NOTIF = 13
 HANDLE_CHAR_WRITE = 16
 TAG_ID = b"\x05"
@@ -25,7 +26,7 @@ class BleScanner(object):
         self.devices = []        
     
     def __scan_callback(self, device: BLEDevice, advertisement_data: AdvertisementData):
-        if LEDGER_SERVICE_UUID in advertisement_data.service_uuids:
+        if LEDGER_SERVICE_UUID_STAX in advertisement_data.service_uuids or LEDGER_SERVICE_UUID_NANOX in advertisement_data.service_uuids:
             device_is_in_list = False
             for dev in self.devices:
                 if device.address == dev[0]:
