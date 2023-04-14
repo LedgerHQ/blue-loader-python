@@ -21,6 +21,7 @@ from binascii import hexlify
 import hid
 import os
 import time
+import sys
 
 import nfc
 from nfc.clf import RemoteTarget
@@ -269,9 +270,8 @@ class DongleBLE(Dongle, DongleWait):
 		try:
 			self.device = BleDevice(os.environ['LEDGER_BLE_MAC'])
 			self.device.open()
-		except Exception as ex:
-			print(f"Please run 'python -m ledgerblue.BleComm' to select wich device to connect to")
-			raise ex
+		except KeyError as ex:
+			sys.exit(f"Key Error\nPlease run 'python -m ledgerblue.BleComm' to select wich device to connect to")
 		self.opened = self.device.opened
 
 	def exchange(self, apdu, timeout=TIMEOUT):
