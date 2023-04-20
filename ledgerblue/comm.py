@@ -279,8 +279,9 @@ class DongleBLE(Dongle, DongleWait):
 			print(f"[BLE] => {apdu.hex()}")
 		response = self.device.exchange(apdu, timeout)
 		sw = (response[-2] << 8) + response[-1]
+		response = response[0:-2]
 		if self.debug:
-			print(f"[BLE] <= {response.hex()}")
+			print("[BLE] <= %s%.2x" % (response.hex(), sw))
 		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
 			possibleCause = "Unknown reason"
 			if sw == 0x6982:
@@ -297,6 +298,7 @@ class DongleBLE(Dongle, DongleWait):
 				possibleCause = "Unexpected state of device: verify that the right application is opened?"
 			if sw == 0x6e00:
 				possibleCause = "Unexpected state of device: verify that the right application is opened?"
+			self.close()
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		return response
 
