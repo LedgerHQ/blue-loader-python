@@ -8,8 +8,7 @@ from typing import List
 
 LEDGER_SERVICE_UUID_STAX = "13d63400-2c97-6004-0000-4c6564676572"
 LEDGER_SERVICE_UUID_NANOX = "13d63400-2c97-0004-0000-4c6564676572"
-HANDLE_CHAR_ENABLE_NOTIF = 13
-HANDLE_CHAR_WRITE = 16
+
 TAG_ID = b"\x05"
 
 def get_argparser():
@@ -23,8 +22,8 @@ class NoLedgerDeviceDetected(Exception):
 
 class BleScanner(object):
     def __init__(self):
-        self.devices = []        
-    
+        self.devices = []
+
     def __scan_callback(self, device: BLEDevice, advertisement_data: AdvertisementData):
         if LEDGER_SERVICE_UUID_STAX in advertisement_data.service_uuids or LEDGER_SERVICE_UUID_NANOX in advertisement_data.service_uuids:
             device_is_in_list = False
@@ -56,45 +55,82 @@ async def _get_client(address: str) -> BleakClient:
     client = BleakClient(address)
     await client.connect()
 
+    characteristic_notify = None
+    characteristic_write_with_rsp = None
+    characteristic_write_cmd = None
+    for service in client.services:
+        if service.uuid in [LEDGER_SERVICE_UUID_NANOX, LEDGER_SERVICE_UUID_STAX]:
+            for char in service.characteristics:
+                if "0001" in char.uuid:
+                    characteristic_notify = char
+                if "0002" in char.uuid:
+                    characteristic_write_with_rsp = char
+                if "0003" in char.uuid:
+                    characteristic_write_cmd = char
+
+    assert characteristic_notify != None
+
+    # Choose write cmd to speed up transfers
+    characteristic_write = characteristic_write_cmd
+    if characteristic_write == None:
+        characteristic_write = characteristic_write_with_rsp
+
     # Register notifications callback
-    await client.start_notify(HANDLE_CHAR_ENABLE_NOTIF, callback)
+    await client.start_notify(characteristic_notify, callback)
 
     # Enable notifications
-    await client.write_gatt_char(HANDLE_CHAR_WRITE, bytes.fromhex("0001"), True)
+    await client.write_gatt_char(characteristic_write.uuid, bytes.fromhex("0001"), True)
     assert await queue.get() == b"\x00\x00\x00\x00\x00"
 
-    # confirm that the MTU is 0x99
-    await client.write_gatt_char(HANDLE_CHAR_WRITE, bytes.fromhex("0800000000"), True)
-    assert await queue.get() == b"\x08\x00\x00\x00\x01\x99"
-
-    return client
-
-async def _read() -> bytes:
+    # Get MTU value
+    await client.write_gatt_char(characteristic_write.uuid, bytes.fromhex("0800000000"), True)
     response = await queue.get()
+    mtu = int.from_bytes(response[5:6], 'big')
 
+    print("[BLE] MTU {:d}".format(mtu))
+
+    return client, mtu, characteristic_write
+
+async def _read(mtu) -> bytes:
+    response = await queue.get()
     assert len(response) >= 5
     assert response[0] == TAG_ID[0]
-    assert response[1:3] == b"\x00\x00"
+    sequence = int.from_bytes(response[1:3], 'big')
+    assert sequence == 0
     total_size = int.from_bytes(response[3:5], "big")
 
-    apdu = response[5:]
-    i = 1
-    if len(apdu) < total_size:
-        assert total_size > len(response) - 5
+    total_size_bkup = total_size
+    if total_size >= (mtu-5):
+        apdu = response[5:mtu]
+        total_size -= (mtu-5)
 
         response = await queue.get()
-
-        assert len(response) >= 3
         assert response[0] == TAG_ID[0]
-        assert int.from_bytes(response[1:3], "big") == i
-        i += 1
-        apdu += response[3:]
+        assert len(response) >= 3
+        next_sequence = int.from_bytes(response[1:3], 'big')
+        assert next_sequence == sequence+1
+        sequence = next_sequence
 
-    assert len(apdu) == total_size
+        while total_size >= (mtu-3):
+            apdu += response[3:mtu]
+            total_size -= (mtu-3)
+            response = await queue.get()
+            assert response[0] == TAG_ID[0]
+            assert len(response) >= 3
+            sequence = int.from_bytes(response[1:3], 'big')
+            assert next_sequence == sequence+1
+            sequence = next_sequence
+
+        if total_size > 0:
+            apdu += response[3:3+total_size]
+    else:
+        apdu = response[5:]
+
+    assert len(apdu) == total_size_bkup
     return apdu
 
 
-async def _write(client: BleakClient, data: bytes, mtu: int = 0x99):
+async def _write(client: BleakClient, data: bytes, write_characteristic, mtu: int = 20):
     chunks: List[bytes] = []
     buffer = data
     while buffer:
@@ -111,7 +147,7 @@ async def _write(client: BleakClient, data: bytes, mtu: int = 0x99):
         header += i.to_bytes(2, "big")
         if i == 0:
             header += len(data).to_bytes(2, "big")
-        await client.write_gatt_char(HANDLE_CHAR_WRITE, header + chunk, True)
+        await client.write_gatt_char(write_characteristic.uuid, header + chunk, True)
 
 
 class BleDevice(object):
@@ -120,10 +156,12 @@ class BleDevice(object):
         self.loop = None
         self.client = None
         self.opened = False
+        self.mtu = 20
+        self.write_characteristic = None
 
     def open(self):
         self.loop = asyncio.new_event_loop()
-        self.client = self.loop.run_until_complete(_get_client(self.address))
+        self.client, self.mtu, self.write_characteristic = self.loop.run_until_complete(_get_client(self.address))
         self.opened = True
 
     def close(self):
@@ -131,12 +169,12 @@ class BleDevice(object):
             self.loop.run_until_complete(self.client.disconnect())
             self.opened = False
             self.loop.close()
-    
+
     def __write(self, data: bytes):
-        self.loop.run_until_complete(_write(self.client, data))
+        self.loop.run_until_complete(_write(self.client, data, self.write_characteristic, self.mtu))
 
     def __read(self) -> bytes:
-        return self.loop.run_until_complete(_read())
+        return self.loop.run_until_complete(_read(self.mtu))
 
     def exchange(self, data: bytes, timeout=1000) -> bytes:
         self.__write(data)
@@ -180,4 +218,4 @@ if __name__ == "__main__":
         print(ex)
     except Exception as ex:
         raise ex
-    
+

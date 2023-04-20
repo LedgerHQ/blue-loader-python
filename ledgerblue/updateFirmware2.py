@@ -52,8 +52,6 @@ def process(dongle, request):
 		try:
 			for apdu in apdusList:
 				response['data'] = dongle.exchange(apdu).hex()
-			if len(response['data']) == 0:
-				response['data'] = "9000"
 			response['response'] = "success"
 		except:
 			response['response'] = "I/O" # or error, and SW in data
