@@ -355,6 +355,62 @@ class HexLoader:
 		data = b'\x15' +  appfullhash
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
+	def createPack(self, language, code_length):
+		#keep the create pack parameters to be included in the load app hash
+		self.createpackParams = struct.pack('>I', code_length)
+		data = self.createpackParams
+		self.language = language
+		self.exchange(self.cla, 0x30, language, 0x00, data)
+
+	def loadPackSegmentChunk(self, offset, chunk):
+		data = struct.pack('>I', offset) + chunk
+		#print(f"Inside loadPackSegmentChunk, offset={offset}, len(chunk)={len(chunk)}")
+		self.exchange(self.cla, 0x31, self.language, 0x00, data)
+
+	def commitPack(self, signature=None):
+		if (signature != None):
+			data = struct.pack('>B', len(signature)) + signature
+		else:
+			data = b''
+		self.exchange(self.cla, 0x32, self.language, 0x00, data)
+
+	def deletePack(self, language):
+		self.language = language
+		self.exchange(self.cla, 0x33, language, 0x00, b'')
+
+	def listPacks(self, restart=True):
+		language_id_name = ["English", "Français", "Español"]
+		if restart:
+			response = self.exchange(self.cla, 0x34, 0x00, 0x00, b'')
+		else:
+			response = self.exchange(self.cla, 0x34, 0x01, 0x00, b'')
+		result = []
+		offset = 0
+		if len(response) > 0:
+			if response[0] != 0x01:
+				raise Exception(f"Unsupported version format {response[0]}!")
+			offset += 1
+			while offset != len(response):
+				item = {}
+				#skip the current entry's size
+				offset += 1
+				#skip len of Language ID
+				offset += 1
+				language_id = response[offset]
+				if language_id >= len(language_id_name):
+					language_name = "Unknown"
+				else:
+					language_name = language_id_name[language_id]
+				item['Language ID'] = f"{language_id} ({language_name})"
+				offset += 1
+				offset += 1
+				item['size'] = (response[offset] << 24) | (response[offset + 1] << 16) | (response[offset + 2] << 8) | response[offset + 3]
+				offset += 4
+				item['Version'] = response[offset + 1 : offset + 1 + response[offset]].decode('utf-8')
+				offset += 1 + response[offset]
+				result.append(item)
+		return result
+
 	def getVersion(self):
 		data = b'\x10'
 		response = self.exchange(self.cla, 0x00, 0x00, 0x00, data)
@@ -447,7 +503,8 @@ class HexLoader:
 				print("Target version is not set, application hash will not match!")
 				targetVersion=""
 			#encore targetId U4LE, and version string bytes
-			sha256.update(struct.pack('>I', targetId) + string_to_bytes(targetVersion))
+			if not self.createpackParams:
+				sha256.update(struct.pack('>I', targetId) + string_to_bytes(targetVersion))
 		if self.createappParams:
 			sha256.update(self.createappParams)
 		areas = hexFile.getAreas()
@@ -456,7 +513,8 @@ class HexLoader:
 		for area in areas:
 			startAddress = area.getStart() - initialAddress
 			data = area.getData()
-			self.selectSegment(startAddress)
+			if not self.createpackParams:
+				self.selectSegment(startAddress)
 			if len(data) == 0:
 				continue
 			if len(data) > 0x10000:
@@ -481,17 +539,24 @@ class HexLoader:
 				# pad with 00's when not complete block and performing NENC
 				if reverse:
 					chunk = data[offset-chunkLen : offset]
-					self.loadSegmentChunk(offset-chunkLen, bytes(chunk))
+					if self.createpackParams:
+						self.loadPackSegmentChunk(offset-chunkLen, bytes(chunk))
+					else:
+						self.loadSegmentChunk(offset-chunkLen, bytes(chunk))
 				else:
 					chunk = data[offset : offset + chunkLen]
 					sha256.update(chunk)
-					self.loadSegmentChunk(offset, bytes(chunk))
+					if self.createpackParams:
+						self.loadPackSegmentChunk(offset, bytes(chunk))
+					else:
+						self.loadSegmentChunk(offset, bytes(chunk))
 				if reverse:
 					offset -= chunkLen
 				else:
 					offset += chunkLen
 				length -= chunkLen
-			self.flushSegment()
+			if not self.createpackParams:
+				self.flushSegment()
 			if doCRC:
 				self.crcSegment(0, len(data), crc)
 		return sha256.hexdigest()
