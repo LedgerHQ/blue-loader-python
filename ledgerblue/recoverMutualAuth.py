@@ -1,9 +1,6 @@
 from ledgerblue.ecWrapper import PublicKey, PrivateKey
 from ledgerblue.hexLoader import HexLoader
 from ledgerblue.recoverSCP import scp_derive_key, extract_from_certificate, decrypt_certificate
-from ecpy.curves import Point, Curve
-from Crypto.Cipher import AES
-from hashlib import sha256
 import binascii
 import struct
 import os
@@ -35,7 +32,6 @@ def SCPv3(dongle, issuer_public_key, target_id, ca_private_key=None, signer_priv
     apdu = bytearray([0xe0, 0x50, 0x00, 0x00]) + bytearray([len(nonce)]) + nonce
 
     auth_info = dongle.exchange(apdu)
-    batch_signer_serial = auth_info[0:4]
     device_nonce = auth_info[4:12]
 
     if user_mode:
@@ -85,11 +81,14 @@ def SCPv3(dongle, issuer_public_key, target_id, ca_private_key=None, signer_priv
     certificate_header, certificate_public_key, certificate_signature_array = \
         extract_from_certificate(certificate_ephemeral)
 
+    # Check the certificate's header
+    if not certificate_header == bytearray():
+        raise Exception("Device ephemeral certificate: error format")
+
     # Decrypt the device static certificate
     # Compute the shared key
     pub_key = PublicKey(bytes(certificate_public_key), raw=True)
     secret = pub_key.ecdh(binascii.unhexlify(ephemeral_private.serialize()), True)
-    loader = HexLoader(dongle, 0xe0, True, secret)
     key = scp_derive_key(secret, 0, True)
 
     certificate_static = decrypt_certificate(encrypted_certificate_static, key)
