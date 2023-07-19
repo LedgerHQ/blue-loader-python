@@ -64,9 +64,7 @@ if __name__ == '__main__':
 
     # Initialize the session with the info from the configuration file
     recoverSession = Recover(conf)
-
-    # Send the user identity to the device
-    loader.recoverConfirmID(recoverSession)
+    confirmed = False
 
     for backup in args.backups:
         # Read the deletion public key
@@ -95,8 +93,16 @@ if __name__ == '__main__':
         loader.recoverMutualAuth()
         sharedKey = recoverMutualAuth(providerSk, devicePublicKey)
         recoverSession.sharedKey = sharedKey
-        dataHash = recoverSession.recoverPrepareDataHash(providerPk)
 
+        # Send the user identity to the device
+        if not confirmed:
+            dataIdv = recoverSession.recoverPrepareDataIdv()
+            cipher = AES.new(sharedKey, AES.MODE_SIV)
+            ciphertext, tag = cipher.encrypt_and_digest(dataIdv)
+            loader.recoverConfirmID(tag, ciphertext)
+            confirmed = True
+
+        dataHash = recoverSession.recoverPrepareDataHash(providerPk)
         cipher = AES.new(sharedKey, AES.MODE_SIV)
         ciphertext, tag = cipher.encrypt_and_digest(dataHash)
 
