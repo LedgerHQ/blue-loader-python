@@ -81,6 +81,14 @@ SCP_DEBUG = str2bool(os.getenv("SCP_DEBUG"))
 class HexLoader:
 
 	def scp_derive_key(self, ecdh_secret, keyindex):
+		if self.scpv3:
+			mac_block = b'\x01' * 16
+			cipher = AES.new(ecdh_secret, AES.MODE_ECB)
+			mac_key = cipher.encrypt(mac_block)
+			enc_block = b'\x02' * 16
+			cipher = AES.new(ecdh_secret, AES.MODE_ECB)
+			enc_key = cipher.encrypt(enc_block)
+			return mac_key + enc_key
 		retry = 0
 		# di = sha256(i || retrycounter || ecdh secret)
 		while True:
@@ -104,12 +112,13 @@ class HexLoader:
 		#print ("Key " + str (keyindex) + ": " + sha256.hexdigest())
 		return sha256.digest()
 
-	def __init__(self, card, cla=0xF0, secure=False, mutauth_result=None, relative=True, cleardata_block_len=None):
+	def __init__(self, card, cla=0xF0, secure=False, mutauth_result=None, relative=True, cleardata_block_len=None, scpv3=False):
 		self.card = card
 		self.cla = cla
 		self.secure = secure
 		self.createappParams = None
 		self.createpackParams = None
+		self.scpv3 = scpv3
 
 		#legacy unsecure SCP (pre nanos-1.4, pre blue-2.1)
 		self.max_mtu = 0xFE
@@ -125,6 +134,14 @@ class HexLoader:
 		if not (self.cleardata_block_len is None):
 			if not self.card is None:
 				self.cleardata_block_len = min(self.cleardata_block_len, self.card.apduMaxDataSize())
+
+		if scpv3 == True:
+			self.scp_enc_key = self.scp_derive_key(mutauth_result, 0)
+			self.scpVersion = 3
+			self.max_mtu = 0xFE
+			if not self.card is None:
+				self.max_mtu = min(self.max_mtu, self.card.apduMaxDataSize() & 0xF0)
+			return
 
 		# try:
 		if type(mutauth_result) is dict and 'ecdh_secret' in mutauth_result:
@@ -192,6 +209,11 @@ class HexLoader:
 	def scpWrap(self, data):
 		if not self.secure or data is None or len(data) == 0:
 			return data
+		if self.scpv3 == True:
+			cipher = AES.new(self.scp_enc_key, mode=AES.MODE_SIV)
+			ciphertext, tag = cipher.encrypt_and_digest(data)
+			encryptedData = tag + ciphertext
+			return encryptedData
 
 		if self.scpVersion == 3:
 			if SCP_DEBUG:
@@ -232,6 +254,11 @@ class HexLoader:
 	def scpUnwrap(self, data):
 		if not self.secure or data is None or len(data) == 0 or len(data) == 2:
 			return data
+		if self.scpv3 == True:
+			cipher = AES.new(self.scp_enc_key, mode=AES.MODE_SIV)
+			tag = data[:16]
+			decryptedData = cipher.decrypt_and_verify(data[16:], tag)
+			return decryptedData
 
 		padding_char = 0x80
 
@@ -577,3 +604,86 @@ class HexLoader:
 		data = name
 		self.exchange(self.cla, 0xD8, 0x00, 0x00, data)
 
+	def recoverConfirmID(self, recoverSession):
+		data = b'\xd4'
+		data += recoverSession.backupId
+		if recoverSession.backupName is not None:
+			data += struct.pack('>B', len(recoverSession.backupName)) + recoverSession.backupName.encode()
+		if recoverSession.firstName is not None:
+			data += struct.pack('>B', recoverSession.f_tag) + struct.pack('>B', len(recoverSession.firstName.encode()))\
+					+ recoverSession.firstName.encode()
+		if recoverSession.lastName is not None:
+			data += struct.pack('>B', recoverSession.n_tag) + struct.pack('>B', len(recoverSession.lastName.encode()))\
+					+ recoverSession.lastName.encode()
+		if recoverSession.birthDate is not None:
+			data += struct.pack('>B', recoverSession.d_tag) + struct.pack('>B', len(recoverSession.birthDate.encode()))\
+					+ recoverSession.birthDate.encode()
+		if recoverSession.birthPlace is not None:
+			data += struct.pack('>B', recoverSession.c_tag) + struct.pack('>B', len(recoverSession.birthPlace.encode()))\
+					+ recoverSession.birthPlace.encode()
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def recoverSetCA(self, name, key):
+		data = b'\xd2' + struct.pack('>B', len(name)) + name.encode() + struct.pack('>B', len(key)) + key
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def recoverDeleteCA(self, name, key):
+		data = b'\xd3' + struct.pack('>B', len(name)) + name.encode() + struct.pack('>B', len(key)) + key
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def recoverValidateCertificate(self, version, role, name, key, sign, last=False):
+		if last == True:
+			p1 = b'\x80'
+		else:
+			p1 = b'\x00'
+		data = b'\xd5' + p1
+		data += version
+		data += role
+		data += struct.pack('>B', len(name)) + name.encode()
+		data += struct.pack('>B', len(key)) + key + struct.pack('>B', len(sign)) + sign
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def recoverMutualAuth(self):
+		data = b'\xd6'
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def recoverValidateHash(self, tag, ciphertext):
+		data = b'\xd7' + struct.pack('>B', 48) + tag + ciphertext
+		return self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def recoverGetShare(self, value='shares'):
+		if value == 'commitments':
+			p1 = b'\x01'
+		elif value == 'point':
+			p1 = b'\x10'
+		else:
+			p1 = b'\x00'
+		data = b'\xd8' + p1
+		return self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def recoverValidateCommit(self, p1, commits, tag=None, ciphertext=None):
+		data = b'\xd9'
+		if p1 == 0x2:
+			data += b'\x02' + struct.pack('>B', len(commits)) + commits
+		elif p1 == 0x3:
+			data += b'\x03' + struct.pack('>B', 48) + tag + ciphertext
+		elif p1 == 0x4:
+			data += b'\x04' + struct.pack('>B', len(commits)) + commits
+		else:
+			data += b'\x00'
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def recoverRestoreSeed(self, tag, ciphertext, words_number):
+		data = b'\xda'
+		if words_number == 12:
+			p1 = b'\x0c'
+		elif words_number == 18:
+			p1 = b'\x12'
+		else :
+			p1 = b'\x00'
+		data += p1 + struct.pack('>B', len(tag + ciphertext)) + tag + ciphertext
+		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
+
+	def recoverDeleteBackup(self, tag, ciphertext):
+		data = b'\xdb' + struct.pack('>B', len(tag + ciphertext)) + tag + ciphertext
+		return self.exchange(self.cla, 0x00, 0x00, 0x00, data)
