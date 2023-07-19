@@ -604,23 +604,9 @@ class HexLoader:
 		data = name
 		self.exchange(self.cla, 0xD8, 0x00, 0x00, data)
 
-	def recoverConfirmID(self, recoverSession):
+	def recoverConfirmID(self, tag, ciphertext):
 		data = b'\xd4'
-		data += recoverSession.backupId
-		if recoverSession.backupName is not None:
-			data += struct.pack('>B', len(recoverSession.backupName)) + recoverSession.backupName.encode()
-		if recoverSession.firstName is not None:
-			data += struct.pack('>B', recoverSession.f_tag) + struct.pack('>B', len(recoverSession.firstName.encode()))\
-					+ recoverSession.firstName.encode()
-		if recoverSession.lastName is not None:
-			data += struct.pack('>B', recoverSession.n_tag) + struct.pack('>B', len(recoverSession.lastName.encode()))\
-					+ recoverSession.lastName.encode()
-		if recoverSession.birthDate is not None:
-			data += struct.pack('>B', recoverSession.d_tag) + struct.pack('>B', len(recoverSession.birthDate.encode()))\
-					+ recoverSession.birthDate.encode()
-		if recoverSession.birthPlace is not None:
-			data += struct.pack('>B', recoverSession.c_tag) + struct.pack('>B', len(recoverSession.birthPlace.encode()))\
-					+ recoverSession.birthPlace.encode()
+		data += struct.pack('>B', len(tag + ciphertext)) + tag + ciphertext
 		self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
 	def recoverSetCA(self, name, key):

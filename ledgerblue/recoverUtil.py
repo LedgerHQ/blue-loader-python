@@ -4,6 +4,7 @@ from ledgerblue.ecWrapper import PublicKey
 from ledgerblue.vss import PedersenVSS
 from hashlib import sha256
 import os
+import struct
 
 FIRST_NAME_TAG = 0x20
 NAME_TAG = 0x21
@@ -108,4 +109,24 @@ class Recover:
         signature = verifyKey.ecdsa_deserialize(signature)
         if not verifyKey.ecdsa_verify(nonce, signature):
             raise Exception("Invalid signature")
+
+    def recoverPrepareDataIdv(self):
+        data = bytes()
+        data += self.backupId
+        if self.backupName is not None:
+            data += struct.pack('>B', len(self.backupName)) + self.backupName.encode()
+        if self.firstName is not None:
+            data += struct.pack('>B', self.f_tag) + struct.pack('>B', len(self.firstName.encode()))\
+                    + self.firstName.encode()
+        if self.lastName is not None:
+            data += struct.pack('>B', self.n_tag) + struct.pack('>B', len(self.lastName.encode()))\
+                    + self.lastName.encode()
+        if self.birthDate is not None:
+            data += struct.pack('>B', self.d_tag) + struct.pack('>B', len(self.birthDate.encode()))\
+                    + self.birthDate.encode()
+        if self.birthPlace is not None:
+            data += struct.pack('>B', self.c_tag) + struct.pack('>B', len(self.birthPlace.encode()))\
+                    + self.birthPlace.encode()
+
+        return data
 
