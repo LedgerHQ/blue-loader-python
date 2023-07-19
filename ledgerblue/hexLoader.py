@@ -109,6 +109,7 @@ class HexLoader:
 		self.cla = cla
 		self.secure = secure
 		self.createappParams = None
+		self.createpackParams = None
 
 		#legacy unsecure SCP (pre nanos-1.4, pre blue-2.1)
 		self.max_mtu = 0xFE
