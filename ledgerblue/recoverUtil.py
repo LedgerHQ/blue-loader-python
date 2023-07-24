@@ -111,22 +111,18 @@ class Recover:
             raise Exception("Invalid signature")
 
     def recoverPrepareDataIdv(self):
-        data = bytes()
-        data += self.backupId
-        if self.backupName is not None:
-            data += struct.pack('>B', len(self.backupName)) + self.backupName.encode()
-        if self.firstName is not None:
-            data += struct.pack('>B', self.f_tag) + struct.pack('>B', len(self.firstName.encode()))\
-                    + self.firstName.encode()
-        if self.lastName is not None:
-            data += struct.pack('>B', self.n_tag) + struct.pack('>B', len(self.lastName.encode()))\
-                    + self.lastName.encode()
-        if self.birthDate is not None:
-            data += struct.pack('>B', self.d_tag) + struct.pack('>B', len(self.birthDate.encode()))\
-                    + self.birthDate.encode()
-        if self.birthPlace is not None:
-            data += struct.pack('>B', self.c_tag) + struct.pack('>B', len(self.birthPlace.encode()))\
-                    + self.birthPlace.encode()
+        identifiers = [
+            (self.backupName, None),
+            (self.firstName, self.f_tag),
+            (self.lastName, self.n_tag),
+            (self.birthDate, self.d_tag),
+            (self.birthPlace, self.c_tag),
+        ]
 
-        return data
+        def pack(tup):
+            identifier, tag = tup
+            data = struct.pack(">B", tag) if tag is not None else b""
+            return data + struct.pack(">B", len(identifier.encode())) + identifier.encode()
+
+        return self.backupId + b"".join(map(pack, identifiers))
 
