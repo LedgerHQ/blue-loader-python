@@ -11,6 +11,7 @@ setup(
     author='Ledger',
     author_email='hello@ledger.fr',
     description='Python library to communicate with Ledger Blue/Nano S',
+    long_description_content_type="text/markdown",
     long_description=open(join(here, 'README.md')).read(),
     url='https://github.com/LedgerHQ/blue-loader-python',
     packages=find_packages(),
