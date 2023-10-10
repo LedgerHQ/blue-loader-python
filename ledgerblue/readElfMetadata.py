@@ -28,7 +28,7 @@ __ELF_METADATA_SECTIONS = [
     "target_id",
     "app_name",
     "app_version",
-    "api_level"
+    "api_level",
     "sdk_version",
     "sdk_name",
     "sdk_hash",
