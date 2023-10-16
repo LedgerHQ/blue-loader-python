@@ -22,6 +22,7 @@ import argparse
 def get_argparser():
 	parser = argparse.ArgumentParser("Update the firmware by using Ledger to open a Secure Channel.")
 	parser.add_argument("--url", help="Websocket URL", default="wss://scriptrunner.api.live.ledger.com/update/install")
+	parser.add_argument("--bypass-ssl-check", help="Keep going even if remote certificate verification fails", action='store_true', default=False)
 	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
 	parser.add_argument("--perso", help="""A reference to the personalization key; this is a reference to the specific
 Issuer keypair used by Ledger to sign the device's Issuer Certificate""", default="perso_11")
@@ -64,6 +65,7 @@ if __name__ == '__main__':
 	from websocket import create_connection
 	import json
 	import binascii
+	import ssl
 
 	args = get_argparser().parse_args()
 
@@ -76,7 +78,15 @@ if __name__ == '__main__':
 	queryParameters['firmwareKey'] = args.firmwareKey
 	queryParameters['perso'] = args.perso
 	queryString = urlparse.urlencode(queryParameters)
-	ws = create_connection(args.url + '?' + queryString)
+	if args.bypass_ssl_check:
+		# SEE: https://docs.python.org/3/library/ssl.html#ssl.CERT_NONE
+		# According to the documentation:
+		# > With client-side sockets, just about any cert is accepted. Validation errors, such
+		# > as untrusted or expired cert, are ignored and do not abort the TLS/SSL handshake.
+		sslopt = { "cert_reqs": ssl.CERT_NONE }
+	else:
+		sslopt = {}
+	ws = create_connection(args.url + '?' + queryString, sslopt=sslopt)
 	while True:
 		result = json.loads(ws.recv())
 		if result['query'] == 'success':
