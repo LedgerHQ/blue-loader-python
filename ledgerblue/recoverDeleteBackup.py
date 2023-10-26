@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
         # Send the user identity to the device
         if not confirmed:
-            dataIdv = recoverSession.recoverPrepareDataIdv()
+            dataIdv = recoverSession.recoverPrepareDataIdv(delete=True)
             cipher = AES.new(sharedKey, AES.MODE_SIV)
             ciphertext, tag = cipher.encrypt_and_digest(dataIdv)
             loader.recoverConfirmID(tag, ciphertext)

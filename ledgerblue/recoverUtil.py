@@ -110,7 +110,7 @@ class Recover:
         if not verifyKey.ecdsa_verify(nonce, signature):
             raise Exception("Invalid signature")
 
-    def recoverPrepareDataIdv(self):
+    def recoverPrepareDataIdv(self, delete=False):
         identifiers = [
             (self.backupName, None),
             (self.firstName, self.f_tag),
@@ -118,11 +118,12 @@ class Recover:
             (self.birthDate, self.d_tag),
             (self.birthPlace, self.c_tag),
         ]
+        flow = b'\x01' if delete else b'\x00'
 
         def pack(tup):
             identifier, tag = tup
             data = struct.pack(">B", tag) if tag is not None else b""
             return data + struct.pack(">B", len(identifier.encode())) + identifier.encode()
 
-        return self.backupId + b"".join(map(pack, identifiers))
+        return self.backupId + b"".join(map(pack, identifiers)) + flow
 
