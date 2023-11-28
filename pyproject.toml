@@ -1,0 +1,62 @@
+[build-system]
+requires = [
+    "setuptools>=45",
+    "setuptools_scm[toml]>=6.2",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ledgerblue"
+authors = [
+    { name = "Ledger", email = "hello@ledger.fr" }
+]
+description = "Python library to communicate with Ledger Blue/Nano S"
+readme = { file = "README.md", content-type = "text/markdown" }
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+dynamic = [ "version" ]
+requires-python = ">=3"
+dependencies = [
+    "pyelftools>=0.29,<1.0",
+    "hidapi>=0.7.99",
+    "protobuf>=2.6.1",
+    "pycryptodomex>=3.6.1",
+    "future",
+    "ecpy>=0.9.0",
+    "pillow>=3.4.0",
+    "python-u2flib-host>=3.0.2",
+    "websocket_client>=0.56.0",
+    "nfcpy>=1.0.4",
+    "bleak>=0.20.1",
+    "pycryptodome>=3.18.0",
+    "python-gnupg>=0.5.0"
+]
+
+[tool.setuptools]
+packages = ["ledgerblue"]
+include-package-data = false
+
+[project.urls]
+Home = "https://github.com/LedgerHQ/blue-loader-python"
+
+[options.extras_require]
+smartcard = [
+    "python-pyscard>=1.6.12"
+]
+
+[tool.setuptools_scm]
+write_to = "ledgerblue/__version__.py"
+local_scheme = "no-local-version"
