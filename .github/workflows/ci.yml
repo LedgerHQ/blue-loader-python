@@ -1,0 +1,74 @@
+name: Build, test and deploy LedgerWallet
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '*'
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  package-deploy:
+    name: Build the Python package, and deploy if needed
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install dependencies
+      run: |
+        python -m pip install pip --upgrade
+        pip install build twine
+
+    - name: Build the Python package
+      run: |
+        python -m build
+        twine check dist/*
+        echo "TAG_VERSION=$(python -c 'from ledgerblue import __version__; print(__version__)')" >> "$GITHUB_ENV"
+
+    - name: Display current status
+      run: |
+        echo "Current status is:"
+        if [[ ${{ github.ref }} == "refs/tags/"* ]];
+        then
+            echo "- Triggered from tag, will be deployed on pypi.org";
+        else
+            echo "- Not triggered from tag, will be deployed on test.pypi.org";
+        fi
+        echo "- Tag version: ${{ env.TAG_VERSION }}";
+
+    - name: Publish Python package on test.pypi.org
+      if: success() && github.event_name == 'push'
+      run: python -m twine upload --repository testpypi dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PUBLIC_API_TOKEN  }}
+        TWINE_NON_INTERACTIVE: 1
+
+    - name: Publish Python package on pypi.org
+      if: success() && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      run: python -m twine upload dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_PUBLIC_API_TOKEN  }}
+        TWINE_NON_INTERACTIVE: 1
+
+    - name: Publish a release on the repo
+      if: |
+        success() &&
+        github.event_name == 'push' &&
+        startsWith(github.ref, 'refs/tags/')
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        automatic_release_tag: "v${{ env.TAG_VERSION }}"
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        files: |
+          LICENSE
+          dist/
