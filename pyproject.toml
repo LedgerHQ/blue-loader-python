@@ -60,3 +60,4 @@ smartcard = [
 [tool.setuptools_scm]
 write_to = "ledgerblue/__version__.py"
 local_scheme = "no-local-version"
+fallback_version = "0.0.0"
