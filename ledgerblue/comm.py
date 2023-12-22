@@ -196,63 +196,33 @@ class DongleNFC(Dongle, DongleWait):
 		self.debug = debug
 		self.clf = nfc.ContactlessFrontend('usb')
 		self.tag = self.clf.connect(rdwr={'on-connect': lambda tag: False})
-		print(self.tag)
-		if self.tag.ndef is not None:
-			for record in self.tag.ndef.records:
-				print(record)
-
-	def _exchange_write(self, apdu, timeout=TIMEOUT):
-		success = False
-		nb_ex = 0
-		while success is False:
-			try:
-				if DEBUG_NFC_APDU:
-					debug = bytearray([NFC_CLA, NFC_INS_WRITE, NFC_P1, NFC_P2, len(apdu)]) + apdu
-					print(debug.hex())
-				response = self.tag.send_apdu(NFC_CLA, NFC_INS_WRITE, NFC_P1, NFC_P2, apdu, check_status=False)
-				if DEBUG_NFC_APDU:
-					print(response.hex())
-				sw = (response[-2] << 8) + response[-1]
-				if (sw&0xF000) != 0x9000 and (sw&0xFF00) != 0x6100 and (sw&0xFF00) != 0x6C00:
-					raise BaseException("Invalid status word received: " + hex(sw))
-			except Type4TagCommandError as ex:
-				if (nb_ex > 2):
-					raise ex
-				time.sleep(0.1)
-				nb_ex = nb_ex+1
-				continue
-			success = True
-		return response
-
-	def _exchange_read(self, timeout=TIMEOUT):
-		sw = 0x6100
-		nb_ex = 0
-		while sw == 0x6100:
-			try:
-				if DEBUG_NFC_APDU:
-					debug = bytearray([NFC_CLA, NFC_INS_READ, NFC_P1, NFC_P2])
-					print(debug.hex())
-				response = self.tag.send_apdu(NFC_CLA, NFC_INS_READ, NFC_P1, NFC_P2, None, check_status=False)
-				if DEBUG_NFC_APDU:
-					print(response.hex())
-				sw = (response[-2] << 8) + response[-1]
-				if (sw&0xF000) != 0x9000 and (sw&0xFF00) != 0x6100 and (sw&0xFF00) != 0x6C00:
-					raise BaseException("Invalid status word received: " + hex(sw))
-			except Type4TagCommandError as ex:
-				if (nb_ex > 2):
-					raise ex
-				time.sleep(0.1)
-				nb_ex = nb_ex+1
-			time.sleep(0.001)
-		return response
+		# print(self.tag)
+		# if self.tag.ndef is not None:
+		# 	for record in self.tag.ndef.records:
+		# 		print(record)
 
 	def exchange(self, apdu, timeout=TIMEOUT):
 		if self.debug:
 			print(f"[NFC] => {apdu.hex()}")
-		response = self._exchange_write(apdu, timeout)
+		response = self.tag.transceive(apdu, 5.0)
 		sw = (response[-2] << 8) + response[-1]
-		if response != 0x9000:
-			response = self._exchange_read(timeout)
+		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
+			possibleCause = "Unknown reason"
+			if sw == 0x6982:
+				possibleCause = "Have you uninstalled the existing CA with resetCustomCA first?"
+			if sw == 0x6985:
+				possibleCause = "Condition of use not satisfied (denied by the user?)"
+			if sw == 0x6a84 or sw == 0x6a85:
+				possibleCause = "Not enough space?"
+			if sw == 0x6a83:
+				possibleCause = "Maybe this app requires a library to be installed first?"
+			if sw == 0x6484:
+				possibleCause = "Are you using the correct targetId?"
+			if sw == 0x6d00:
+				possibleCause = "Unexpected state of device: verify that the right application is opened?"
+			if sw == 0x6e00:
+				possibleCause = "Unexpected state of device: verify that the right application is opened?"
+			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		if self.debug:
 			print(f"[NFC] <= {response.hex()}")
 		return response
@@ -261,6 +231,7 @@ class DongleNFC(Dongle, DongleWait):
 		return 255
 
 	def close(self):
+		self.clf.close()
 		pass
 
 class DongleBLE(Dongle, DongleWait):
