@@ -196,10 +196,6 @@ class DongleNFC(Dongle, DongleWait):
 		self.debug = debug
 		self.clf = nfc.ContactlessFrontend('usb')
 		self.tag = self.clf.connect(rdwr={'on-connect': lambda tag: False})
-		# print(self.tag)
-		# if self.tag.ndef is not None:
-		# 	for record in self.tag.ndef.records:
-		# 		print(record)
 
 	def exchange(self, apdu, timeout=TIMEOUT):
 		if self.debug:
