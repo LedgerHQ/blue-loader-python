@@ -60,7 +60,7 @@ class DongleServer(object):
 			# When more data is available, the chip sends 0x61XX
 			# So 0x61xx as a SW must not be interpreted as an error
 			if (sw & 0xFF00) != 0x6100:
-				raise CommException("Invalid status %04x" % sw, sw)
+				raise CommException("Invalid status %04x" % sw, sw, data=response)
 			else:
 				while (sw & 0xFF00) == 0x6100:
 					send_apdu(bytes.fromhex("00c0000000"))  # GET RESPONSE
@@ -72,7 +72,7 @@ class DongleServer(object):
 					return bytearray(response)
 
 		# In any other case return an exception
-		raise CommException("Invalid status %04x" % sw, sw)
+		raise CommException("Invalid status %04x" % sw, sw, data=response)
 
 	def apduMaxDataSize(self):
 		return 240
