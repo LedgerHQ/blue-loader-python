@@ -79,6 +79,7 @@ class DongleServer(object):
 
 	def close(self):
 		try:
+			self.socket.shutdown(socket.SHUT_RD)
 			self.socket.close()
 			self.socket = None
 		except:
