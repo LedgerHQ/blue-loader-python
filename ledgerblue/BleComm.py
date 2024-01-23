@@ -79,11 +79,11 @@ async def _get_client(address: str) -> BleakClient:
     await client.start_notify(characteristic_notify, callback)
 
     # Enable notifications
-    await client.write_gatt_char(characteristic_write.uuid, bytes.fromhex("0001"), True)
+    await client.write_gatt_char(characteristic_write.uuid, bytes.fromhex("0001"))
     assert await queue.get() == b"\x00\x00\x00\x00\x00"
 
     # Get MTU value
-    await client.write_gatt_char(characteristic_write.uuid, bytes.fromhex("0800000000"), True)
+    await client.write_gatt_char(characteristic_write.uuid, bytes.fromhex("0800000000"))
     response = await queue.get()
     mtu = int.from_bytes(response[5:6], 'big')
 
@@ -147,7 +147,7 @@ async def _write(client: BleakClient, data: bytes, write_characteristic, mtu: in
         header += i.to_bytes(2, "big")
         if i == 0:
             header += len(data).to_bytes(2, "big")
-        await client.write_gatt_char(write_characteristic.uuid, header + chunk, True)
+        await client.write_gatt_char(write_characteristic.uuid, header + chunk)
 
 
 class BleDevice(object):
