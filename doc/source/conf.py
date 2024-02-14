@@ -5,10 +5,10 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath('../../'))
+from ledgerblue.__version__ import __version__
 
 def setup(app):
-    app.add_stylesheet('theme_overrides.css') # Override wide tables in RTD theme
+    app.add_css_file('theme_overrides.css') # Override wide tables in RTD theme
 
 # General Configuration
 # =====================
@@ -23,8 +23,8 @@ project = u'BOLOS Python Loader'
 copyright = u'2017, Ledger Team'
 author = u'Ledger Team'
 
-version = u'0.1.30'
-release = u'0.1.30'
+version = __version__
+release = __version__
 
 pygments_style = 'sphinx'
 
@@ -39,12 +39,3 @@ html_static_path = ['_static']
 # =========
 
 extensions += ['sphinxarg.ext']
-
-# intersphinx
-# ===========
-
-extensions += ['sphinx.ext.intersphinx']
-
-intersphinx_mapping = {
-    'ledger': ('https://ledger.readthedocs.io/en/2/', None)
-}

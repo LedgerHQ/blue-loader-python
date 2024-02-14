@@ -52,9 +52,14 @@ include-package-data = false
 [project.urls]
 Home = "https://github.com/LedgerHQ/blue-loader-python"
 
-[options.extras_require]
+[project.optional-dependencies]
 smartcard = [
     "python-pyscard>=1.6.12"
+]
+doc = [
+    "sphinx",
+    "sphinx_rtd_theme",
+    "sphinx_argparse"
 ]
 
 [tool.setuptools_scm]
