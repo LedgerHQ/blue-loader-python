@@ -43,9 +43,9 @@ Which would end up installing glibtool and glibtoolize utilities required for th
 When running on Linux, make sure the following rules have been added to `/etc/udev/rules.d/`:
 
 ```
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="2c97", ATTRS{idProduct}=="0000", MODE="0660", TAG+="uaccess", TAG+="udev-acl" OWNER="<UNIX username>"
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="2c97", ATTRS{idProduct}=="0001", MODE="0660", TAG+="uaccess", TAG+="udev-acl" OWNER="<UNIX username>"
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="2c97", ATTRS{idProduct}=="0004", MODE="0660", TAG+="uaccess", TAG+="udev-acl" OWNER="<UNIX username>"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="2c97", MODE="0660", TAG+="uaccess", TAG+="udev-acl" OWNER="<UNIX username>"
+
+KERNEL=="hidraw*", ATTRS{idVendor}=="2c97", MODE="0660" OWNER="<UNIX username>"
 ```
 
 ## Target ID
