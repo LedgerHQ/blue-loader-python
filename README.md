@@ -1,4 +1,4 @@
-# Python tools for Ledger Blue, Nano S and Nano X
+# Ledgerblue - Python tools for Ledger Blue, Nano S and Nano X
 
 This package contains Python tools to communicate with Ledger Blue, Nano S and Nano X and manage applications life cycle.
 
@@ -12,7 +12,7 @@ source ledger/bin/activate
 pip install ledgerblue
 ```
 
-## Supported devices 
+## Supported devices
 
 At the moment these tools work for all Nano S, Nano S+, and Blue devices, but only for special Nano X developer units which are not available to the general public.
 The Recover scripts, will work with Nano X starting from a specific version.
@@ -65,3 +65,30 @@ Use the following Target IDs (--targetId option) when running commands directly:
 | `Ledger Blue`    | 2.1.x                              | `0x31000004` |
 | `Ledger Blue v2` | 2.1.x                              | `0x31010004` |
 
+
+## Ledgerblue documentation
+
+You can generate the Ledgerblue documentation locally.
+
+Firstly, make sure you have [pip installed](https://pip.pypa.io/en/stable/installing/) and `make`
+installed.
+
+Then, install the documentation dependencies:
+
+```bash
+# from the top of the Git repository
+(cd doc && pip install -r requirements.txt)
+```
+
+(As the `requirements.txt` file contains relative path, pip install must be called from the `./doc/`
+repository).
+
+Finally, generate the documentation (you will need internet access for intersphinx to work
+properly):
+
+```bash
+# from the top of the Git repository
+(cd doc/ && make html)
+```
+
+The documentation will be generated into the `doc/build/` directory.
