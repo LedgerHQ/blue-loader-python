@@ -77,14 +77,10 @@ Then, install the documentation dependencies:
 
 ```bash
 # from the top of the Git repository
-(cd doc && pip install -r requirements.txt)
+pip install .[doc]
 ```
 
-(As the `requirements.txt` file contains relative path, pip install must be called from the `./doc/`
-repository).
-
-Finally, generate the documentation (you will need internet access for intersphinx to work
-properly):
+Finally, generate the documentation:
 
 ```bash
 # from the top of the Git repository

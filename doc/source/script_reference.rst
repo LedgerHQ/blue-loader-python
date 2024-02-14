@@ -166,10 +166,7 @@ setupCustomCA.py
 signApp.py
 ----------
 
-.. argparse::
-   :module: ledgerblue.signApp
-   :func: get_argparser
-   :prog: python -m ledgerblue.signApp
+See :ref:`loadApp <loadApp.py>`, and its `--signApp` flag.
 
 .. _updateFirmware.py:
 

@@ -39,12 +39,3 @@ html_static_path = ['_static']
 # =========
 
 extensions += ['sphinxarg.ext']
-
-# intersphinx
-# ===========
-
-extensions += ['sphinx.ext.intersphinx']
-
-intersphinx_mapping = {
-    'ledger': ('https://ledger.readthedocs.io/en/2/', None)
-}

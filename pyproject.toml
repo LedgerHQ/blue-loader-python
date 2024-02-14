@@ -56,6 +56,11 @@ Home = "https://github.com/LedgerHQ/blue-loader-python"
 smartcard = [
     "python-pyscard>=1.6.12"
 ]
+doc = [
+    "sphinx",
+    "sphinx_rtd_theme",
+    "sphinx_argparse"
+]
 
 [tool.setuptools_scm]
 write_to = "ledgerblue/__version__.py"
