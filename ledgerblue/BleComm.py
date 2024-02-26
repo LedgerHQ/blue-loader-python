@@ -6,6 +6,7 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from typing import List
 
+LEDGER_SERVICE_UUID_EUROPA = "13d63400-2c97-3004-0000-4c6564676572"
 LEDGER_SERVICE_UUID_STAX = "13d63400-2c97-6004-0000-4c6564676572"
 LEDGER_SERVICE_UUID_NANOX = "13d63400-2c97-0004-0000-4c6564676572"
 
@@ -25,7 +26,7 @@ class BleScanner(object):
         self.devices = []
 
     def __scan_callback(self, device: BLEDevice, advertisement_data: AdvertisementData):
-        if LEDGER_SERVICE_UUID_STAX in advertisement_data.service_uuids or LEDGER_SERVICE_UUID_NANOX in advertisement_data.service_uuids:
+        if LEDGER_SERVICE_UUID_STAX in advertisement_data.service_uuids or LEDGER_SERVICE_UUID_NANOX in advertisement_data.service_uuids or LEDGER_SERVICE_UUID_EUROPA in advertisement_data.service_uuids:
             device_is_in_list = False
             for dev in self.devices:
                 if device.address == dev[0]:
@@ -39,7 +40,7 @@ class BleScanner(object):
         )
         await scanner.start()
         counter = 0
-        while counter < 50:
+        while counter < 5000:
             await asyncio.sleep(0.01)
             counter += 1
         await scanner.stop()
@@ -59,7 +60,7 @@ async def _get_client(address: str) -> BleakClient:
     characteristic_write_with_rsp = None
     characteristic_write_cmd = None
     for service in client.services:
-        if service.uuid in [LEDGER_SERVICE_UUID_NANOX, LEDGER_SERVICE_UUID_STAX]:
+        if service.uuid in [LEDGER_SERVICE_UUID_NANOX, LEDGER_SERVICE_UUID_STAX, LEDGER_SERVICE_UUID_EUROPA]:
             for char in service.characteristics:
                 if "0001" in char.uuid:
                     characteristic_notify = char
