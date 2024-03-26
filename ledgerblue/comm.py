@@ -179,15 +179,6 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 				pass
 		self.opened = False
 
-from nfc.tag.tt4 import Type4TagCommandError
-
-NFC_CLA = 0x00
-NFC_INS_WRITE = 0x5e
-NFC_INS_READ = 0x5f
-NFC_P1 = 0x00
-NFC_P2 = 0x00
-
-DEBUG_NFC_APDU = False
 
 class DongleNFC(Dongle, DongleWait):
 	def __init__(self, debug = False):
