@@ -91,22 +91,22 @@ def string_to_bytes(x):
 	return bytes(x, 'ascii')
 
 
-if __name__ == '__main__':
+def main(args, debug: bool = True):
 	from .ecWrapper import PrivateKey
 	from .comm import getDongle
 	from .hexParser import IntelHexParser, IntelHexPrinter
-	from .hexLoader import HexLoader
-	from .hexLoader import *
+	from .hexLoader import HexLoader, encodetlv, BOLOS_TAG_APPNAME, BOLOS_TAG_DERIVEPATH
 	from .deployed import getDeployedSecretV1, getDeployedSecretV2
 	import struct
 	import binascii
 
-	args = get_argparser().parse_args()
+	args = get_argparser().parse_args(args)
 
 	if args.rootPrivateKey == None:
 		privateKey = PrivateKey()
 		publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
-		print("Generated random root public key : %s" % publicKey)
+		if debug:
+			print("Generated random root public key : %s" % publicKey)
 		args.rootPrivateKey = privateKey.serialize()
 
 	args.appName = string_to_bytes(args.appName)
@@ -270,12 +270,14 @@ if __name__ == '__main__':
 
 	hash = loader.load(0x0, 0xF0, printer, targetId=args.targetId, targetVersion=args.targetVersion, doCRC=not (args.nocrc or NOCRC))
 
-	print("Application full hash : " + hash)
+	if debug:
+		print("Application full hash : " + hash)
 
 	if signature == None and args.signApp:
 		masterPrivate = PrivateKey(bytes(bytearray.fromhex(args.signPrivateKey)))
 		signature = masterPrivate.ecdsa_serialize(masterPrivate.ecdsa_sign(bytes(binascii.unhexlify(hash)), raw=True))
-		print("Application signature: " + str(binascii.hexlify(signature)))
+		if debug:
+			print("Application signature: " + str(binascii.hexlify(signature)))
 
 	if args.tlv:
 		loader.commit(signature)
@@ -283,3 +285,10 @@ if __name__ == '__main__':
 		loader.run(args.bootAddr-printer.minAddr(), signature)
 
 	dongle.close()
+	return hash
+
+
+if __name__ == '__main__':
+        import sys
+
+        sys.exit(main(sys.argv[1:]))
