@@ -291,4 +291,5 @@ def main(args, debug: bool = True):
 if __name__ == '__main__':
         import sys
 
-        sys.exit(main(sys.argv[1:]))
+        main(sys.argv[1:])
+        sys.exit(0)
