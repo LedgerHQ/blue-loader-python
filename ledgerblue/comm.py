@@ -154,6 +154,14 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 				possibleCause = "Unexpected state of device: verify that the right application is opened?"
 			if sw == 0x6e00:
 				possibleCause = "Unexpected state of device: verify that the right application is opened?"
+			if sw == 0x5515:
+				possibleCause = "Did you unlock the device?"
+			if sw == 0x6814:
+				possibleCause = "Unexpected target device: verify that your are using the right device?"
+			if sw == 0x511F:
+				possibleCause = "The OS version on your device does not seem compatible with the SDK version used to build the app"
+			if sw == 0x5120:
+				possibleCause = "Sideload is not supported on Nano X"
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		return response
 
@@ -209,6 +217,14 @@ class DongleNFC(Dongle, DongleWait):
 				possibleCause = "Unexpected state of device: verify that the right application is opened?"
 			if sw == 0x6e00:
 				possibleCause = "Unexpected state of device: verify that the right application is opened?"
+			if sw == 0x5515:
+				possibleCause = "Did you unlock the device?"
+			if sw == 0x6814:
+				possibleCause = "Unexpected target device: verify that your are using the right device?"
+			if sw == 0x511F:
+				possibleCause = "The OS version on your device does not seem compatible with the SDK version used to build the app"
+			if sw == 0x5120:
+				possibleCause = "Sideload is not supported on Nano X"
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		if self.debug:
 			print(f"[NFC] <= {response.hex()}")
@@ -256,6 +272,14 @@ class DongleBLE(Dongle, DongleWait):
 				possibleCause = "Unexpected state of device: verify that the right application is opened?"
 			if sw == 0x6e00:
 				possibleCause = "Unexpected state of device: verify that the right application is opened?"
+			if sw == 0x5515:
+				possibleCause = "Did you unlock the device?"
+			if sw == 0x6814:
+				possibleCause = "Unexpected target device: verify that your are using the right device?"
+			if sw == 0x511F:
+				possibleCause = "The OS version on your device does not seem compatible with the SDK version used to build the app"
+			if sw == 0x5120:
+				possibleCause = "Sideload is not supported on Nano X"
 			self.close()
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		return response

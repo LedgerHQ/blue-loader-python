@@ -1,6 +1,6 @@
-# Ledgerblue - Python tools for Ledger Blue, Nano S and Nano X
+# Ledgerblue - Python tools for Ledger devices
 
-This package contains Python tools to communicate with Ledger Blue, Nano S and Nano X and manage applications life cycle.
+This package contains Python tools to communicate with Ledger devices and manage applications life cycle.
 
 ## Installation
 
@@ -14,7 +14,7 @@ pip install ledgerblue
 
 ## Supported devices
 
-At the moment these tools work for all Nano S, Nano S+, and Blue devices, but only for special Nano X developer units which are not available to the general public.
+At the moment these tools work for all ledger devices, but only for special Nano X developer units which are not available to the general public.
 The Recover scripts, will work with Nano X starting from a specific version.
 
 Please check [Ledger Developer Portal](https://developers.ledger.com/docs/nano-app/introduction/) to see how to debug your application on a Nano X simulator using [Speculos](https://github.com/LedgerHQ/speculos)
@@ -55,6 +55,8 @@ Use the following Target IDs (--targetId option) when running commands directly:
 
 | Device name      | Firmware Version                   | Target ID    |
 |------------------|------------------------------------|--------------|
+| `Flex`           | all                                | `0x33300004` |
+| `Stax`           | all                                | `0x33200004` |
 | `Nano S Plus`    | all                                | `0x33100004` |
 | `Nano X`         | < 2.2.1 (**developer units only**) | `0x33000004` |
 | `Nano X`         | \>=  2.2.1                         | `0x33000004` |
