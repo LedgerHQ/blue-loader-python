@@ -71,6 +71,26 @@ if PCSC:
 	except ImportError:
 		PCSC = False
 
+def get_possible_error_cause(sw):
+    cause_map = {
+        0x6982: "Have you uninstalled the existing CA with resetCustomCA first?",
+        0x6985: "Condition of use not satisfied (denied by the user?)",
+        0x6a84: "Not enough space?",
+        0x6a85: "Not enough space?",
+        0x6a83: "Maybe this app requires a library to be installed first?",
+        0x6484: "Are you using the correct targetId?",
+        0x6d00: "Unexpected state of device: verify that the right application is opened?",
+        0x6e00: "Unexpected state of device: verify that the right application is opened?",
+        0x5515: "Did you unlock the device?",
+        0x6814: "Unexpected target device: verify that you are using the right device?",
+        0x511F: "The OS version on your device does not seem compatible with the SDK version used to build the app",
+        0x5120: "Sideload is not supported on Nano X",
+    }
+
+    # If the status word is in the map, return the corresponding cause, otherwise return a default message
+    return cause_map.get(sw, "Unknown reason")
+
+
 class HIDDongleHIDAPI(Dongle, DongleWait):
 
 	def __init__(self, device, ledger=False, debug=False):
@@ -139,29 +159,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		if self.debug:
 			print("HID <= %s%.2x" % (response.hex(), sw))
 		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
-			possibleCause = "Unknown reason"
-			if sw == 0x6982:
-				possibleCause = "Have you uninstalled the existing CA with resetCustomCA first?"
-			if sw == 0x6985:
-				possibleCause = "Condition of use not satisfied (denied by the user?)"
-			if sw == 0x6a84 or sw == 0x6a85:
-				possibleCause = "Not enough space?"
-			if sw == 0x6a83:
-				possibleCause = "Maybe this app requires a library to be installed first?"
-			if sw == 0x6484:
-				possibleCause = "Are you using the correct targetId?"
-			if sw == 0x6d00:
-				possibleCause = "Unexpected state of device: verify that the right application is opened?"
-			if sw == 0x6e00:
-				possibleCause = "Unexpected state of device: verify that the right application is opened?"
-			if sw == 0x5515:
-				possibleCause = "Did you unlock the device?"
-			if sw == 0x6814:
-				possibleCause = "Unexpected target device: verify that your are using the right device?"
-			if sw == 0x511F:
-				possibleCause = "The OS version on your device does not seem compatible with the SDK version used to build the app"
-			if sw == 0x5120:
-				possibleCause = "Sideload is not supported on Nano X"
+			possibleCause = get_possible_error_cause(sw)
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		return response
 
@@ -202,29 +200,8 @@ class DongleNFC(Dongle, DongleWait):
 		response = self.tag.transceive(apdu, 5.0)
 		sw = (response[-2] << 8) + response[-1]
 		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
-			possibleCause = "Unknown reason"
-			if sw == 0x6982:
-				possibleCause = "Have you uninstalled the existing CA with resetCustomCA first?"
-			if sw == 0x6985:
-				possibleCause = "Condition of use not satisfied (denied by the user?)"
-			if sw == 0x6a84 or sw == 0x6a85:
-				possibleCause = "Not enough space?"
-			if sw == 0x6a83:
-				possibleCause = "Maybe this app requires a library to be installed first?"
-			if sw == 0x6484:
-				possibleCause = "Are you using the correct targetId?"
-			if sw == 0x6d00:
-				possibleCause = "Unexpected state of device: verify that the right application is opened?"
-			if sw == 0x6e00:
-				possibleCause = "Unexpected state of device: verify that the right application is opened?"
-			if sw == 0x5515:
-				possibleCause = "Did you unlock the device?"
-			if sw == 0x6814:
-				possibleCause = "Unexpected target device: verify that your are using the right device?"
-			if sw == 0x511F:
-				possibleCause = "The OS version on your device does not seem compatible with the SDK version used to build the app"
-			if sw == 0x5120:
-				possibleCause = "Sideload is not supported on Nano X"
+			possibleCause = get_possible_error_cause(sw)
+			self.close()
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		if self.debug:
 			print(f"[NFC] <= {response.hex()}")
@@ -257,29 +234,7 @@ class DongleBLE(Dongle, DongleWait):
 		if self.debug:
 			print("[BLE] <= %s%.2x" % (response.hex(), sw))
 		if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
-			possibleCause = "Unknown reason"
-			if sw == 0x6982:
-				possibleCause = "Have you uninstalled the existing CA with resetCustomCA first?"
-			if sw == 0x6985:
-				possibleCause = "Condition of use not satisfied (denied by the user?)"
-			if sw == 0x6a84 or sw == 0x6a85:
-				possibleCause = "Not enough space?"
-			if sw == 0x6a83:
-				possibleCause = "Maybe this app requires a library to be installed first?"
-			if sw == 0x6484:
-				possibleCause = "Are you using the correct targetId?"
-			if sw == 0x6d00:
-				possibleCause = "Unexpected state of device: verify that the right application is opened?"
-			if sw == 0x6e00:
-				possibleCause = "Unexpected state of device: verify that the right application is opened?"
-			if sw == 0x5515:
-				possibleCause = "Did you unlock the device?"
-			if sw == 0x6814:
-				possibleCause = "Unexpected target device: verify that your are using the right device?"
-			if sw == 0x511F:
-				possibleCause = "The OS version on your device does not seem compatible with the SDK version used to build the app"
-			if sw == 0x5120:
-				possibleCause = "Sideload is not supported on Nano X"
+			possibleCause = get_possible_error_cause(sw)
 			self.close()
 			raise CommException("Invalid status %04x (%s)" % (sw, possibleCause), sw, response)
 		return response

@@ -58,8 +58,7 @@ Use the following Target IDs (--targetId option) when running commands directly:
 | `Flex`           | all                                | `0x33300004` |
 | `Stax`           | all                                | `0x33200004` |
 | `Nano S Plus`    | all                                | `0x33100004` |
-| `Nano X`         | < 2.2.1 (**developer units only**) | `0x33000004` |
-| `Nano X`         | \>=  2.2.1                         | `0x33000004` |
+| `Nano X`         | (**developer units only**)         | `0x33000004` |
 | `Nano S`         | <= 1.3.1                           | `0x31100002` |
 | `Nano S`         | 1.4.x                              | `0x31100003` |
 | `Nano S`         | \>= 1.5.x                          | `0x31100004` |
