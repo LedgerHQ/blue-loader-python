@@ -95,7 +95,11 @@ def main(args, debug: bool = True):
 	from .ecWrapper import PrivateKey
 	from .comm import getDongle
 	from .hexParser import IntelHexParser, IntelHexPrinter
-	from .hexLoader import HexLoader, encodetlv, BOLOS_TAG_APPNAME, BOLOS_TAG_DERIVEPATH
+	from .hexLoader import (
+                HexLoader, encodelv, encodetlv,
+                BOLOS_TAG_APPNAME, BOLOS_TAG_DERIVEPATH,
+                BOLOS_TAG_APPVERSION, BOLOS_TAG_ICON, BOLOS_TAG_DEPENDENCY
+        )
 	from .deployed import getDeployedSecretV1, getDeployedSecretV2
 	import struct
 	import binascii
