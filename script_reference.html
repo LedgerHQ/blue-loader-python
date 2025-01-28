@@ -1,24 +1,22 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Script Reference &mdash; BOLOS Python Loader 0.1.54 documentation</title>
+  <title>Script Reference &mdash; BOLOS Python Loader 0.1.55.dev2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/theme_overrides.css?v=0c24fe83" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=0ec583c6"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=e6a6d438"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,9 +34,6 @@
           <a href="index.html" class="icon icon-home">
             BOLOS Python Loader
           </a>
-              <div class="version">
-                0.1.54
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -51,81 +46,81 @@
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">Scripts</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Script Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#checkgenuine-py">checkGenuine.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.checkGenuine-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#deleteapp-py">deleteApp.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.deleteApp-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#derivepassphrase-py">derivePassphrase.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.derivePassphrase-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#endorsementsetupledger-py">endorsementSetupLedger.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.endorsementSetupLedger-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#endorsementsetup-py">endorsementSetup.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.endorsementSetup-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#gencapair-py">genCAPair.py</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hashapp-py">hashApp.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.hashApp-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#hostonboard-py">hostOnboard.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.hostOnboard-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#listapps-py">listApps.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.listApps-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#loadapp-py">loadApp.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.loadApp-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#loadmcu-py">loadMCU.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.loadMCU-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#mcubootloader-py">mcuBootloader.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.mcuBootloader-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#resetcustomca-py">resetCustomCA.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.resetCustomCA-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#runapp-py">runApp.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.runApp-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#runscript-py">runScript.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.runScript-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#setupcustomca-py">setupCustomCA.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.setupCustomCA-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#signapp-py">signApp.py</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#updatefirmware-py">updateFirmware.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.updateFirmware-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#verifyapp-py">verifyApp.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.verifyApp-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#verifyendorsement1-py">verifyEndorsement1.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.verifyEndorsement1-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#verifyendorsement2-py">verifyEndorsement2.py</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ledgerblue.verifyEndorsement2-get_argparser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 </ul>
@@ -167,20 +162,20 @@ device.</p>
                                          <span class="p">[</span><span class="o">--</span><span class="n">issuerKey</span> <span class="n">ISSUERKEY</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">apdu</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.checkGenuine-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.checkGenuine-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--issuerKey</kbd></dt>
 <dd><p>Issuer key (hex encoded, default is batch 1)</p>
-<p>Default: “0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609'</span></code></p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -196,12 +191,12 @@ device.</p>
                                       <span class="p">[</span><span class="o">--</span><span class="n">offline</span> <span class="n">OFFLINE</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.deleteApp-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.deleteApp-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--appName</kbd></dt>
 <dd><p>The name of the application to delete</p>
@@ -214,11 +209,11 @@ device.</p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--deployLegacy</kbd></dt>
 <dd><p>Use legacy deployment API</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--offline</kbd></dt>
 <dd><p>Request to only output application load APDUs into given filename</p>
@@ -233,13 +228,13 @@ device.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">ledgerblue</span><span class="o">.</span><span class="n">derivePassphrase</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">persistent</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.derivePassphrase-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.derivePassphrase-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--persistent</kbd></dt>
 <dd><p>Persist passphrase as secondary PIN (otherwise, it’s set as a temporary
 passphrase)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -257,30 +252,30 @@ certificate.</p>
                                                    <span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">}</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.endorsementSetupLedger-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.endorsementSetupLedger-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--url</kbd></dt>
 <dd><p>Server URL</p>
-<p>Default: “<a class="reference external" href="https://hsmprod.hardwarewallet.com/hsm/process">https://hsmprod.hardwarewallet.com/hsm/process</a>”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'https://hsmprod.hardwarewallet.com/hsm/process'</span></code></p>
 </dd>
 <dt><kbd>--bypass-ssl-check</kbd></dt>
 <dd><p>Keep going even if remote certificate verification fails</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--perso</kbd></dt>
 <dd><p>A reference to the personalization key; this is a reference to the specific
 Issuer keypair used by Ledger to sign the device’s Issuer Certificate</p>
-<p>Default: “perso_11”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'perso_11'</span></code></p>
 </dd>
 <dt><kbd>--endorsement</kbd></dt>
 <dd><p>A reference to the endorsement key to use; this is a reference to the
 specific Owner keypair to be used by Ledger to sign the Owner Certificate</p>
-<p>Default: “attest_1”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'attest_1'</span></code></p>
 </dd>
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
@@ -306,8 +301,8 @@ key to sign the Owner Certificate.</p>
                                              <span class="p">[</span><span class="o">--</span><span class="n">apdu</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.endorsementSetup-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.endorsementSetup-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--key</kbd></dt>
 <dd><p>Possible choices: 1, 2</p>
@@ -323,18 +318,18 @@ if no certificate is specified</p>
 </dd>
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--issuerKey</kbd></dt>
 <dd><p>Issuer key (hex encoded, default is batch 1)</p>
-<p>Default: “0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'0490f5c9d15a0134bb019d2afd0bf297149738459706e7ac5be4abc350a1f818057224fce12ec9a65de18ec34d6e8c24db927835ea1692b14c32e9836a75dad609'</span></code></p>
 </dd>
 <dt><kbd>--rootPrivateKey</kbd></dt>
 <dd><p>SCP Host private key</p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -355,8 +350,8 @@ if no certificate is specified</p>
                                     <span class="p">[</span><span class="o">--</span><span class="n">targetVersion</span> <span class="n">TARGETVERSION</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.hashApp-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.hashApp-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--hex</kbd></dt>
 <dd><p>The application hex file to be hashed</p>
@@ -383,12 +378,12 @@ if no certificate is specified</p>
                                         <span class="p">[</span><span class="o">--</span><span class="n">words</span> <span class="n">WORDS</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.hostOnboard-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.hostOnboard-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--id</kbd></dt>
 <dd><p>Possible choices: 0, 1, 2</p>
@@ -418,12 +413,12 @@ if no certificate is specified</p>
                                      <span class="p">[</span><span class="o">--</span><span class="n">apdu</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">deployLegacy</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">scp</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.listApps-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.listApps-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--rootPrivateKey</kbd></dt>
 <dd><p>The Signer private key used to establish a Secure Channel
@@ -431,15 +426,15 @@ if no certificate is specified</p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--deployLegacy</kbd></dt>
 <dd><p>Use legacy deployment API</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--scp</kbd></dt>
 <dd><p>Use a secure channel to list applications</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -466,19 +461,19 @@ if no certificate is specified</p>
                                     <span class="p">[</span><span class="o">--</span><span class="n">tlvraw</span> <span class="n">TLVRAW</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dep</span> <span class="n">DEP</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">nocrc</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.loadApp-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.loadApp-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--targetVersion</kbd></dt>
 <dd><p>Set the chip target version</p>
 </dd>
 <dt><kbd>--apiLevel</kbd></dt>
 <dd><p>Set the API level of the SDK used to build the app</p>
-<p>Default: -1</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
 </dd>
 <dt><kbd>--fileName</kbd></dt>
 <dd><p>The application hex file to be loaded onto the device</p>
@@ -505,11 +500,11 @@ repeated</p>
 </dd>
 <dt><kbd>--signApp</kbd></dt>
 <dd><p>Sign application with provided signPrivateKey</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--appFlags</kbd></dt>
 <dd><p>The application flags</p>
-<p>Default: 0</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">0</span></code></p>
 </dd>
 <dt><kbd>--bootAddr</kbd></dt>
 <dd><p>The application’s boot address</p>
@@ -523,23 +518,23 @@ a random one will be generated)</p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--deployLegacy</kbd></dt>
 <dd><p>Use legacy deployment API</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--delete</kbd></dt>
 <dd><p>Delete the app with the same name before loading the provided one</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--params</kbd></dt>
 <dd><p>Store icon and install parameters in a parameter section before the code</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--tlv</kbd></dt>
 <dd><p>Use install parameters for all variable length parameters</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--dataSize</kbd></dt>
 <dd><p>The code section’s size in the provided hex file (to separate data from code, if not provided the whole allocated NVRAM section for the application will remain readonly.</p>
@@ -552,7 +547,7 @@ a random one will be generated)</p>
 </dd>
 <dt><kbd>--offlineText</kbd></dt>
 <dd><p>Request to only output application load APDUs into given filename in text mode</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--installparamsSize</kbd></dt>
 <dd><p>The loaded install parameters section size (when parameters are already included within the .hex file.</p>
@@ -565,7 +560,7 @@ a random one will be generated)</p>
 </dd>
 <dt><kbd>--nocrc</kbd></dt>
 <dd><p>Skip CRC generation when loading</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -580,8 +575,8 @@ bootloader mode.</p>
                                     <span class="p">[</span><span class="o">--</span><span class="n">reverse</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">nocrc</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.loadMCU-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.loadMCU-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID</p>
@@ -594,15 +589,15 @@ bootloader mode.</p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--reverse</kbd></dt>
 <dd><p>Load HEX file in reverse from the highest address to the lowest</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--nocrc</kbd></dt>
 <dd><p>Load HEX file without checking CRC of loaded sections</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -616,12 +611,12 @@ bootloader mode.</p>
                                           <span class="p">[</span><span class="o">--</span><span class="n">apdu</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.mcuBootloader-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.mcuBootloader-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--rootPrivateKey</kbd></dt>
 <dd><p>The Signer private key used to establish a Secure Channel (otherwise
@@ -629,7 +624,7 @@ a random one will be generated)</p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -643,16 +638,16 @@ device.</p>
                                           <span class="p">[</span><span class="o">--</span><span class="n">rootPrivateKey</span> <span class="n">ROOTPRIVATEKEY</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.resetCustomCA-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.resetCustomCA-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--rootPrivateKey</kbd></dt>
 <dd><p>The Signer private key used to establish a Secure Channel (otherwise
@@ -668,16 +663,16 @@ a random one will be generated)</p>
                                    <span class="n">APPNAME</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.runApp-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.runApp-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--rootPrivateKey</kbd></dt>
 <dd><p>The Signer private key used to establish a Secure Channel (otherwise
@@ -700,23 +695,23 @@ device. The file must be formatted as hex, with one CAPDU per line.</p>
                                       <span class="p">[</span><span class="o">--</span><span class="n">rootPrivateKey</span> <span class="n">ROOTPRIVATEKEY</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.runScript-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.runScript-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--fileName</kbd></dt>
 <dd><p>The name of the APDU script to load</p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--scp</kbd></dt>
 <dd><p>Open a Secure Channel to exchange APDU</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Nano S). If –elfFile is used, the targetId from the ELF file will be used instead.</p>
-<p>Default: 823132162</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">823132162</span></code></p>
 </dd>
 <dt><kbd>--elfFile</kbd></dt>
 <dd><p>ELF file from which the target ID is fetched. Overrides ‘–targetId’</p>
@@ -737,16 +732,16 @@ a random one will be generated)</p>
                                           <span class="o">--</span><span class="n">public</span> <span class="n">PUBLIC</span> <span class="o">--</span><span class="n">name</span> <span class="n">NAME</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.setupCustomCA-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.setupCustomCA-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--rootPrivateKey</kbd></dt>
 <dd><p>The Signer private key used to establish a Secure Channel (otherwise
@@ -775,32 +770,32 @@ auth requests)</p>
                                            <span class="n">FIRMWAREKEY</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.updateFirmware-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.updateFirmware-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--url</kbd></dt>
 <dd><p>Server URL</p>
-<p>Default: “<a class="reference external" href="https://hsmprod.hardwarewallet.com/hsm/process">https://hsmprod.hardwarewallet.com/hsm/process</a>”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'https://hsmprod.hardwarewallet.com/hsm/process'</span></code></p>
 </dd>
 <dt><kbd>--bypass-ssl-check</kbd></dt>
 <dd><p>Keep going even if remote certificate verification fails</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--apdu</kbd></dt>
 <dd><p>Display APDU log</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--perso</kbd></dt>
 <dd><p>A reference to the personalization key; this is a reference to the specific
 Issuer keypair used by Ledger to sign the device’s Issuer Certificate</p>
-<p>Default: “perso_11”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'perso_11'</span></code></p>
 </dd>
 <dt><kbd>--firmware</kbd></dt>
 <dd><p>A reference to the firmware to load</p>
 </dd>
 <dt><kbd>--targetId</kbd></dt>
 <dd><p>The device’s target ID (default is Ledger Blue)</p>
-<p>Default: 822083586</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">822083586</span></code></p>
 </dd>
 <dt><kbd>--firmwareKey</kbd></dt>
 <dd><p>A reference to the firmware key to use</p>
@@ -814,8 +809,8 @@ Issuer keypair used by Ledger to sign the device’s Issuer Certificate</p>
                                       <span class="n">SIGNATURE</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.verifyApp-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.verifyApp-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--hex</kbd></dt>
 <dd><p>The hex file of the signed application</p>
@@ -838,8 +833,8 @@ Issuer keypair used by Ledger to sign the device’s Issuer Certificate</p>
                                                <span class="o">--</span><span class="n">signature</span> <span class="n">SIGNATURE</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.verifyEndorsement1-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.verifyEndorsement1-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--key</kbd></dt>
 <dd><p>The endorsement public key with which to verify the signature (hex encoded)</p>
@@ -865,8 +860,8 @@ Issuer keypair used by Ledger to sign the device’s Issuer Certificate</p>
                                                <span class="o">--</span><span class="n">signature</span> <span class="n">SIGNATURE</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading"></a></h3>
+<section id="ledgerblue.verifyEndorsement2-get_argparser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#ledgerblue.verifyEndorsement2-get_argparser-named-arguments" title="Link to this heading"></a></h3>
 <dl class="option-list">
 <dt><kbd>--key</kbd></dt>
 <dd><p>The endorsement public key with which to verify the signature (hex encoded)</p>
