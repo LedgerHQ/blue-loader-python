@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=45",
+    "setuptools>=75",
     "setuptools_scm[toml]>=6.2",
     "wheel"
 ]
@@ -21,18 +21,19 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dynamic = [ "version" ]
-requires-python = ">=3"
+requires-python = ">=3.8"
 dependencies = [
     "pyelftools>=0.29,<1.0",
     "hidapi>=0.7.99",
-    "protobuf >=3.20,<4",
+    "protobuf >=5",
     "pycryptodomex>=3.6.1",
     "future",
     "ecpy>=0.9.0",
