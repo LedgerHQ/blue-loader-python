@@ -20,37 +20,48 @@
 import argparse
 import struct
 
+
 def get_argparser():
-	parser = argparse.ArgumentParser(description="Calculate an application hash from the application's hex file.")
-	parser.add_argument("--hex", help="The application hex file to be hashed", required=True)
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
-	parser.add_argument("--targetVersion", help="Set the chip target version")
-	return parser
+    parser = argparse.ArgumentParser(
+        description="Calculate an application hash from the application's hex file."
+    )
+    parser.add_argument(
+        "--hex", help="The application hex file to be hashed", required=True
+    )
+    parser.add_argument(
+        "--targetId",
+        help="The device's target ID (default is Ledger Blue)",
+        type=auto_int,
+    )
+    parser.add_argument("--targetVersion", help="Set the chip target version")
+    return parser
+
 
 def auto_int(x):
-	return int(x, 0)
+    return int(x, 0)
 
-if __name__ == '__main__':
-	from .hexParser import IntelHexParser
-	import hashlib
 
-	args = get_argparser().parse_args()
+if __name__ == "__main__":
+    from .hexParser import IntelHexParser
+    import hashlib
 
-	# parse
-	parser = IntelHexParser(args.hex)
+    args = get_argparser().parse_args()
 
-	# prepare data
-	m = hashlib.sha256()
+    # parse
+    parser = IntelHexParser(args.hex)
 
-	if args.targetId:
-		m.update(struct.pack(">I", args.targetId))
+    # prepare data
+    m = hashlib.sha256()
 
-	if args.targetVersion:
-		m.update(args.targetVersion)
+    if args.targetId:
+        m.update(struct.pack(">I", args.targetId))
 
-	# consider areas are ordered by ascending address and non-overlaped
-	for a in parser.getAreas():
-		m.update(a.data)
-	dataToSign = m.digest()
+    if args.targetVersion:
+        m.update(args.targetVersion)
 
-	print(dataToSign.hex())
+    # consider areas are ordered by ascending address and non-overlaped
+    for a in parser.getAreas():
+        m.update(a.data)
+    dataToSign = m.digest()
+
+    print(dataToSign.hex())

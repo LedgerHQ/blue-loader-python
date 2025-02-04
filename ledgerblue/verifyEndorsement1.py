@@ -19,30 +19,48 @@
 
 import argparse
 
+
 def get_argparser():
-	parser = argparse.ArgumentParser(description="Verify a message signature created with Endorsement Scheme #1.")
-	parser.add_argument("--key", help="The endorsement public key with which to verify the signature (hex encoded)", required=True)
-	parser.add_argument("--codehash", help="The hash of the app associated with the endorsement request (hex encoded)", required=True)
-	parser.add_argument("--message", help="The message associated to the endorsement request (hex encoded)", required=True)
-	parser.add_argument("--signature", help="The signature to be verified (hex encoded)", required=True)
-	return parser
+    parser = argparse.ArgumentParser(
+        description="Verify a message signature created with Endorsement Scheme #1."
+    )
+    parser.add_argument(
+        "--key",
+        help="The endorsement public key with which to verify the signature (hex encoded)",
+        required=True,
+    )
+    parser.add_argument(
+        "--codehash",
+        help="The hash of the app associated with the endorsement request (hex encoded)",
+        required=True,
+    )
+    parser.add_argument(
+        "--message",
+        help="The message associated to the endorsement request (hex encoded)",
+        required=True,
+    )
+    parser.add_argument(
+        "--signature", help="The signature to be verified (hex encoded)", required=True
+    )
+    return parser
 
-if __name__ == '__main__':
-	import hashlib
 
-	from .ecWrapper import PublicKey
+if __name__ == "__main__":
+    import hashlib
 
-	args = get_argparser().parse_args()
+    from .ecWrapper import PublicKey
 
-	# prepare data
-	m = hashlib.sha256()
-	m.update(bytes(bytearray.fromhex(args.message)))
-	m.update(bytes(bytearray.fromhex(args.codehash)))
-	digest = m.digest()
+    args = get_argparser().parse_args()
 
-	publicKey = PublicKey(bytes(bytearray.fromhex(args.key)), raw=True)
-	signature = publicKey.ecdsa_deserialize(bytes(bytearray.fromhex(args.signature)))
-	if not publicKey.ecdsa_verify(bytes(digest), signature, raw=True):
-		raise Exception("Endorsement not verified")
+    # prepare data
+    m = hashlib.sha256()
+    m.update(bytes(bytearray.fromhex(args.message)))
+    m.update(bytes(bytearray.fromhex(args.codehash)))
+    digest = m.digest()
 
-	print("Endorsement verified")
+    publicKey = PublicKey(bytes(bytearray.fromhex(args.key)), raw=True)
+    signature = publicKey.ecdsa_deserialize(bytes(bytearray.fromhex(args.signature)))
+    if not publicKey.ecdsa_verify(bytes(digest), signature, raw=True):
+        raise Exception("Endorsement not verified")
+
+    print("Endorsement verified")

@@ -19,15 +19,19 @@
 
 import argparse
 
+
 def get_argparser():
-	parser = argparse.ArgumentParser(description="Generate a Custom CA public-private keypair and print it to console.")
-	return parser
+    parser = argparse.ArgumentParser(
+        description="Generate a Custom CA public-private keypair and print it to console."
+    )
+    return parser
 
-if __name__ == '__main__':
-	from .ecWrapper import PrivateKey
 
-	get_argparser().parse_args()
-	privateKey = PrivateKey()
-	publicKey = privateKey.pubkey.serialize(compressed=False).hex()
-	print("Public key : %s" % publicKey)
-	print("Private key: %s" % privateKey.serialize())
+if __name__ == "__main__":
+    from .ecWrapper import PrivateKey
+
+    get_argparser().parse_args()
+    privateKey = PrivateKey()
+    publicKey = privateKey.pubkey.serialize(compressed=False).hex()
+    print("Public key : %s" % publicKey)
+    print("Private key: %s" % privateKey.serialize())
