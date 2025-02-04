@@ -17,13 +17,13 @@
 ********************************************************************************
 """
 
+
 class CommException(Exception):
+    def __init__(self, message, sw=0x6F00, data=None):
+        self.message = message
+        self.sw = sw
+        self.data = data
 
-	def __init__(self, message, sw=0x6f00, data=None):
-		self.message = message
-		self.sw = sw
-		self.data = data
-
-	def __str__(self):
-		buf = "Exception : " + self.message
-		return buf
+    def __str__(self):
+        buf = "Exception : " + self.message
+        return buf

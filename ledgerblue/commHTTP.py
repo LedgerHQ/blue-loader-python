@@ -21,19 +21,20 @@ import time
 
 import requests
 
-class HTTPProxy(object):
 
+class HTTPProxy(object):
     def __init__(self, remote_host="localhost:8081", debug=False):
         self.remote_host = "http://" + remote_host
         self.debug = debug
-
 
     def exchange(self, apdu):
         if self.debug:
             print("=> %s" % apdu.hex())
 
         try:
-            ret = requests.post(self.remote_host + "/send_apdu", params={"data": apdu.hex()})
+            ret = requests.post(
+                self.remote_host + "/send_apdu", params={"data": apdu.hex()}
+            )
 
             while True:
                 ret = requests.post(self.remote_host + "/fetch_apdu")
@@ -43,23 +44,22 @@ class HTTPProxy(object):
                 else:
                     time.sleep(0.1)
 
-
             return bytearray(str(ret.text).decode("hex"))
         except Exception as e:
             print(e)
-
-
 
     def exchange_seph_event(self, event):
         if self.debug >= 3:
             print("=> %s" % event.hex())
 
         try:
-            ret = requests.post(self.remote_host + "/send_seph_event", params={"data": event.encode("hex")})
+            ret = requests.post(
+                self.remote_host + "/send_seph_event",
+                params={"data": event.encode("hex")},
+            )
             return ret.text
         except Exception as e:
             print(e)
-
 
     def poll_status(self):
         if self.debug >= 5:
@@ -77,7 +77,6 @@ class HTTPProxy(object):
         except Exception as e:
             print(e)
 
-
     def reset(self):
         if self.debug:
             print("=> Reset")
@@ -86,6 +85,7 @@ class HTTPProxy(object):
             ret = requests.post(self.remote_host + "/reset")
         except Exception as e:
             print(e)
+
 
 def getDongle(remote_host="localhost", debug=False):
     return HTTPProxy(remote_host, debug)
