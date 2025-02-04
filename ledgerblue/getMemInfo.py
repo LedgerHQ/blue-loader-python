@@ -26,31 +26,40 @@ import binascii
 
 
 def auto_int(x):
-	return int(x, 0)
+    return int(x, 0)
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--targetId", help="Set the chip target ID", type=auto_int, default=0x31100003)
+parser.add_argument(
+    "--targetId", help="Set the chip target ID", type=auto_int, default=0x31100003
+)
 parser.add_argument("--rootPrivateKey", help="Set the root private key")
-parser.add_argument("--apdu", help="Display APDU log", action='store_true')
-parser.add_argument("--deployLegacy", help="Use legacy deployment API", action='store_true')
+parser.add_argument("--apdu", help="Display APDU log", action="store_true")
+parser.add_argument(
+    "--deployLegacy", help="Use legacy deployment API", action="store_true"
+)
 
 args = parser.parse_args()
 
 print(args.targetId)
 
 if args.rootPrivateKey is None:
-	privateKey = PrivateKey()
-	publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
-	print("Generated random root public key : %s" % publicKey)
-	args.rootPrivateKey = privateKey.serialize()
+    privateKey = PrivateKey()
+    publicKey = binascii.hexlify(privateKey.pubkey.serialize(compressed=False))
+    print("Generated random root public key : %s" % publicKey)
+    args.rootPrivateKey = privateKey.serialize()
 
 dongle = getDongle(args.apdu)
 
 if args.deployLegacy:
-	secret = getDeployedSecretV1(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
+    secret = getDeployedSecretV1(
+        dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId
+    )
 else:
-	secret = getDeployedSecretV2(dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId)
-loader = HexLoader(dongle, 0xe0, True, secret)
+    secret = getDeployedSecretV2(
+        dongle, bytearray.fromhex(args.rootPrivateKey), args.targetId
+    )
+loader = HexLoader(dongle, 0xE0, True, secret)
 # apps = loader.listApp()
 memInfo = loader.getMemInfo()
 print(memInfo)

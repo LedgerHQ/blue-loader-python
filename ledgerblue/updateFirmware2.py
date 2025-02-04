@@ -19,84 +19,114 @@
 
 import argparse
 
+
 def get_argparser():
-	parser = argparse.ArgumentParser("Update the firmware by using Ledger to open a Secure Channel.")
-	parser.add_argument("--url", help="Websocket URL", default="wss://scriptrunner.api.live.ledger.com/update/install")
-	parser.add_argument("--bypass-ssl-check", help="Keep going even if remote certificate verification fails", action='store_true', default=False)
-	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
-	parser.add_argument("--perso", help="""A reference to the personalization key; this is a reference to the specific
-Issuer keypair used by Ledger to sign the device's Issuer Certificate""", default="perso_11")
-	parser.add_argument("--firmware", help="A reference to the firmware to load", required=True)
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int, default=0x31000002)
-	parser.add_argument("--firmwareKey", help="A reference to the firmware key to use", required=True)
-	return parser
+    parser = argparse.ArgumentParser(
+        "Update the firmware by using Ledger to open a Secure Channel."
+    )
+    parser.add_argument(
+        "--url",
+        help="Websocket URL",
+        default="wss://scriptrunner.api.live.ledger.com/update/install",
+    )
+    parser.add_argument(
+        "--bypass-ssl-check",
+        help="Keep going even if remote certificate verification fails",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument("--apdu", help="Display APDU log", action="store_true")
+    parser.add_argument(
+        "--perso",
+        help="""A reference to the personalization key; this is a reference to the specific
+Issuer keypair used by Ledger to sign the device's Issuer Certificate""",
+        default="perso_11",
+    )
+    parser.add_argument(
+        "--firmware", help="A reference to the firmware to load", required=True
+    )
+    parser.add_argument(
+        "--targetId",
+        help="The device's target ID (default is Ledger Blue)",
+        type=auto_int,
+        default=0x31000002,
+    )
+    parser.add_argument(
+        "--firmwareKey", help="A reference to the firmware key to use", required=True
+    )
+    return parser
+
 
 def auto_int(x):
-	return int(x, 0)
+    return int(x, 0)
+
 
 def process(dongle, request):
-	response = {}
-	apdusList = []
-	try:
-		response['nonce'] = request['nonce']
-		if request['query'] == "exchange":
-			apdusList.append(binascii.unhexlify(request['data']))
-		elif request['query'] == "bulk":
-			for apdu in request['data']:
-				apdusList.append(binascii.unhexlify(apdu))
-		else:
-			response['response'] = "unsupported"
-	except:
-		response['response'] = "parse error"
+    response = {}
+    apdusList = []
+    try:
+        response["nonce"] = request["nonce"]
+        if request["query"] == "exchange":
+            apdusList.append(binascii.unhexlify(request["data"]))
+        elif request["query"] == "bulk":
+            for apdu in request["data"]:
+                apdusList.append(binascii.unhexlify(apdu))
+        else:
+            response["response"] = "unsupported"
+    except:
+        response["response"] = "parse error"
 
-	if len(apdusList) != 0:
-		try:
-			for apdu in apdusList:
-				response['data'] = dongle.exchange(apdu).hex()
-			response['response'] = "success"
-		except:
-			response['response'] = "I/O" # or error, and SW in data
+    if len(apdusList) != 0:
+        try:
+            for apdu in apdusList:
+                response["data"] = dongle.exchange(apdu).hex()
+            response["response"] = "success"
+        except:
+            response["response"] = "I/O"  # or error, and SW in data
 
-	return response
+    return response
 
-if __name__ == '__main__':
-	import urllib.parse as urlparse
-	from .comm import getDongle
-	from websocket import create_connection
-	import json
-	import binascii
-	import ssl
 
-	args = get_argparser().parse_args()
+if __name__ == "__main__":
+    import urllib.parse as urlparse
+    from .comm import getDongle
+    from websocket import create_connection
+    import json
+    import binascii
+    import ssl
 
-	dongle = getDongle(args.apdu)
+    args = get_argparser().parse_args()
 
-	url = args.url
-	queryParameters = {}
-	queryParameters['targetId'] = args.targetId
-	queryParameters['firmware'] = args.firmware
-	queryParameters['firmwareKey'] = args.firmwareKey
-	queryParameters['perso'] = args.perso
-	queryString = urlparse.urlencode(queryParameters)
-	if args.bypass_ssl_check:
-		# SEE: https://docs.python.org/3/library/ssl.html#ssl.CERT_NONE
-		# According to the documentation:
-		# > With client-side sockets, just about any cert is accepted. Validation errors, such
-		# > as untrusted or expired cert, are ignored and do not abort the TLS/SSL handshake.
-		sslopt = { "cert_reqs": ssl.CERT_NONE }
-	else:
-		sslopt = {}
-	ws = create_connection(args.url + '?' + queryString, sslopt=sslopt)
-	while True:
-		result = json.loads(ws.recv())
-		if result['query'] == 'success':
-			break
-		if result['query'] == 'error':
-			raise Exception(result['data'] + " on " + result['uuid'] + "/" + result['session'])
-		response = process(dongle, result)
-		ws.send(json.dumps(response))
-	ws.close()
+    dongle = getDongle(args.apdu)
 
-	print("Script executed successfully")
+    url = args.url
+    queryParameters = {}
+    queryParameters["targetId"] = args.targetId
+    queryParameters["firmware"] = args.firmware
+    queryParameters["firmwareKey"] = args.firmwareKey
+    queryParameters["perso"] = args.perso
+    queryString = urlparse.urlencode(queryParameters)
+    if args.bypass_ssl_check:
+        # SEE: https://docs.python.org/3/library/ssl.html#ssl.CERT_NONE
+        # According to the documentation:
+        # > With client-side sockets, just about any cert is accepted. Validation errors, such
+        # > as untrusted or expired cert, are ignored and do not abort the TLS/SSL handshake.
+        sslopt = {"cert_reqs": ssl.CERT_NONE}
+    else:
+        sslopt = {}
+    ws = create_connection(args.url + "?" + queryString, sslopt=sslopt)
+    while True:
+        result = json.loads(ws.recv())
+        if result["query"] == "success":
+            break
+        if result["query"] == "error":
+            raise Exception(
+                result["data"] + " on " + result["uuid"] + "/" + result["session"]
+            )
+        response = process(dongle, result)
+        ws.send(json.dumps(response))
+    ws.close()
 
-	dongle.close()
+    print("Script executed successfully")
+
+    dongle.close()

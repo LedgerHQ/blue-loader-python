@@ -18,14 +18,16 @@ DELETE_FLOW = 0x11
 class Recover:
     def __init__(self, conf):
         self.sharedKey = bytes()
-        self.backupId = bytearray.fromhex(conf['backup_info']['backup_id'])
-        self.backupName = conf['backup_info']['backup_name']
-        user = conf['user_info']
-        self.firstName = user['first_name']
-        self.lastName = user['last_name']
-        self.birthDate = user['birth']
-        self.birthPlace = user['city']
-        self.userInfo = self.firstName + self.lastName + self.birthDate + self.birthPlace
+        self.backupId = bytearray.fromhex(conf["backup_info"]["backup_id"])
+        self.backupName = conf["backup_info"]["backup_name"]
+        user = conf["user_info"]
+        self.firstName = user["first_name"]
+        self.lastName = user["last_name"]
+        self.birthDate = user["birth"]
+        self.birthPlace = user["city"]
+        self.userInfo = (
+            self.firstName + self.lastName + self.birthDate + self.birthPlace
+        )
         self.f_tag = FIRST_NAME_TAG
         self.n_tag = NAME_TAG
         self.d_tag = DATE_OF_BIRTH_TAG
@@ -49,10 +51,16 @@ class Recover:
         loader.recoverValidateCommit(0x3, None, tag, ciphertext)
 
     def recoverShareCommit(self, point, share):
-        Q = Point(int.from_bytes(point[:self.VSS.domain_len], 'big'),
-                  int.from_bytes(point[self.VSS.domain_len:2 * self.VSS.domain_len], 'big'), self.VSS.curve)
+        Q = Point(
+            int.from_bytes(point[: self.VSS.domain_len], "big"),
+            int.from_bytes(point[self.VSS.domain_len : 2 * self.VSS.domain_len], "big"),
+            self.VSS.curve,
+        )
         P = self.VSS.pedersen_share_commit(Q, share)
-        return bytearray(P.x.to_bytes(self.VSS.domain_len, 'big') + P.y.to_bytes(self.VSS.domain_len, 'big'))
+        return bytearray(
+            P.x.to_bytes(self.VSS.domain_len, "big")
+            + P.y.to_bytes(self.VSS.domain_len, "big")
+        )
 
     def recoverValidateShareCommit(self, loader, shareCommit):
         dataToHash = bytes(shareCommit)
@@ -66,13 +74,35 @@ class Recover:
 
     def recoverVerifyCommitments(self, share, idx, commitments, point):
         point_len = 2 * self.VSS.domain_len
-        commitsPoints = [Point(int.from_bytes(commitments[i * point_len:i * point_len + self.VSS.domain_len], 'big'),
-                                int.from_bytes(commitments[i * point_len + self.VSS.domain_len: i * point_len + 2 * self.VSS.domain_len],
-                                               'big'), self.VSS.curve) for i in range(2)]
-        Q = Point(int.from_bytes(point[:self.VSS.domain_len], 'big'),
-                  int.from_bytes(point[self.VSS.domain_len:2 * self.VSS.domain_len], 'big'), self.VSS.curve)
-        result, shareCommitPoint = self.VSS.pedersen_verify_commit(Q, share, idx, commitsPoints)
-        shareCommit = bytearray(shareCommitPoint.x.to_bytes(self.VSS.domain_len, 'big') + shareCommitPoint.y.to_bytes(self.VSS.domain_len, 'big'))
+        commitsPoints = [
+            Point(
+                int.from_bytes(
+                    commitments[i * point_len : i * point_len + self.VSS.domain_len],
+                    "big",
+                ),
+                int.from_bytes(
+                    commitments[
+                        i * point_len + self.VSS.domain_len : i * point_len
+                        + 2 * self.VSS.domain_len
+                    ],
+                    "big",
+                ),
+                self.VSS.curve,
+            )
+            for i in range(2)
+        ]
+        Q = Point(
+            int.from_bytes(point[: self.VSS.domain_len], "big"),
+            int.from_bytes(point[self.VSS.domain_len : 2 * self.VSS.domain_len], "big"),
+            self.VSS.curve,
+        )
+        result, shareCommitPoint = self.VSS.pedersen_verify_commit(
+            Q, share, idx, commitsPoints
+        )
+        shareCommit = bytearray(
+            shareCommitPoint.x.to_bytes(self.VSS.domain_len, "big")
+            + shareCommitPoint.y.to_bytes(self.VSS.domain_len, "big")
+        )
         return result, shareCommit
 
     def recoverPrepareDataHash(self, publicKey):
@@ -92,7 +122,7 @@ class Recover:
         plaintext = cipher.decrypt_and_verify(encryptedData[16:], encryptedData[:16])
 
         share = plaintext[:96]
-        idx = int.from_bytes(plaintext[96:100], 'little')
+        idx = int.from_bytes(plaintext[96:100], "little")
         deletePublicKey = plaintext[100:165]
         commitHash = plaintext[165:]
 
@@ -104,7 +134,9 @@ class Recover:
         ciphertext, tag = cipher.encrypt_and_digest(nonce)
         encryptedSignature = loader.recoverDeleteBackup(tag, ciphertext)
         cipher = AES.new(self.sharedKey, AES.MODE_SIV)
-        signature = cipher.decrypt_and_verify(encryptedSignature[16:], encryptedSignature[:16])
+        signature = cipher.decrypt_and_verify(
+            encryptedSignature[16:], encryptedSignature[:16]
+        )
         verifyKey = PublicKey(bytes(backupPublicKey), raw=True)
         signature = verifyKey.ecdsa_deserialize(signature)
         if not verifyKey.ecdsa_verify(nonce, signature):
@@ -118,12 +150,13 @@ class Recover:
             (self.birthDate, self.d_tag),
             (self.birthPlace, self.c_tag),
         ]
-        flow = b'\x01' if delete else b'\x00'
+        flow = b"\x01" if delete else b"\x00"
 
         def pack(tup):
             identifier, tag = tup
             data = struct.pack(">B", tag) if tag is not None else b""
-            return data + struct.pack(">B", len(identifier.encode())) + identifier.encode()
+            return (
+                data + struct.pack(">B", len(identifier.encode())) + identifier.encode()
+            )
 
         return self.backupId + b"".join(map(pack, identifiers)) + flow
-

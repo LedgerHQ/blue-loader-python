@@ -20,150 +20,194 @@
 import argparse
 import ssl
 
+
 def get_argparser():
-	parser = argparse.ArgumentParser(description="""Generate an attestation keypair, using Ledger to sign the Owner
-certificate.""")
-	parser.add_argument("--url", help="Server URL", default="https://hsmprod.hardwarewallet.com/hsm/process")
-	parser.add_argument("--bypass-ssl-check", help="Keep going even if remote certificate verification fails", action='store_true', default=False)
-	parser.add_argument("--apdu", help="Display APDU log", action='store_true')
-	parser.add_argument("--perso", help="""A reference to the personalization key; this is a reference to the specific
-Issuer keypair used by Ledger to sign the device's Issuer Certificate""", default="perso_11")
-	parser.add_argument("--endorsement", help="""A reference to the endorsement key to use; this is a reference to the
-specific Owner keypair to be used by Ledger to sign the Owner Certificate""", default="attest_1")
-	parser.add_argument("--targetId", help="The device's target ID (default is Ledger Blue)", type=auto_int)
-	parser.add_argument("--key", help="Which endorsement scheme to use", type=auto_int, choices=(1, 2), required=True)
-	return parser
+    parser = argparse.ArgumentParser(
+        description="""Generate an attestation keypair, using Ledger to sign the Owner
+certificate."""
+    )
+    parser.add_argument(
+        "--url",
+        help="Server URL",
+        default="https://hsmprod.hardwarewallet.com/hsm/process",
+    )
+    parser.add_argument(
+        "--bypass-ssl-check",
+        help="Keep going even if remote certificate verification fails",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument("--apdu", help="Display APDU log", action="store_true")
+    parser.add_argument(
+        "--perso",
+        help="""A reference to the personalization key; this is a reference to the specific
+Issuer keypair used by Ledger to sign the device's Issuer Certificate""",
+        default="perso_11",
+    )
+    parser.add_argument(
+        "--endorsement",
+        help="""A reference to the endorsement key to use; this is a reference to the
+specific Owner keypair to be used by Ledger to sign the Owner Certificate""",
+        default="attest_1",
+    )
+    parser.add_argument(
+        "--targetId",
+        help="The device's target ID (default is Ledger Blue)",
+        type=auto_int,
+    )
+    parser.add_argument(
+        "--key",
+        help="Which endorsement scheme to use",
+        type=auto_int,
+        choices=(1, 2),
+        required=True,
+    )
+    return parser
+
 
 def auto_int(x):
-	return int(x, 0)
+    return int(x, 0)
+
 
 def serverQuery(request, url):
-	data = request.SerializeToString()
-	urll = urlparse.urlparse(args.url)
-	req = urllib2.Request(args.url, data, {"Content-type": "application/octet-stream" })
-	if args.bypass_ssl_check:
-		res = urllib2.urlopen(req, context=ssl._create_unverified_context())
-	else:
-		res = urllib2.urlopen(req)
-	data = res.read()
-	response = Response()
-	response.ParseFromString(data)
-	if len(response.exception) != 0:
-		raise Exception(response.exception)
-	return response
+    data = request.SerializeToString()
+    urll = urlparse.urlparse(args.url)
+    req = urllib2.Request(args.url, data, {"Content-type": "application/octet-stream"})
+    if args.bypass_ssl_check:
+        res = urllib2.urlopen(req, context=ssl._create_unverified_context())
+    else:
+        res = urllib2.urlopen(req)
+    data = res.read()
+    response = Response()
+    response.ParseFromString(data)
+    if len(response.exception) != 0:
+        raise Exception(response.exception)
+    return response
 
-if __name__ == '__main__':
-	import struct
-	import urllib.request as urllib2
-	import urllib.parse as urlparse
-	from .BlueHSMServer_pb2 import Request, Response
-	from .comm import getDongle
 
-	args = get_argparser().parse_args()
+if __name__ == "__main__":
+    import struct
+    import urllib.request as urllib2
+    import urllib.parse as urlparse
+    from .BlueHSMServer_pb2 import Request, Response
+    from .comm import getDongle
 
-	if args.targetId == None:
-		args.targetId = 0x31000002 # Ledger Blue by default
+    args = get_argparser().parse_args()
 
-	dongle = getDongle(args.apdu)
+    if args.targetId == None:
+        args.targetId = 0x31000002  # Ledger Blue by default
 
-	# Identify
+    dongle = getDongle(args.apdu)
 
-	targetid = bytearray(struct.pack('>I', args.targetId))
-	apdu = bytearray([0xe0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
-	dongle.exchange(apdu)
+    # Identify
 
-	# Get nonce and ephemeral key
+    targetid = bytearray(struct.pack(">I", args.targetId))
+    apdu = bytearray([0xE0, 0x04, 0x00, 0x00]) + bytearray([len(targetid)]) + targetid
+    dongle.exchange(apdu)
 
-	request = Request()
-	request.reference = "signEndorsement"
-	parameter = request.remote_parameters.add()
-	parameter.local = False
-	parameter.alias = "persoKey"
-	parameter.name = args.perso
+    # Get nonce and ephemeral key
 
-	response = serverQuery(request, args.url)
+    request = Request()
+    request.reference = "signEndorsement"
+    parameter = request.remote_parameters.add()
+    parameter.local = False
+    parameter.alias = "persoKey"
+    parameter.name = args.perso
 
-	offset = 0
+    response = serverQuery(request, args.url)
 
-	remotePublicKey = response.response[offset : offset + 65]
-	offset += 65
-	nonce = response.response[offset : offset + 8]
+    offset = 0
 
-	# Initialize chain
+    remotePublicKey = response.response[offset : offset + 65]
+    offset += 65
+    nonce = response.response[offset : offset + 8]
 
-	apdu = bytearray([0xe0, 0x50, 0x00, 0x00, 0x08]) + nonce
-	deviceInit = dongle.exchange(apdu)
-	deviceNonce = deviceInit[4 : 4 + 8]
+    # Initialize chain
 
-	# Get remote certificate
+    apdu = bytearray([0xE0, 0x50, 0x00, 0x00, 0x08]) + nonce
+    deviceInit = dongle.exchange(apdu)
+    deviceNonce = deviceInit[4 : 4 + 8]
 
-	request = Request()
-	request.reference = "signEndorsement"
-	request.id = response.id
-	parameter = request.remote_parameters.add()
-	parameter.local = False
-	parameter.alias = "persoKey"
-	parameter.name = args.perso
-	request.parameters = bytes(deviceNonce)
+    # Get remote certificate
 
-	response = serverQuery(request, args.url)
+    request = Request()
+    request.reference = "signEndorsement"
+    request.id = response.id
+    parameter = request.remote_parameters.add()
+    parameter.local = False
+    parameter.alias = "persoKey"
+    parameter.name = args.perso
+    request.parameters = bytes(deviceNonce)
 
-	offset = 0
+    response = serverQuery(request, args.url)
 
-	responseLength = response.response[offset + 1]
-	remotePublicKeySignatureLength = responseLength + 2
-	remotePublicKeySignature = response.response[offset : offset + remotePublicKeySignatureLength]
+    offset = 0
 
-	certificate = bytearray([len(remotePublicKey)]) + remotePublicKey + bytearray([len(remotePublicKeySignature)]) + remotePublicKeySignature
-	apdu = bytearray([0xE0, 0x51, 0x80, 0x00]) + bytearray([len(certificate)]) + certificate
-	dongle.exchange(apdu)
+    responseLength = response.response[offset + 1]
+    remotePublicKeySignatureLength = responseLength + 2
+    remotePublicKeySignature = response.response[
+        offset : offset + remotePublicKeySignatureLength
+    ]
 
-	# Walk the chain
+    certificate = (
+        bytearray([len(remotePublicKey)])
+        + remotePublicKey
+        + bytearray([len(remotePublicKeySignature)])
+        + remotePublicKeySignature
+    )
+    apdu = (
+        bytearray([0xE0, 0x51, 0x80, 0x00])
+        + bytearray([len(certificate)])
+        + certificate
+    )
+    dongle.exchange(apdu)
 
-	index = 0
-	while True:
-			if index == 0:
-				certificate = bytearray(dongle.exchange(bytearray.fromhex('E052000000')))
-			elif index == 1:
-				certificate = bytearray(dongle.exchange(bytearray.fromhex('E052800000')))
-			else:
-					break
-			if len(certificate) == 0:
-				break
-			request = Request()
-			request.reference = "signEndorsement"
-			request.id = response.id
-			request.parameters = bytes(certificate)
-			serverQuery(request, args.url)
-			index += 1
+    # Walk the chain
 
-	# Commit agreement
+    index = 0
+    while True:
+        if index == 0:
+            certificate = bytearray(dongle.exchange(bytearray.fromhex("E052000000")))
+        elif index == 1:
+            certificate = bytearray(dongle.exchange(bytearray.fromhex("E052800000")))
+        else:
+            break
+        if len(certificate) == 0:
+            break
+        request = Request()
+        request.reference = "signEndorsement"
+        request.id = response.id
+        request.parameters = bytes(certificate)
+        serverQuery(request, args.url)
+        index += 1
 
-	request = Request()
-	request.reference = "signEndorsement"
-	request.id = response.id
-	response = serverQuery(request, args.url)
+    # Commit agreement
 
-	# Send endorsement request
+    request = Request()
+    request.reference = "signEndorsement"
+    request.id = response.id
+    response = serverQuery(request, args.url)
 
-	apdu = bytearray([0xe0, 0xC0, args.key, 0x00, 0x00])
-	endorsementData = dongle.exchange(apdu)
+    # Send endorsement request
 
-	request = Request()
-	request.reference = "signEndorsement"
-	parameter = request.remote_parameters.add()
-	parameter.local = False
-	parameter.alias = "endorsementKey"
-	parameter.name = args.endorsement
-	request.parameters = bytes(endorsementData)
-	request.id = response.id
-	response = serverQuery(request, args.url)
-	certificate = bytearray(response.response)
+    apdu = bytearray([0xE0, 0xC0, args.key, 0x00, 0x00])
+    endorsementData = dongle.exchange(apdu)
 
-	# Commit endorsement certificate
+    request = Request()
+    request.reference = "signEndorsement"
+    parameter = request.remote_parameters.add()
+    parameter.local = False
+    parameter.alias = "endorsementKey"
+    parameter.name = args.endorsement
+    request.parameters = bytes(endorsementData)
+    request.id = response.id
+    response = serverQuery(request, args.url)
+    certificate = bytearray(response.response)
 
-	apdu = bytearray([0xe0, 0xC2, 0x00, 0x00, len(certificate)]) + certificate
-	dongle.exchange(apdu)
-	print("Endorsement setup finalized")
+    # Commit endorsement certificate
 
-	dongle.close()
+    apdu = bytearray([0xE0, 0xC2, 0x00, 0x00, len(certificate)]) + certificate
+    dongle.exchange(apdu)
+    print("Endorsement setup finalized")
+
+    dongle.close()

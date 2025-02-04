@@ -34,10 +34,11 @@ __ELF_METADATA_SECTIONS = [
     "sdk_hash",
 ]
 
+
 @contextmanager
 def _get_elf_file(filename):
     if os.path.exists(filename):
-        with open(filename, 'rb') as fp:
+        with open(filename, "rb") as fp:
             yield ELFFile(fp)
     else:
         raise FileNotFoundError(f"File {filename} does not exist.")
@@ -62,22 +63,27 @@ def get_target_id_from_elf(filename):
 
 def get_argparser():
     parser = argparse.ArgumentParser(
-        description="""Read the metadata of a Ledger device's ELF binary file.""")
+        description="""Read the metadata of a Ledger device's ELF binary file."""
+    )
     parser.add_argument(
-        "--fileName", help="The name of the ELF binary file to read", required=True)
+        "--fileName", help="The name of the ELF binary file to read", required=True
+    )
     parser.add_argument(
-        "--section", help=f"The name of the metadata section to be read. If no value is provided, all sections are read.", choices=__ELF_METADATA_SECTIONS + ["all"], default="all")
+        "--section",
+        help=f"The name of the metadata section to be read. If no value is provided, all sections are read.",
+        choices=__ELF_METADATA_SECTIONS + ["all"],
+        default="all",
+    )
     return parser
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     args = get_argparser().parse_args()
 
     with _get_elf_file(args.fileName) as elf:
-        if(args.section == "all"):
+        if args.section == "all":
             for section_name in __ELF_METADATA_SECTIONS:
                 section_value = _get_elf_section_value(elf, section_name)
                 print(f"{section_name} : {section_value}")
         else:
-            print(_get_elf_section_value(elf, args.section))      
+            print(_get_elf_section_value(elf, args.section))
