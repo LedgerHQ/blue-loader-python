@@ -2,5 +2,6 @@ build/
 dist/
 ledgerblue.egg-info/
 __pycache__
+.python-version
 
 __version__.py
