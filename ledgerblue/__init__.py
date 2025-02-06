@@ -16,6 +16,7 @@
 *  limitations under the License.
 ********************************************************************************
 """
+
 try:
     from ledgerblue.__version__ import __version__  # noqa
 except ImportError:

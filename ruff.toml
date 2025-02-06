@@ -1,0 +1,8 @@
+[lint]
+# Using rules from: pycodestyle, Pyflake and isort
+# INP001 __init__ files check on package
+select = [ "E", "F", "I", "INP001"]
+
+
+[lint.per-file-ignores]
+"!ledgerblue/*" = ["INP001"]

@@ -57,7 +57,7 @@ from hashlib import sha256
 
 from .commException import CommException
 
-TIMEOUT=30000
+TIMEOUT = 30000
 
 DEVICES = [
     (0x1050, 0x0200),  # Gnubby
@@ -71,14 +71,14 @@ DEVICES = [
     (0x1050, 0x0403),  # YubiKey 4 OTP+U2F
     (0x1050, 0x0406),  # YubiKey 4 U2F+CCID
     (0x1050, 0x0407),  # YubiKey 4 OTP+U2F+CCID
-    (0x2581, 0xf1d0),  # Plug-Up U2F Security Key
-    (0x2581, 0xf1d1),  # Ledger Production U2F Dongle
-    (0x2c97, 0x0000),  # Ledger Blue
-    (0x2c97, 0x0001),  # Ledger Nano S
-    (0x2c97, 0x0002),  # Ledger Aramis
-    (0x2c97, 0x0003),  # Ledger HW2
-    (0x2c97, 0x0004),  # Ledger Blend
-    (0x2c97, 0xf1d0),  # Plug-Up U2F Security Key
+    (0x2581, 0xF1D0),  # Plug-Up U2F Security Key
+    (0x2581, 0xF1D1),  # Ledger Production U2F Dongle
+    (0x2C97, 0x0000),  # Ledger Blue
+    (0x2C97, 0x0001),  # Ledger Nano S
+    (0x2C97, 0x0002),  # Ledger Aramis
+    (0x2C97, 0x0003),  # Ledger HW2
+    (0x2C97, 0x0004),  # Ledger Blend
+    (0x2C97, 0xF1D0),  # Plug-Up U2F Security Key
 ]
 HID_RPT_SIZE = 64
 
@@ -90,17 +90,19 @@ CMD_WINK = 0x08
 CMD_APDU = 0x03
 U2FHID_YUBIKEY_DEVICE_CONFIG = U2F_VENDOR_FIRST
 
-STAT_ERR = 0xbf
+STAT_ERR = 0xBF
+
 
 def _read_timeout(dev, size, timeout=TIMEOUT):
     if timeout > 0:
-      timeout += time.time()
+        timeout += time.time()
     while timeout == 0 or time.time() < timeout:
         resp = dev.read(size)
         if resp:
             return resp
         time.sleep(0.01)
     return []
+
 
 class U2FHIDError(Exception):
     def __init__(self, code):
@@ -109,7 +111,6 @@ class U2FHIDError(Exception):
 
 
 class HIDDevice(U2FDevice):
-
     """
     U2FDevice implementation using the HID transport.
     """
@@ -125,7 +126,7 @@ class HIDDevice(U2FDevice):
         self.init()
 
     def close(self):
-        if hasattr(self, 'handle'):
+        if hasattr(self, "handle"):
             self.handle.close()
             del self.handle
 
@@ -149,30 +150,31 @@ class HIDDevice(U2FDevice):
 
     def _send_req(self, cid, cmd, data):
         size = len(data)
-        bc_l = int2byte(size & 0xff)
-        bc_h = int2byte(size >> 8 & 0xff)
-        payload = cid + int2byte(TYPE_INIT | cmd) + bc_h + bc_l + \
-            data[:HID_RPT_SIZE - 7]
-        payload += b'\0' * (HID_RPT_SIZE - len(payload))
+        bc_l = int2byte(size & 0xFF)
+        bc_h = int2byte(size >> 8 & 0xFF)
+        payload = (
+            cid + int2byte(TYPE_INIT | cmd) + bc_h + bc_l + data[: HID_RPT_SIZE - 7]
+        )
+        payload += b"\0" * (HID_RPT_SIZE - len(payload))
         if self.handle.write([0] + [byte2int(c) for c in payload]) < 0:
-          raise exc.DeviceError("Cannot write to device!")
-        data = data[HID_RPT_SIZE - 7:]
+            raise exc.DeviceError("Cannot write to device!")
+        data = data[HID_RPT_SIZE - 7 :]
         seq = 0
         while len(data) > 0:
-            payload = cid + int2byte(0x7f & seq) + data[:HID_RPT_SIZE - 5]
-            payload += b'\0' * (HID_RPT_SIZE - len(payload))
+            payload = cid + int2byte(0x7F & seq) + data[: HID_RPT_SIZE - 5]
+            payload += b"\0" * (HID_RPT_SIZE - len(payload))
             if self.handle.write([0] + [byte2int(c) for c in payload]) < 0:
-              raise exc.DeviceError("Cannot write to device!")
-            data = data[HID_RPT_SIZE - 5:]
+                raise exc.DeviceError("Cannot write to device!")
+            data = data[HID_RPT_SIZE - 5 :]
             seq += 1
 
     def _read_resp(self, cid, cmd):
-        resp = b'.'
+        resp = b"."
         header = cid + int2byte(TYPE_INIT | cmd)
         while resp and resp[:5] != header:
             # allow for timeout
             resp_vals = _read_timeout(self.handle, HID_RPT_SIZE)
-            resp = b''.join(int2byte(v) for v in resp_vals)
+            resp = b"".join(int2byte(v) for v in resp_vals)
             if resp[:5] == cid + int2byte(STAT_ERR):
                 raise U2FHIDError(byte2int(resp[7]))
 
@@ -180,147 +182,164 @@ class HIDDevice(U2FDevice):
             raise exc.DeviceError("Invalid response from device!")
 
         data_len = (byte2int(resp[5]) << 8) + byte2int(resp[6])
-        data = resp[7:min(7 + data_len, HID_RPT_SIZE)]
+        data = resp[7 : min(7 + data_len, HID_RPT_SIZE)]
         data_len -= len(data)
 
         seq = 0
         while data_len > 0:
             resp_vals = _read_timeout(self.handle, HID_RPT_SIZE)
-            resp = b''.join(int2byte(v) for v in resp_vals)
+            resp = b"".join(int2byte(v) for v in resp_vals)
             if resp[:4] != cid:
                 raise exc.DeviceError("Wrong CID from device!")
-            if resp[4] != (seq & 0x7f):
-                raise exc.DeviceError("Wrong SEQ from device! {} != {}".format(resp[4], seq))
+            if resp[4] != (seq & 0x7F):
+                raise exc.DeviceError(
+                    "Wrong SEQ from device! {} != {}".format(resp[4], seq)
+                )
             seq += 1
-            new_data = resp[5:min(5 + data_len, HID_RPT_SIZE)]
+            new_data = resp[5 : min(5 + data_len, HID_RPT_SIZE)]
             data_len -= len(new_data)
             data += new_data
         return data
 
-    def call(self, cmd, data=b''):
+    def call(self, cmd, data=b""):
         if isinstance(data, int):
             data = int2byte(data)
 
         self._send_req(self.cid, cmd, data)
         return self._read_resp(self.cid, cmd)
 
+
 class U2FTunnelDongle(Dongle, DongleWait):
+    def __init__(self, device, scrambleKey="", ledger=False, debug=False):
+        self.device = device
+        self.scrambleKey = scrambleKey
+        self.ledger = ledger
+        self.debug = debug
+        self.waitImpl = self
+        self.opened = True
+        self.device.open()
 
-  def __init__(self, device, scrambleKey="", ledger=False, debug=False):
-    self.device = device
-    self.scrambleKey = scrambleKey
-    self.ledger = ledger
-    self.debug = debug
-    self.waitImpl = self
-    self.opened = True
-    self.device.open()
+    def exchange(self, apdu, timeout=TIMEOUT):
+        if self.debug:
+            print("U2F => %s" % apdu.hex())
 
-  def exchange(self, apdu, timeout=TIMEOUT):
-    if self.debug:
-      print("U2F => %s" % apdu.hex())
+        if len(apdu) >= 256:
+            raise CommException("Too long APDU to transport")
 
-    if len(apdu) >= 256:
-      raise CommException("Too long APDU to transport")
+        # wrap apdu
+        i = 0
+        keyHandle = b""
+        while i < len(apdu):
+            val = apdu[i : i + 1]
+            if len(self.scrambleKey) > 0:
+                val = b"" + int2byte(
+                    ord(val) ^ ord(self.scrambleKey[i % len(self.scrambleKey)])
+                )
+            keyHandle += val
+            i += 1
 
-    # wrap apdu
-    i=0
-    keyHandle = b''
-    while i < len(apdu):
-      val = apdu[i:i+1]
-      if len(self.scrambleKey) > 0:
-        val = b'' + int2byte(ord(val) ^ ord(self.scrambleKey[i % len(self.scrambleKey)]))
-      keyHandle += val
-      i+=1
+        client_param = sha256("u2f_tunnel".encode("utf8")).digest()
+        app_param = sha256("u2f_tunnel".encode("utf8")).digest()
 
-    client_param = sha256("u2f_tunnel".encode('utf8')).digest()
-    app_param = sha256("u2f_tunnel".encode('utf8')).digest()
+        request = client_param + app_param + int2byte(len(keyHandle)) + keyHandle
 
-    request = client_param + app_param + int2byte(len(keyHandle)) + keyHandle
+        start = time.time()
+        while time.time() - start < timeout:
+            # p1 = 0x07 if check_only else 0x03
+            p1 = 0x03
+            p2 = 0
+            try:
+                response = self.device.send_apdu(INS_SIGN, p1, p2, request)
+            except exc.APDUError as e:
+                if e.code == 0x6985:
+                    time.sleep(0.25)
+                    continue
+                raise e
 
-    start = time.time()
-    while time.time() - start < timeout:
+            if self.debug:
+                print("U2F <= %s%.2x" % (response.hex(), 0x9000))
 
-      #p1 = 0x07 if check_only else 0x03
-      p1 = 0x03
-      p2 = 0
-      try:
-        response = self.device.send_apdu(INS_SIGN, p1, p2, request)
-      except exc.APDUError as e:
-        if e.code == 0x6985:
-          time.sleep(0.25)
-          continue
-        raise e
+            # check replied status words of the command (within the APDU tunnel)
+            if response[-2:] != b"\x90\x00":
+                raise CommException(
+                    "Invalid status words received: " + response[-2:].hex()
+                )
+            else:
+                break
 
-      if self.debug:
-        print("U2F <= %s%.2x" % (response.hex(), 0x9000))
+        # api expect a byte array, remove the appended status words, remove the user presence and counter
+        return bytearray(response[5:-2])
 
-      # check replied status words of the command (within the APDU tunnel)
-      if response[-2:] != b"\x90\x00":
-        raise CommException("Invalid status words received: " + response[-2:].hex())
-      else:
-        break
+    def apduMaxDataSize(self):
+        return 256 - 5
 
-    # api expect a byte array, remove the appended status words, remove the user presence and counter
-    return bytearray(response[5:-2])
+    def close(self):
+        self.device.close()
 
-  def apduMaxDataSize(self):
-    return 256-5
+    def waitFirstResponse(self, timeout):
+        raise CommException("Invalid use")
 
-  def close(self):
-  	self.device.close()
-
-  def waitFirstResponse(self, timeout):
-  	raise CommException("Invalid use")
 
 def getDongles(dev_class=None, scrambleKey="", debug=False):
     dev_class = dev_class or HIDDevice
     devices = []
     for d in hid.enumerate(0, 0):
-        usage_page = d['usage_page']
-        if usage_page == 0xf1d0 and d['usage'] == 1:
-            devices.append(U2FTunnelDongle(dev_class(d['path']),scrambleKey, debug=debug))
+        usage_page = d["usage_page"]
+        if usage_page == 0xF1D0 and d["usage"] == 1:
+            devices.append(
+                U2FTunnelDongle(dev_class(d["path"]), scrambleKey, debug=debug)
+            )
         # Usage page doesn't work on Linux
         # well known devices
-        elif (d['vendor_id'], d['product_id']) in DEVICES:
-            device = HIDDevice(d['path'])
+        elif (d["vendor_id"], d["product_id"]) in DEVICES:
+            device = HIDDevice(d["path"])
             try:
                 device.open()
                 device.close()
-                devices.append(U2FTunnelDongle(dev_class(d['path']),scrambleKey, debug=debug))
+                devices.append(
+                    U2FTunnelDongle(dev_class(d["path"]), scrambleKey, debug=debug)
+                )
             except (exc.DeviceError, IOError, OSError):
                 pass
         # unknown devices
         else:
-            device = HIDDevice(d['path'])
+            device = HIDDevice(d["path"])
             try:
                 device.open()
                 # try a ping command to ensure a FIDO device, else timeout (BEST here, modulate the timeout, 2 seconds is way too big)
                 device.ping()
                 device.close()
-                devices.append(U2FTunnelDongle(dev_class(d['path']),scrambleKey, debug=debug))
+                devices.append(
+                    U2FTunnelDongle(dev_class(d["path"]), scrambleKey, debug=debug)
+                )
             except (exc.DeviceError, IOError, OSError):
                 pass
     return devices
 
+
 def getDongle(path=None, dev_class=None, scrambleKey="", debug=False):
-  # if path is none, then use the first device
-  dev_class = dev_class or HIDDevice
-  devices = []
-  for d in hid.enumerate(0, 0):
-    if path is None or d['path'] == path:
-      usage_page = d['usage_page']
-      if usage_page == 0xf1d0 and d['usage'] == 1:
-          return U2FTunnelDongle(dev_class(d['path']),scrambleKey, debug=debug)
-      # Usage page doesn't work on Linux
-      # well known devices
-      elif (d['vendor_id'], d['product_id']) in DEVICES and ('interface_number' not in d or d['interface_number'] == 1):
-          #print d
-          device = HIDDevice(d['path'])
-          try:
-              device.open()
-              device.close()
-              return U2FTunnelDongle(dev_class(d['path']),scrambleKey, debug=debug)
-          except (exc.DeviceError, IOError, OSError):
-              traceback.print_exc()
-              pass
-  raise CommException("No dongle found")
+    # if path is none, then use the first device
+    dev_class = dev_class or HIDDevice
+    devices = []
+    for d in hid.enumerate(0, 0):
+        if path is None or d["path"] == path:
+            usage_page = d["usage_page"]
+            if usage_page == 0xF1D0 and d["usage"] == 1:
+                return U2FTunnelDongle(dev_class(d["path"]), scrambleKey, debug=debug)
+            # Usage page doesn't work on Linux
+            # well known devices
+            elif (d["vendor_id"], d["product_id"]) in DEVICES and (
+                "interface_number" not in d or d["interface_number"] == 1
+            ):
+                # print d
+                device = HIDDevice(d["path"])
+                try:
+                    device.open()
+                    device.close()
+                    return U2FTunnelDongle(
+                        dev_class(d["path"]), scrambleKey, debug=debug
+                    )
+                except (exc.DeviceError, IOError, OSError):
+                    traceback.print_exc()
+                    pass
+    raise CommException("No dongle found")
