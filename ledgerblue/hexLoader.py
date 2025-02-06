@@ -89,10 +89,11 @@ class HexLoader:
     def scp_derive_key(self, ecdh_secret, keyindex):
         if self.scpv3:
             mac_block = b"\x01" * 16
-            cipher = AES.new(ecdh_secret, AES.MODE_ECB)
+            iv = b"\x00" * 16
+            cipher = AES.new(ecdh_secret, AES.MODE_CBC, iv=iv)
             mac_key = cipher.encrypt(mac_block)
             enc_block = b"\x02" * 16
-            cipher = AES.new(ecdh_secret, AES.MODE_ECB)
+            cipher = AES.new(ecdh_secret, AES.MODE_CBC, iv=iv)
             enc_key = cipher.encrypt(enc_block)
             return mac_key + enc_key
         retry = 0
