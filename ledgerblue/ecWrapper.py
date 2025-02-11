@@ -64,7 +64,7 @@ class PublicKey(object):
                 out += self.obj.W.x.to_bytes(32, "big")
                 out += self.obj.W.y.to_bytes(32, "big")
             else:
-                out = b"\x03" if ((self.obj.W.y & 1) != 0) else "\x02"
+                out = b"\x03" if ((self.obj.W.y & 1) != 0) else b"\x02"
                 out += self.obj.W.x.to_bytes(32, "big")
             return out
 
