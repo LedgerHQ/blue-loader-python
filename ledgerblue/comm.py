@@ -310,6 +310,9 @@ def getDongle(debug=False, selectCommand=None):
             ) or ("usage_page" in hidDevice and hidDevice["usage_page"] == 0xFFA0):
                 hidDevicePath = hidDevice["path"]
 
+    usb_port = os.getenv("LEDGER_PROXY_USB_PORT")
+    if usb_port:
+        hidDevicePath = usb_port.encode()
     if hidDevicePath is not None:
         dev = hid.device()
         dev.open_path(hidDevicePath)
