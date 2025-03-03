@@ -17,14 +17,15 @@
 ********************************************************************************
 """
 
-from Cryptodome.Cipher import AES
-import sys
-import struct
-import hashlib
 import binascii
-from .ecWrapper import PrivateKey
-from ecpy.curves import Curve
+import hashlib
 import os
+import struct
+
+from Cryptodome.Cipher import AES
+from ecpy.curves import Curve
+
+from .ecWrapper import PrivateKey
 
 LOAD_SEGMENT_CHUNK_HEADER_LENGTH = 3
 MIN_PADDING_LENGTH = 1
@@ -43,16 +44,16 @@ def string_to_bytes(x):
 
 
 def encodelv(v):
-    l = len(v)
+    L = len(v)
     s = b""
-    if l < 128:
-        s += struct.pack(">B", l)
-    elif l < 256:
+    if L < 128:
+        s += struct.pack(">B", L)
+    elif L < 256:
         s += struct.pack(">B", 0x81)
-        s += struct.pack(">B", l)
-    elif l < 65536:
+        s += struct.pack(">B", L)
+    elif L < 65536:
         s += struct.pack(">B", 0x82)
-        s += struct.pack(">H", l)
+        s += struct.pack(">H", L)
     else:
         raise Exception("Unimplemented LV encoding")
     s += v
@@ -60,16 +61,16 @@ def encodelv(v):
 
 
 def encodetlv(t, v):
-    l = len(v)
+    L = len(v)
     s = struct.pack(">B", t)
-    if l < 128:
-        s += struct.pack(">B", l)
-    elif l < 256:
+    if L < 128:
+        s += struct.pack(">B", L)
+    elif L < 256:
         s += struct.pack(">B", 0x81)
-        s += struct.pack(">B", l)
-    elif l < 65536:
+        s += struct.pack(">B", L)
+    elif L < 65536:
         s += struct.pack(">B", 0x82)
-        s += struct.pack(">H", l)
+        s += struct.pack(">H", L)
     else:
         raise Exception("Unimplemented TLV encoding")
     s += v
@@ -89,10 +90,11 @@ class HexLoader:
     def scp_derive_key(self, ecdh_secret, keyindex):
         if self.scpv3:
             mac_block = b"\x01" * 16
-            cipher = AES.new(ecdh_secret, AES.MODE_ECB)
+            iv = b"\x00" * 16
+            cipher = AES.new(ecdh_secret, AES.MODE_CBC, iv=iv)
             mac_key = cipher.encrypt(mac_block)
             enc_block = b"\x02" * 16
-            cipher = AES.new(ecdh_secret, AES.MODE_ECB)
+            cipher = AES.new(ecdh_secret, AES.MODE_CBC, iv=iv)
             enc_key = cipher.encrypt(enc_block)
             return mac_key + enc_key
         retry = 0
@@ -137,7 +139,7 @@ class HexLoader:
 
         # legacy unsecure SCP (pre nanos-1.4, pre blue-2.1)
         self.max_mtu = 0xFE
-        if not self.card is None:
+        if self.card is not None:
             self.max_mtu = min(self.max_mtu, self.card.apduMaxDataSize())
         self.scpVersion = 2
         self.key = mutauth_result
@@ -146,22 +148,22 @@ class HexLoader:
 
         # store the aligned block len to be transported if requested
         self.cleardata_block_len = cleardata_block_len
-        if not (self.cleardata_block_len is None):
-            if not self.card is None:
+        if self.cleardata_block_len is not None:
+            if self.card is not None:
                 self.cleardata_block_len = min(
                     self.cleardata_block_len, self.card.apduMaxDataSize()
                 )
 
-        if scpv3 == True:
+        if scpv3:
             self.scp_enc_key = self.scp_derive_key(mutauth_result, 0)
             self.scpVersion = 3
             self.max_mtu = 0xFE
-            if not self.card is None:
+            if self.card is not None:
                 self.max_mtu = min(self.max_mtu, self.card.apduMaxDataSize() & 0xF0)
             return
 
         # try:
-        if type(mutauth_result) is dict and "ecdh_secret" in mutauth_result:
+        if isinstance(mutauth_result, dict) and "ecdh_secret" in mutauth_result:
             self.scp_enc_key = self.scp_derive_key(mutauth_result["ecdh_secret"], 0)[
                 0:16
             ]
@@ -172,7 +174,7 @@ class HexLoader:
             self.scp_mac_iv = b"\x00" * 16
             self.scpVersion = 3
             self.max_mtu = 0xFE
-            if not self.card is None:
+            if self.card is not None:
                 self.max_mtu = min(self.max_mtu, self.card.apduMaxDataSize() & 0xF0)
 
     def crc16(self, data):
@@ -445,7 +447,7 @@ class HexLoader:
         # wrap
         data = self.scpWrap(data)
         apdu = bytearray([cla, ins, p1, p2, len(data)]) + bytearray(data)
-        if self.card == None:
+        if self.card is None:
             print("%s" % binascii.hexlify(apdu))
         else:
             # unwrap after exchanged
@@ -454,7 +456,7 @@ class HexLoader:
     def scpWrap(self, data):
         if not self.secure or data is None or len(data) == 0:
             return data
-        if self.scpv3 == True:
+        if self.scpv3:
             cipher = AES.new(self.scp_enc_key, mode=AES.MODE_SIV)
             ciphertext, tag = cipher.encrypt_and_digest(data)
             encryptedData = tag + ciphertext
@@ -499,7 +501,7 @@ class HexLoader:
     def scpUnwrap(self, data):
         if not self.secure or data is None or len(data) == 0 or len(data) == 2:
             return data
-        if self.scpv3 == True:
+        if self.scpv3:
             cipher = AES.new(self.scp_enc_key, mode=AES.MODE_SIV)
             tag = data[:16]
             decryptedData = cipher.decrypt_and_verify(data[16:], tag)
@@ -525,12 +527,12 @@ class HexLoader:
             cipher = AES.new(self.scp_enc_key, AES.MODE_CBC, self.scp_enc_iv)
             self.scp_enc_iv = bytes(data[-16:])
             data = cipher.decrypt(bytes(data))
-            l = len(data) - 1
-            while data[l] != padding_char:
-                l -= 1
-                if l == -1:
+            L = len(data) - 1
+            while data[L] != padding_char:
+                L -= 1
+                if L == -1:
                     raise BaseException("Invalid SCP ENC padding")
-            data = data[0:l]
+            data = data[0:L]
             decryptedData = data
 
             if SCP_DEBUG:
@@ -540,12 +542,12 @@ class HexLoader:
             decryptedData = cipher.decrypt(data)
             if SCP_DEBUG:
                 print("unwrap_old: " + binascii.hexlify(decryptedData))
-            l = len(decryptedData) - 1
-            while decryptedData[l] != padding_char:
-                l -= 1
-                if l == -1:
+            L = len(decryptedData) - 1
+            while decryptedData[L] != padding_char:
+                L -= 1
+                if L == -1:
                     raise BaseException("Invalid SCP ENC padding")
-            decryptedData = decryptedData[0:l]
+            decryptedData = decryptedData[0:L]
             self.iv = data[-16:]
 
         # print ("<<")
@@ -580,13 +582,13 @@ class HexLoader:
         # Force jump into Thumb mode
         bootadr |= 1
         data = b"\x09" + struct.pack(">I", bootadr)
-        if signature != None:
+        if signature is not None:
             data += struct.pack(">B", len(signature)) + signature
         self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
     def commit(self, signature=None):
         data = b"\x09"
-        if signature != None:
+        if signature is not None:
             data += struct.pack(">B", len(signature)) + signature
         self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
@@ -609,20 +611,20 @@ class HexLoader:
             + appname
         )
         if iconOffset is None:
-            if not (icon is None):
+            if icon is not None:
                 data += struct.pack(">B", len(icon)) + icon
             else:
                 data += b"\x00"
 
-        if not (path is None):
+        if path is not None:
             data += struct.pack(">B", len(path)) + path
         else:
             data += b"\x00"
 
-        if not iconOffset is None:
+        if iconOffset is not None:
             data += struct.pack(">I", iconOffset) + struct.pack(">H", iconSize)
 
-        if not appversion is None:
+        if appversion is not None:
             data += struct.pack(">B", len(appversion)) + appversion
 
         # in previous version, appparams are not part of the application hash yet
@@ -681,11 +683,10 @@ class HexLoader:
 
     def loadPackSegmentChunk(self, offset, chunk):
         data = struct.pack(">I", offset) + chunk
-        # print(f"Inside loadPackSegmentChunk, offset={offset}, len(chunk)={len(chunk)}")
         self.exchange(self.cla, 0x31, self.language, 0x00, data)
 
     def commitPack(self, signature=None):
-        if signature != None:
+        if signature is not None:
             data = struct.pack(">B", len(signature)) + signature
         else:
             data = b""
@@ -884,8 +885,8 @@ class HexLoader:
             initialAddress = hexFile.minAddr()
         sha256 = hashlib.new("sha256")
         # stat by hashing the create app params to ensure complete app signature
-        if targetId != None and (targetId & 0xF) > 3:
-            if targetVersion == None:
+        if targetId is not None and (targetId & 0xF) > 3:
+            if targetVersion is None:
                 print("Target version is not set, application hash will not match!")
                 targetVersion = ""
             # encore targetId U4LE, and version string bytes
@@ -934,7 +935,7 @@ class HexLoader:
                 if self.cleardata_block_len and chunkLen % self.cleardata_block_len:
                     if chunkLen < self.cleardata_block_len:
                         raise Exception(
-                            "Cannot transport not block aligned data with fixed block len"
+                            "Cannot transport data that is not block-aligned"
                         )
                     chunkLen -= chunkLen % self.cleardata_block_len
                 # pad with 00's when not complete block and performing NENC
@@ -1009,7 +1010,7 @@ class HexLoader:
         self.exchange(self.cla, 0x00, 0x00, 0x00, data)
 
     def recoverValidateCertificate(self, version, role, name, key, sign, last=False):
-        if last == True:
+        if last:
             p1 = b"\x80"
         else:
             p1 = b"\x00"
