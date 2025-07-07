@@ -122,7 +122,7 @@ async def _read(mtu) -> bytes:
     total_size = int.from_bytes(response[3:5], "big")
 
     total_size_bkup = total_size
-    if total_size >= (mtu - 5):
+    if total_size > (mtu - 5):
         apdu = response[5:mtu]
         total_size -= mtu - 5
 
