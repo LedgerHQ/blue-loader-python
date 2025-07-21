@@ -17,23 +17,21 @@
 ********************************************************************************
 """
 
-from binascii import hexlify
-import hid
 import os
-import time
 import sys
+import time
+from binascii import hexlify
 
+import hid
 import nfc
-from nfc.clf import RemoteTarget
 
+from .BleComm import BleDevice
 from .commException import CommException
 from .commHTTP import getDongle as getDongleHTTP
 from .commTCP import getDongle as getDongleTCP
 from .commU2F import getDongle as getDongleU2F
-from .Dongle import Dongle, DongleWait, TIMEOUT
-from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
-from .BleComm import BleDevice
-
+from .Dongle import TIMEOUT, Dongle, DongleWait
+from .ledgerWrapper import unwrapResponseAPDU, wrapCommandAPDU
 
 APDUGEN = None
 if "APDUGEN" in os.environ and len(os.environ["APDUGEN"]) != 0:
@@ -72,9 +70,8 @@ if "PCSC" in os.environ and len(os.environ["PCSC"]) != 0:
     PCSC = os.environ["PCSC"]
 if PCSC:
     try:
-        from smartcard.Exceptions import NoCardException
         from smartcard.System import readers
-        from smartcard.util import toHexString, toBytes
+        from smartcard.util import toBytes
     except ImportError:
         PCSC = False
 
@@ -87,15 +84,14 @@ def get_possible_error_cause(sw):
         0x6A85: "Not enough space?",
         0x6A83: "Maybe this app requires a library to be installed first?",
         0x6484: "Are you using the correct targetId?",
-        0x6D00: "Unexpected state of device: verify that the right application is opened?",
-        0x6E00: "Unexpected state of device: verify that the right application is opened?",
+        0x6D00: "Unexpected state of device: verify that the right application is opened?",  # noqa: E501
+        0x6E00: "Unexpected state of device: verify that the right application is opened?",  # noqa: E501
         0x5515: "Did you unlock the device?",
         0x6814: "Unexpected target device: verify that you are using the right device?",
-        0x511F: "The OS version on your device does not seem compatible with the SDK version used to build the app",
+        0x511F: "The OS version on your device does not seem compatible with the SDK version used to build the app",  # noqa: E501
         0x5120: "Sideload is not supported on Nano X",
     }
 
-    # If the status word is in the map, return the corresponding cause, otherwise return a default message
     return cause_map.get(sw, "Unknown reason")
 
 
@@ -190,7 +186,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
         if self.opened:
             try:
                 self.device.close()
-            except:
+            except Exception:
                 pass
         self.opened = False
 
@@ -233,9 +229,10 @@ class DongleBLE(Dongle, DongleWait):
         try:
             self.device = BleDevice(os.environ["LEDGER_BLE_MAC"])
             self.device.open()
-        except KeyError as ex:
+        except KeyError:
             sys.exit(
-                f"Key Error\nPlease run 'python -m ledgerblue.BleComm' to select wich device to connect to"
+                "Key Error\nPlease run 'python -m ledgerblue.BleComm'"
+                " to select wich device to connect to"
             )
         self.opened = self.device.opened
 
@@ -284,7 +281,7 @@ class DongleSmartcard(Dongle):
         if self.opened:
             try:
                 self.device.disconnect()
-            except:
+            except Exception:
                 pass
         self.opened = False
 
@@ -293,7 +290,7 @@ def getDongle(debug=False, selectCommand=None):
     if APDUGEN:
         return HIDDongleHIDAPI(None, True, debug)
 
-    if not U2FKEY is None:
+    if U2FKEY is not None:
         return getDongleU2F(scrambleKey=U2FKEY, debug=debug)
     elif MCUPROXY is not None:
         return getDongleHTTP(remote_host=MCUPROXY, debug=debug)
@@ -312,6 +309,10 @@ def getDongle(debug=False, selectCommand=None):
                 "interface_number" in hidDevice and hidDevice["interface_number"] == 0
             ) or ("usage_page" in hidDevice and hidDevice["usage_page"] == 0xFFA0):
                 hidDevicePath = hidDevice["path"]
+
+    usb_port = os.getenv("LEDGER_PROXY_USB_PORT")
+    if usb_port:
+        hidDevicePath = usb_port.encode()
     if hidDevicePath is not None:
         dev = hid.device()
         dev.open_path(hidDevicePath)
@@ -323,7 +324,7 @@ def getDongle(debug=False, selectCommand=None):
             try:
                 connection = reader.createConnection()
                 connection.connect()
-                if selectCommand != None:
+                if selectCommand is not None:
                     response, sw1, sw2 = connection.transmit(
                         toBytes("00A4040010FF4C4547522E57414C5430312E493031")
                     )
@@ -335,7 +336,7 @@ def getDongle(debug=False, selectCommand=None):
                         connection = None
                 else:
                     break
-            except:
+            except Exception:
                 connection = None
                 pass
         if connection is not None:
