@@ -12,10 +12,6 @@ on:
       - master
       - develop
 
-permissions:
-  id-token: write
-  attestations: write
-
 jobs:
   build_install:
     name: Build and install the Ledgerblue Python package
@@ -42,6 +38,11 @@ jobs:
     name: Build the Python package, and deploy if needed
     runs-on: public-ledgerhq-shared-small
     needs: build_install
+    permissions:
+      id-token: write
+      attestations: write
+      contents: write
+
     steps:
     - name: Clone
       uses: actions/checkout@v3
