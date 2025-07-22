@@ -64,16 +64,14 @@ BLE_PROXY = None
 if "LEDGER_BLE_PROXY" in os.environ:
     BLE_PROXY = True
 
-# Force use of MCUPROXY if required
 PCSC = None
 if "PCSC" in os.environ and len(os.environ["PCSC"]) != 0:
     PCSC = os.environ["PCSC"]
-if PCSC:
     try:
+        # Don't force all users to install pyscard
         from smartcard.System import readers
-        from smartcard.util import toBytes
     except ImportError:
-        PCSC = False
+        PCSC = None
 
 
 def get_possible_error_cause(sw):
@@ -268,11 +266,11 @@ class DongleSmartcard(Dongle):
 
     def exchange(self, apdu, timeout=TIMEOUT):
         if self.debug:
-            print("SC => %s" % apdu.hex())
-        response, sw1, sw2 = self.device.transmit(toBytes(hexlify(apdu)))
+            print(f"[SC] => {apdu.hex()}")
+        response, sw1, sw2 = self.device.transmit(list(apdu))
         sw = (sw1 << 8) | sw2
         if self.debug:
-            print("SC <= %s%.2x" % (response.hex(), sw))
+            print("[SC] <= %s%.2x" % (bytes(response).hex(), sw))
         if sw != 0x9000 and (sw & 0xFF00) != 0x6100 and (sw & 0xFF00) != 0x6C00:
             raise CommException("Invalid status %04x" % sw, sw, bytearray(response))
         return bytearray(response)
@@ -286,7 +284,7 @@ class DongleSmartcard(Dongle):
         self.opened = False
 
 
-def getDongle(debug=False, selectCommand=None):
+def getDongle(debug=False):
     if APDUGEN:
         return HIDDongleHIDAPI(None, True, debug)
 
@@ -300,45 +298,37 @@ def getDongle(debug=False, selectCommand=None):
         return DongleNFC(debug)
     elif BLE_PROXY:
         return DongleBLE(debug)
-    dev = None
-    hidDevicePath = None
-    ledger = True
-    for hidDevice in hid.enumerate(0, 0):
-        if hidDevice["vendor_id"] == 0x2C97:
-            if (
-                "interface_number" in hidDevice and hidDevice["interface_number"] == 0
-            ) or ("usage_page" in hidDevice and hidDevice["usage_page"] == 0xFFA0):
-                hidDevicePath = hidDevice["path"]
-
-    usb_port = os.getenv("LEDGER_PROXY_USB_PORT")
-    if usb_port:
-        hidDevicePath = usb_port.encode()
-    if hidDevicePath is not None:
-        dev = hid.device()
-        dev.open_path(hidDevicePath)
-        dev.set_nonblocking(True)
-        return HIDDongleHIDAPI(dev, ledger, debug)
-    if PCSC:
+    elif PCSC is not None:
+        # Use the first pcsc reader with a card inserted
         connection = None
         for reader in readers():
             try:
                 connection = reader.createConnection()
                 connection.connect()
-                if selectCommand is not None:
-                    response, sw1, sw2 = connection.transmit(
-                        toBytes("00A4040010FF4C4547522E57414C5430312E493031")
-                    )
-                    sw = (sw1 << 8) | sw2
-                    if sw == 0x9000:
-                        break
-                    else:
-                        connection.disconnect()
-                        connection = None
-                else:
-                    break
             except Exception:
                 connection = None
                 pass
         if connection is not None:
             return DongleSmartcard(connection, debug)
+    else:
+        # USB HID by default
+        dev = None
+        hidDevicePath = None
+        ledger = True
+        for hidDevice in hid.enumerate(0, 0):
+            if hidDevice["vendor_id"] == 0x2C97:
+                if (
+                    "interface_number" in hidDevice and hidDevice["interface_number"] == 0
+                ) or ("usage_page" in hidDevice and hidDevice["usage_page"] == 0xFFA0):
+                    hidDevicePath = hidDevice["path"]
+
+        usb_port = os.getenv("LEDGER_PROXY_USB_PORT")
+        if usb_port:
+            hidDevicePath = usb_port.encode()
+        if hidDevicePath is not None:
+            dev = hid.device()
+            dev.open_path(hidDevicePath)
+            dev.set_nonblocking(True)
+            return HIDDongleHIDAPI(dev, ledger, debug)
+
     raise CommException("No dongle found")
