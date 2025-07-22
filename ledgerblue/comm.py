@@ -300,16 +300,13 @@ def getDongle(debug=False):
         return DongleBLE(debug)
     elif PCSC is not None:
         # Use the first pcsc reader with a card inserted
-        connection = None
         for reader in readers():
             try:
                 connection = reader.createConnection()
                 connection.connect()
+                return DongleSmartcard(connection, debug)
             except Exception:
-                connection = None
                 pass
-        if connection is not None:
-            return DongleSmartcard(connection, debug)
     else:
         # USB HID by default
         dev = None
