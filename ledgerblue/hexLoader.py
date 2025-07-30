@@ -568,14 +568,14 @@ class HexLoader:
 				if reverse:
 					chunk = data[offset-chunkLen : offset]
 					if self.createpackParams:
-						self.loadPackSegmentChunk(offset-chunkLen, bytes(chunk))
+						self.loadPackSegmentChunk(startAddress+offset-chunkLen, bytes(chunk))
 					else:
 						self.loadSegmentChunk(offset-chunkLen, bytes(chunk))
 				else:
 					chunk = data[offset : offset + chunkLen]
 					sha256.update(chunk)
 					if self.createpackParams:
-						self.loadPackSegmentChunk(offset, bytes(chunk))
+						self.loadPackSegmentChunk(startAddress+offset, bytes(chunk))
 					else:
 						self.loadSegmentChunk(offset, bytes(chunk))
 				if reverse:
