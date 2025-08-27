@@ -6,9 +6,12 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from typing import List
 
-LEDGER_SERVICE_UUID_EUROPA = "13d63400-2c97-3004-0000-4c6564676572"
-LEDGER_SERVICE_UUID_STAX = "13d63400-2c97-6004-0000-4c6564676572"
-LEDGER_SERVICE_UUID_NANOX = "13d63400-2c97-0004-0000-4c6564676572"
+SERVICE_UUIDS = [
+    "13d63400-2c97-3004-0000-4c6564676572", #flex
+    "13d63400-2c97-6004-0000-4c6564676572", #stax
+    "13d63400-2c97-0004-0000-4c6564676572", #nanox
+    "13d63400-2c97-8004-0000-4c6564676572", #apex
+]
 
 TAG_ID = b"\x05"
 
@@ -35,17 +38,14 @@ class BleScanner(object):
         self.devices = []
 
     def __scan_callback(self, device: BLEDevice, advertisement_data: AdvertisementData):
-        if (
-            LEDGER_SERVICE_UUID_STAX in advertisement_data.service_uuids
-            or LEDGER_SERVICE_UUID_NANOX in advertisement_data.service_uuids
-            or LEDGER_SERVICE_UUID_EUROPA in advertisement_data.service_uuids
-        ):
-            device_is_in_list = False
-            for dev in self.devices:
-                if device.address == dev[0]:
-                    device_is_in_list = True
-            if not device_is_in_list:
-                self.devices.append((device.address, device.name))
+        for uuid in advertisement_data.service_uuids:
+            if uuid in SERVICE_UUIDS:
+                device_is_in_list = False
+                for dev in self.devices:
+                    if device.address == dev[0]:
+                        device_is_in_list = True
+                if not device_is_in_list:
+                    self.devices.append((device.address, device.name))
 
     async def scan(self):
         scanner = BleakScanner(
@@ -76,11 +76,7 @@ async def _get_client(address: str) -> BleakClient:
     characteristic_write_with_rsp = None
     characteristic_write_cmd = None
     for service in client.services:
-        if service.uuid in [
-            LEDGER_SERVICE_UUID_NANOX,
-            LEDGER_SERVICE_UUID_STAX,
-            LEDGER_SERVICE_UUID_EUROPA,
-        ]:
+        if service.uuid in SERVICE_UUIDS:
             for char in service.characteristics:
                 if "0001" in char.uuid:
                     characteristic_notify = char
