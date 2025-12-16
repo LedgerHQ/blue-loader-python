@@ -145,6 +145,7 @@ a random one will be generated)""",
     parser.add_argument(
         "--nocrc", help="Skip CRC generation when loading", action="store_true"
     )
+    parser.add_argument("--compress", help="Compress data before sending", action="store_true")
 
     return parser
 
@@ -304,6 +305,8 @@ def main(args, debug: bool = True):
     loader = HexLoader(
         dongle, 0xE0, not args.offline, secret, cleardata_block_len=cleardata_block_len
     )
+    if args.compress:
+        loader.compress = True
 
     # tlv mode does not support explicit by name removal, would require a list app before to identify the hash to be removed
     if (not (args.appFlags & 2)) and args.delete:

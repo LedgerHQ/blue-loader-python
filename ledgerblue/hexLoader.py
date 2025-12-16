@@ -26,6 +26,7 @@ from Cryptodome.Cipher import AES
 from ecpy.curves import Curve
 
 from .ecWrapper import PrivateKey
+import gzip
 
 LOAD_SEGMENT_CHUNK_HEADER_LENGTH = 3
 MIN_PADDING_LENGTH = 1
@@ -38,6 +39,7 @@ BOLOS_TAG_DERIVEPATH = 0x04
 BOLOS_TAG_DATASIZE = 0x05
 BOLOS_TAG_DEPENDENCY = 0x06
 
+CHUNK_LEN = 512
 
 def string_to_bytes(x):
     return bytes(x, "ascii")
@@ -82,6 +84,24 @@ def str2bool(v):
         return v.lower() in ("yes", "true", "t", "1")
     return False
 
+def dataToCompressedChunks(data):
+    length = len(data)
+    offset = 0
+    out_data = bytearray(0)
+    while length > 0:
+        uncompressed_chunk_len = min(length, CHUNK_LEN)
+        chunk = gzip.compress(data[offset:offset+uncompressed_chunk_len], mtime=0)
+        compressed_chunk_len = len(chunk)
+        # if the compression is bigger than original, use original
+        if compressed_chunk_len >= uncompressed_chunk_len:
+            compressed_chunk_len = uncompressed_chunk_len
+            chunk = data[offset:offset+uncompressed_chunk_len]
+        out_data += struct.pack(">H", uncompressed_chunk_len)
+        out_data += struct.pack(">H", compressed_chunk_len)
+        out_data += chunk
+        length -= uncompressed_chunk_len
+        offset += uncompressed_chunk_len
+    return out_data
 
 SCP_DEBUG = str2bool(os.getenv("SCP_DEBUG"))
 
@@ -136,6 +156,8 @@ class HexLoader:
         self.createappParams = None
         self.createpackParams = None
         self.scpv3 = scpv3
+
+        self.compress = False
 
         # legacy unsecure SCP (pre nanos-1.4, pre blue-2.1)
         self.max_mtu = 0xFE
@@ -902,13 +924,17 @@ class HexLoader:
         for area in areas:
             startAddress = area.getStart() - initialAddress
             data = area.getData()
+            data_len = len(data)
+            crc = self.crc16(bytearray(data))
+            sha256.update(data)
+            if self.compress:
+                data = dataToCompressedChunks(data)
             if not self.createpackParams:
                 self.selectSegment(startAddress)
             if len(data) == 0:
                 continue
             if len(data) > 0x10000:
                 raise Exception("Invalid data size for loader")
-            crc = self.crc16(bytearray(data))
             offset = 0
             length = len(data)
             if reverse:
@@ -947,7 +973,6 @@ class HexLoader:
                         self.loadSegmentChunk(offset - chunkLen, bytes(chunk))
                 else:
                     chunk = data[offset : offset + chunkLen]
-                    sha256.update(chunk)
                     if self.createpackParams:
                         self.loadPackSegmentChunk(startAddress + offset, bytes(chunk))
                     else:
@@ -960,7 +985,7 @@ class HexLoader:
             if not self.createpackParams:
                 self.flushSegment()
             if doCRC:
-                self.crcSegment(0, len(data), crc)
+                self.crcSegment(0, data_len, crc)
         return sha256.hexdigest()
 
     def run(self, bootoffset=1, signature=None):
