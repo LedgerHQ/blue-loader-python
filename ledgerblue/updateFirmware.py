@@ -98,7 +98,7 @@ if __name__ == "__main__":
     # Get nonce and ephemeral key
 
     request = Request()
-    request.reference = "distributeFirmware11_scan"
+    request.reference = "distributeFirmware"
     parameter = request.remote_parameters.add()
     parameter.local = False
     parameter.alias = "persoKey"
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     # Get remote certificate
 
     request = Request()
-    request.reference = "distributeFirmware11_scan"
+    request.reference = "distributeFirmware"
     request.id = response.id
     parameter = request.remote_parameters.add()
     parameter.local = False
@@ -180,7 +180,7 @@ if __name__ == "__main__":
         if len(certificate) == 0:
             break
         request = Request()
-        request.reference = "distributeFirmware11_scan"
+        request.reference = "distributeFirmware"
         request.id = response.id
         request.parameters = bytes(certificate)
         request.largeStack = True
@@ -190,7 +190,7 @@ if __name__ == "__main__":
     # Commit agreement and send firmware
 
     request = Request()
-    request.reference = "distributeFirmware11_scan"
+    request.reference = "distributeFirmware"
     if args.targetId & 0xF >= 0x3:
         parameter = request.remote_parameters.add()
         parameter.local = False
@@ -213,7 +213,7 @@ if __name__ == "__main__":
         responseData = dongle.exchange(responseData)
 
         request = Request()
-        request.reference = "distributeFirmware11_scan"
+        request.reference = "distributeFirmware"
         request.parameters = b"\xff" + b"\xff" + bytes(responseData)
         request.id = response.id
         request.largeStack = True
@@ -222,7 +222,7 @@ if __name__ == "__main__":
         responseData = bytearray(response.response)
 
     request = Request()
-    request.reference = "distributeFirmware11_scan"
+    request.reference = "distributeFirmware"
     parameter = request.remote_parameters.add()
     parameter.local = False
     parameter.alias = "firmware"
