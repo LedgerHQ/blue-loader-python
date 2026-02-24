@@ -65,8 +65,22 @@ doc = [
 ]
 dev = [
     "pre-commit==3.2.0",
-    "ruff==0.3.7"
+    "ruff==0.3.7",
+    "pytest>=8,<9",
+    "pytest-cov>=5,<6"
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--cov=ledgerblue --cov-branch --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+source = ["ledgerblue"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
 
 [tool.setuptools_scm]
 write_to = "ledgerblue/__version__.py"
