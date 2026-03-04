@@ -54,7 +54,7 @@ def get_argparser():
     parser.add_argument(
         "--curve",
         help="""A curve on which BIP 32 derivation is locked ("secp256k1", "secp256r1",
-"ed25519" or "bls12381g1"), can be repeated""",
+"ed25519", "bls12381g1", "bls12377g1" or "jubjub"), can be repeated""",
         action="append",
     )
     parser.add_argument(
@@ -227,6 +227,10 @@ def main(args, debug: bool = True):
                 curveMask |= 0x04
             elif curve == "bls12381g1":
                 curveMask |= 0x10
+            elif curve == 'bls12377g1':
+                curveMask |= 0x20
+            elif curve == 'jubjub':
+                curveMask |= 0x40
             else:
                 raise Exception("Unknown curve " + curve)
 
