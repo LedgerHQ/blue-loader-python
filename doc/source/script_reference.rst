@@ -11,6 +11,16 @@ checkGenuine.py
    :func: get_argparser
    :prog: python -m ledgerblue.checkGenuine
 
+.. _debugApp.py:
+
+debugApp.py
+-----------
+
+.. argparse::
+   :module: ledgerblue.debugApp
+   :func: get_argparser
+   :prog: python -m ledgerblue.debugApp
+
 .. _deleteApp.py:
 
 deleteApp.py
