@@ -19,6 +19,8 @@
 
 import argparse
 import sys
+import time
+from datetime import datetime
 
 import serial
 import serial.tools.list_ports
@@ -67,21 +69,36 @@ def find_ledger_cdc_port(port=None):
     return None
 
 
+def wait_for_cdc_port(port=None, timeout=0):
+    """Wait for the Ledger CDC port to appear.
+
+    If timeout is 0, wait indefinitely.
+    Returns the port name, or None if timeout expired.
+    """
+    start = time.time()
+    first = True
+    while True:
+        cdc_port = find_ledger_cdc_port(port)
+        if cdc_port is not None:
+            if not first:
+                sys.stdout.write("\n")
+                sys.stdout.flush()
+            return cdc_port
+        if first:
+            print("Waiting for Ledger CDC debug port...", end="", flush=True)
+            first = False
+        else:
+            sys.stdout.write(".")
+            sys.stdout.flush()
+        if timeout and (time.time() - start) >= timeout:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+            return None
+        time.sleep(1)
+
+
 if __name__ == "__main__":
     args = get_argparser().parse_args()
-
-    cdc_port = find_ledger_cdc_port(args.port)
-    if cdc_port is None:
-        print(
-            "No Ledger CDC debug port found.\n"
-            "Make sure your Ledger app was compiled with DEBUG_OVER_USB=1\n"
-            "and that the device is connected and the app is running.\n"
-            "You can also specify the port manually with --port."
-        )
-        sys.exit(1)
-
-    print("Listening on {} (baudrate={}) ...".format(cdc_port, args.baudrate))
-    print("Press Ctrl+C to stop.\n")
 
     output_file = None
     if args.output:
@@ -92,19 +109,36 @@ if __name__ == "__main__":
             sys.exit(1)
 
     try:
-        with serial.Serial(cdc_port, args.baudrate, timeout=1) as ser:
-            while True:
-                data = ser.readline()
-                if data:
-                    text = data.decode("utf-8", errors="replace")
-                    sys.stdout.write(text)
-                    sys.stdout.flush()
-                    if output_file:
-                        output_file.write(text)
-                        output_file.flush()
-    except serial.SerialException as e:
-        print("Serial error: {}".format(e))
-        sys.exit(1)
+        while True:
+            cdc_port = wait_for_cdc_port(args.port)
+            if cdc_port is None:
+                print(
+                    "No Ledger CDC debug port found.\n"
+                    "Make sure your Ledger app was compiled with DEBUG_OVER_USB=1\n"
+                    "and that the device is connected and the app is running.\n"
+                    "You can also specify the port manually with --port."
+                )
+                sys.exit(1)
+
+            print("Connected on {} (baudrate={}).".format(cdc_port, args.baudrate))
+            print("Press Ctrl+C to stop.\n")
+
+            try:
+                with serial.Serial(cdc_port, args.baudrate, timeout=1) as ser:
+                    while True:
+                        data = ser.readline()
+                        if data:
+                            text = data.decode("utf-8", errors="replace")
+                            timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+                            for line in text.splitlines(True):
+                                stamped = "[{}] {}".format(timestamp, line)
+                                sys.stdout.write(stamped)
+                                sys.stdout.flush()
+                                if output_file:
+                                    output_file.write(stamped)
+                                    output_file.flush()
+            except serial.SerialException:
+                print("\nSerial connection lost. Waiting for device...")
     except KeyboardInterrupt:
         print("\nStopped.")
     finally:
