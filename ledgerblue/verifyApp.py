@@ -19,37 +19,48 @@
 
 import argparse
 
+
 def get_argparser():
-	parser = argparse.ArgumentParser("""Verify that the provided signature is a valid signature of the provided
+    parser = argparse.ArgumentParser("""Verify that the provided signature is a valid signature of the provided
 application.""")
-	parser.add_argument("--hex", help="The hex file of the signed application", required=True)
-	parser.add_argument("--key", help="The Custom CA public key with which to verify the signature (hex encoded)", required=True)
-	parser.add_argument("--signature", help="The signature to be verified (hex encoded)", required=True)
-	return parser
+    parser.add_argument(
+        "--hex", help="The hex file of the signed application", required=True
+    )
+    parser.add_argument(
+        "--key",
+        help="The Custom CA public key with which to verify the signature (hex encoded)",
+        required=True,
+    )
+    parser.add_argument(
+        "--signature", help="The signature to be verified (hex encoded)", required=True
+    )
+    return parser
+
 
 def auto_int(x):
-	return int(x, 0)
+    return int(x, 0)
 
-if __name__ == '__main__':
-	from .hexParser import IntelHexParser
-	from .ecWrapper import PublicKey
-	import hashlib
 
-	args = get_argparser().parse_args()
+if __name__ == "__main__":
+    from .hexParser import IntelHexParser
+    from .ecWrapper import PublicKey
+    import hashlib
 
-	# parse
-	parser = IntelHexParser(args.hex)
+    args = get_argparser().parse_args()
 
-	# prepare data
-	m = hashlib.sha256()
-	# consider areas are ordered by ascending address and non-overlaped
-	for a in parser.getAreas():
-		m.update(a.data)
-	dataToSign = m.digest()
+    # parse
+    parser = IntelHexParser(args.hex)
 
-	publicKey = PublicKey(bytes(bytearray.fromhex(args.key)), raw=True)
-	signature = publicKey.ecdsa_deserialize(bytes(bytearray.fromhex(args.signature)))
-	if not publicKey.ecdsa_verify(bytes(dataToSign), signature, raw=True):
-		raise Exception("Signature not verified")
+    # prepare data
+    m = hashlib.sha256()
+    # consider areas are ordered by ascending address and non-overlaped
+    for a in parser.getAreas():
+        m.update(a.data)
+    dataToSign = m.digest()
 
-	print("Signature verified")
+    publicKey = PublicKey(bytes(bytearray.fromhex(args.key)), raw=True)
+    signature = publicKey.ecdsa_deserialize(bytes(bytearray.fromhex(args.signature)))
+    if not publicKey.ecdsa_verify(bytes(dataToSign), signature, raw=True):
+        raise Exception("Signature not verified")
+
+    print("Signature verified")

@@ -16,31 +16,34 @@
 *  limitations under the License.
 ********************************************************************************
 """
+
 from abc import ABCMeta, abstractmethod
 
-TIMEOUT=20000
+TIMEOUT = 20000
+
 
 class DongleWait(object):
-	__metaclass__ = ABCMeta
+    __metaclass__ = ABCMeta
 
-	@abstractmethod
-	def waitFirstResponse(self, timeout):
-		pass
+    @abstractmethod
+    def waitFirstResponse(self, timeout):
+        pass
+
 
 class Dongle(object):
-	__metaclass__ = ABCMeta
+    __metaclass__ = ABCMeta
 
-	@abstractmethod
-	def exchange(self, apdu, timeout=TIMEOUT):
-		pass
+    @abstractmethod
+    def exchange(self, apdu, timeout=TIMEOUT):
+        pass
 
-	@abstractmethod
-	def apduMaxDataSize(self):
-		pass
+    @abstractmethod
+    def apduMaxDataSize(self):
+        pass
 
-	@abstractmethod
-	def close(self):
-		pass
+    @abstractmethod
+    def close(self):
+        pass
 
-	def setWaitImpl(self, waitImpl):
-		self.waitImpl = waitImpl
+    def setWaitImpl(self, waitImpl):
+        self.waitImpl = waitImpl

@@ -67,6 +67,19 @@ Use the following Target IDs (--targetId option) when running commands directly:
 | `Ledger Blue v2` | 2.1.x                              | `0x31010004` |
 
 
+## PCSC support
+
+This package can optionally work with PCSC readers for NFC communication with Ledger devices
+
+Installation instructions on linux:
+```
+apt install libpcsclite-dev
+pip3 install pyscard
+```
+
+Usage:
+If the environment variable `PCSC=1` is defined, ledgerblue tools will communicate through the first PCSC interface with a detected NFC tag
+
 ## Ledgerblue documentation
 
 You can generate the Ledgerblue documentation locally.

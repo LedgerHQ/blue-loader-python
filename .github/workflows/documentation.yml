@@ -9,6 +9,7 @@ on:
   pull_request:
     branches:
       - master
+      - develop
 
 jobs:
   generate:
@@ -26,7 +27,7 @@ jobs:
       - name: Generate the documentation
         run: (cd doc && make html)
       - name: Upload documentation bundle
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: documentation
           path: doc/build/html/
