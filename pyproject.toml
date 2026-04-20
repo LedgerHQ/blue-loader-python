@@ -35,7 +35,6 @@ dependencies = [
     "hidapi>=0.7.99",
     "protobuf>=5.28,<6",
     "pycryptodomex>=3.6.1",
-    "future",
     "ecpy>=0.9.0",
     "pillow>=3.4.0",
     "python-u2flib-host>=3.0.2",
