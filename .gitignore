@@ -3,5 +3,7 @@ dist/
 ledgerblue.egg-info/
 __pycache__
 .python-version
+.coverage
+tests/.cache/
 
 __version__.py
