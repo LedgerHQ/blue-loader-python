@@ -14,7 +14,7 @@ on:
 
 jobs:
   build_install:
-    name: Build and install the Ledgerblue Python package
+    name: Build and test the Ledgerblue Python package (Python ${{ matrix.python_version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -32,7 +32,10 @@ jobs:
     - name: Build & install
       run: |
         pip install -U pip
-        pip install -U .
+        pip install -U ".[dev]"
+
+    - name: pytest
+      run: pytest
 
   deploy:
     name: Build and deploy ledgerblue package

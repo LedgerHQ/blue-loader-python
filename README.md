@@ -80,6 +80,26 @@ pip3 install pyscard
 Usage:
 If the environment variable `PCSC=1` is defined, ledgerblue tools will communicate through the first PCSC interface with a detected NFC tag
 
+## Testing
+
+Run the test suite with:
+
+```bash
+python -m pytest
+```
+
+### Golden APDU files
+
+Some tests work by running `loadApp` in offline mode (`--offline`) and comparing the resulting APDU sequence byte-for-byte against a checked-in reference file in `tests/fixtures/`.
+
+If you intentionally change APDU generation (e.g. a new field in the install parameters), regenerate the reference with:
+
+```bash
+UPDATE_SNAPSHOTS=1 python -m pytest tests/test_load_app.py -v
+```
+
+The updated `tests/fixtures/minimal_reference.apdu` should then be committed alongside the code change so the diff in the reference file documents exactly what changed at the wire level.
+
 ## Ledgerblue documentation
 
 You can generate the Ledgerblue documentation locally.
