@@ -15,6 +15,31 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************
+
+Compute the SHA-256 application hash from a .hex file.
+
+The digest matches the value computed device-side at install time. It is built
+by hashing, in order:
+
+    target_id            (4 bytes, big endian)
+    api_level            (1 byte)
+    code_length          (4 bytes, big endian)
+    data_length          (4 bytes, big endian)
+    install_params_length(4 bytes, big endian)
+    flags                (4 bytes, big endian)
+    boot_offset          (4 bytes, big endian)
+    image                (the loaded bytes, minAddr..maxAddr, gaps zero-padded)
+
+code_length is derived as ``maxAddr - minAddr - data_length - install_params_length``.
+boot_offset comes from the HEX start-linear-address record (type 0x05), made
+relative to minAddr and OR-ed with 1 (Thumb bit).
+
+Parameters not stored in the .hex (target_id, api_level, flags, data_length,
+install_params_length) must be supplied by the caller; retrieve them from the
+ELF ledger.* sections or the target device SDK.
+
+This module is the single source of truth for the application hash and is reused
+by :mod:`ledgerblue.loadApp`.
 """
 
 import argparse
