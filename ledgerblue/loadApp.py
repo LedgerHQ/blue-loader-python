@@ -421,13 +421,27 @@ def main(args, debug: bool = True):
             string_to_bytes(args.appVersion),
         )
 
-    hash = loader.load(
+    # loader.load() streams the app to the device; its returned digest is ignored
+    # in favour of the hashApp module, which is the single source of truth for the
+    # application hash (see compute_app_hash).
+    loader.load(
         0x0,
         0xF0,
         printer,
         targetId=args.targetId,
         targetVersion=args.targetVersion,
         doCRC=not (args.nocrc or NOCRC),
+    )
+
+    from .hashApp import compute_app_hash
+
+    hash, _ = compute_app_hash(
+        args.fileName,
+        args.targetId,
+        args.apiLevel,
+        args.appFlags,
+        args.dataSize or 0,
+        args.installparamsSize or 0,
     )
 
     if debug:
