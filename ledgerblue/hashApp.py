@@ -18,50 +18,142 @@
 """
 
 import argparse
+import hashlib
 import struct
 
-
-def get_argparser():
-    parser = argparse.ArgumentParser(
-        description="Calculate an application hash from the application's hex file."
-    )
-    parser.add_argument(
-        "--hex", help="The application hex file to be hashed", required=True
-    )
-    parser.add_argument(
-        "--targetId",
-        help="The device's target ID (default is Ledger Blue)",
-        type=auto_int,
-    )
-    parser.add_argument("--targetVersion", help="Set the chip target version")
-    return parser
+from .hexParser import IntelHexParser
 
 
 def auto_int(x):
     return int(x, 0)
 
 
-if __name__ == "__main__":
-    from .hexParser import IntelHexParser
-    import hashlib
+def get_argparser():
+    parser = argparse.ArgumentParser(
+        description="Calculate an application hash from the application's hex file.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""\
+Parameters not stored in the .hex must be supplied on the command line;
+retrieve them from the ELF ledger.* sections or the target device SDK:
 
+  --targetId            ledger.target_id
+  --apiLevel            ledger.api_level
+  --appFlags            ledger.app_flags
+  --dataSize            _envram_data - _nvram_data          (symbol arithmetic)
+  --installparamsSize   _einstall_parameters - _install_parameters
+
+code_length is derived automatically as:
+    maxAddr - minAddr - dataSize - installparamsSize
+
+boot_offset is taken from the HEX start-linear-address record (type 0x05),
+made relative to minAddr and OR-ed with 1 (Thumb bit).
+""",
+    )
+    parser.add_argument(
+        "--hex", help="The application hex file to be hashed", required=True
+    )
+    parser.add_argument(
+        "--targetId",
+        help="The device's target ID (e.g. 0x33100004)",
+        type=auto_int,
+        required=True,
+    )
+    parser.add_argument(
+        "--apiLevel", help="API level (e.g. 26)", type=int, required=True
+    )
+    parser.add_argument(
+        "--appFlags",
+        help="Application flags (e.g. 0x800)",
+        type=auto_int,
+        required=True,
+    )
+    parser.add_argument(
+        "--dataSize",
+        help="_envram_data - _nvram_data in bytes",
+        type=int,
+        required=True,
+    )
+    parser.add_argument(
+        "--installparamsSize",
+        help="_einstall_parameters - _install_parameters in bytes",
+        type=int,
+        required=True,
+    )
+    return parser
+
+
+def compute_app_hash(
+    hex_path, target_id, api_level, flags, data_length, install_params_length
+):
+    """Return (digest_hex, info) for the application described by hex_path.
+
+    The digest matches the application hash computed device-side: it hashes the
+    target ID, the createApp parameters (api_level, code_length, data_length,
+    install_params_length, flags, boot_offset) and the loaded image bytes.
+    """
+    parser = IntelHexParser(hex_path)
+
+    min_addr = parser.minAddr()
+    max_addr = parser.maxAddr()  # exclusive end (start + len)
+    span = max_addr - min_addr
+
+    code_length = span - data_length - install_params_length
+    if code_length < 0:
+        raise ValueError("dataSize + installparamsSize exceeds the image span")
+
+    # Build the contiguous image, zero-padding any gaps between areas.
+    data = bytearray(span)
+    for area in parser.getAreas():
+        offset = area.getStart() - min_addr
+        chunk = area.getData()
+        data[offset : offset + len(chunk)] = chunk
+
+    # boot_offset: relative to minAddr, Thumb bit forced.
+    boot_addr = parser.getBootAddr()
+    if boot_addr > min_addr:
+        boot_addr -= min_addr
+    boot_offset = boot_addr | 1
+
+    m = hashlib.sha256()
+    m.update(struct.pack(">I", target_id))
+    m.update(struct.pack(">B", api_level))
+    m.update(struct.pack(">I", code_length))
+    m.update(struct.pack(">I", data_length))
+    m.update(struct.pack(">I", install_params_length))
+    m.update(struct.pack(">I", flags))
+    m.update(struct.pack(">I", boot_offset))
+    m.update(bytes(data))
+
+    info = {
+        "target_id": target_id,
+        "api_level": api_level,
+        "flags": flags,
+        "code_length": code_length,
+        "data_length": data_length,
+        "install_params_length": install_params_length,
+        "boot_offset": boot_offset,
+        "load_length": len(data),
+    }
+    return m.hexdigest(), info
+
+
+def main():
     args = get_argparser().parse_args()
 
-    # parse
-    parser = IntelHexParser(args.hex)
+    digest, info = compute_app_hash(
+        args.hex,
+        args.targetId,
+        args.apiLevel,
+        args.appFlags,
+        args.dataSize,
+        args.installparamsSize,
+    )
 
-    # prepare data
-    m = hashlib.sha256()
+    print(f"{'hex':>24} = {args.hex}")
+    for name, value in info.items():
+        print(f"{name:>24} = {value} (0x{value:x})")
+    print(f"{'sha256':>24} = {digest}")
 
-    if args.targetId:
-        m.update(struct.pack(">I", args.targetId))
 
-    if args.targetVersion:
-        m.update(args.targetVersion)
-
-    # consider areas are ordered by ascending address and non-overlaped
-    for a in parser.getAreas():
-        m.update(a.data)
-    dataToSign = m.digest()
-
-    print(dataToSign.hex())
+if __name__ == "__main__":
+    main()
