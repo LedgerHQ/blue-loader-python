@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update appHash module to compute the proper application's hash
-- loadApp now use appHash to compute proper hash for both C and Rust apps
+- loadApp now use appHash to compute hash
 
 ## [0.1.56] - 2026-04-08
 
