@@ -141,7 +141,11 @@ def compute_app_hash(
 
     m = hashlib.sha256()
     m.update(struct.pack(">I", target_id))
-    m.update(struct.pack(">B", api_level))
+    # maintain compatibility with SDKs not handling API level: when api_level is
+    # -1 (e.g. Nano S), HexLoader.createApp omits the api_level byte from the
+    # createApp parameters.
+    if api_level != -1:
+        m.update(struct.pack(">B", api_level))
     m.update(struct.pack(">I", code_length))
     m.update(struct.pack(">I", data_length))
     m.update(struct.pack(">I", install_params_length))
